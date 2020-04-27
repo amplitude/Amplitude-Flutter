@@ -1,0 +1,21 @@
+name: amplitude_flutter
+description: Amplitude Flutter plugin
+version: 2.0.0
+author: Amplitude
+homepage: https://www.amplitude.com
+
+environment:
+  sdk: ">=2.1.0 <3.0.0"
+  flutter: ">=1.10.0 <2.0.0"
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  plugin:
+    androidPackage: com.amplitude.amplitude_flutter
+    pluginClass: AmplitudeFlutterPlugin
