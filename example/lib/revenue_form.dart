@@ -1,4 +1,3 @@
-import 'package:amplitude_flutter/amplitude.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -19,14 +18,12 @@ class _RevenueFormState extends State<RevenueForm> {
     if (productId.text.isNotEmpty &&
         num.tryParse(price.text) != null &&
         num.tryParse(quantity.text) != null) {
-//      final Revenue revenue = Revenue()
-//        ..setProductId(productId.text)
-//        ..setPrice(num.tryParse(price.text))
-//        ..setQuantity(num.tryParse(quantity.text));
-//
-//      AppState.of(context)
-//        ..analytics.logRevenue(revenue)
-//        ..setMessage('Revenue Sent.');
+
+      AppState.of(context)
+        ..analytics.logRevenue(productId.text,
+            price: num.tryParse(price.text),
+            quantity: num.tryParse(quantity.text))
+        ..setMessage('Revenue Sent.');
     }
   }
 

@@ -1,5 +1,7 @@
-
+import 'package:amplitude_flutter/identify.dart';
 import 'package:flutter/material.dart';
+
+import 'app_state.dart';
 
 class IdentifyForm extends StatefulWidget {
   @override
@@ -8,18 +10,18 @@ class IdentifyForm extends StatefulWidget {
 
 class _IdentifyFormState extends State<IdentifyForm> {
   void onPress() {
-//    final Identify identify = Identify()
-//      ..set('identify_test',
-//          'identify sent at ${DateTime.now().millisecondsSinceEpoch}')
-//      ..add('identify_count', 1);
+    final Identify identify = Identify()
+      ..set('identify_test',
+          'identify sent at ${DateTime.now().millisecondsSinceEpoch}')
+      ..add('identify_count', 1);
 
-//    if (userPropKey.isNotEmpty && userPropValue.isNotEmpty) {
-//      identify.set(userPropKey, userPropValue);
-//    }
-//
-//    AppState.of(context)
-//      ..analytics.identify(identify)
-//      ..setMessage('Identify sent.');
+    if (userPropKey.isNotEmpty && userPropValue.isNotEmpty) {
+      identify.set(userPropKey, userPropValue);
+    }
+
+    AppState.of(context)
+      ..analytics.identify(identify)
+      ..setMessage('Identify sent.');
   }
 
   String userPropKey = '';

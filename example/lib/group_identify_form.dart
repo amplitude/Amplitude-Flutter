@@ -1,5 +1,7 @@
-
+import 'package:amplitude_flutter/identify.dart';
 import 'package:flutter/material.dart';
+
+import 'app_state.dart';
 
 class GroupIdentifyForm extends StatefulWidget {
   @override
@@ -8,17 +10,17 @@ class GroupIdentifyForm extends StatefulWidget {
 
 class _GroupIdentifyFormState extends State<GroupIdentifyForm> {
   void onPress() {
-//    if (groupType.text.isNotEmpty &&
-//        groupValue.text.isNotEmpty &&
-//        groupPropertyKey.text.isNotEmpty &&
-//        groupPropertyValue.text.isNotEmpty) {
-//      final Identify identify = Identify()
-//        ..set(groupPropertyKey.text, groupPropertyValue.text);
-//
-//      AppState.of(context)
-//        ..analytics.groupIdentify(groupType.text, groupValue.text, identify)
-//        ..setMessage('Group Identify sent.');
-//    }
+    if (groupType.text.isNotEmpty &&
+        groupValue.text.isNotEmpty &&
+        groupPropertyKey.text.isNotEmpty &&
+        groupPropertyValue.text.isNotEmpty) {
+      final Identify identify = Identify()
+        ..set(groupPropertyKey.text, groupPropertyValue.text);
+
+      AppState.of(context)
+        ..analytics.groupIdentify(groupType.text, groupValue.text, identify)
+        ..setMessage('Group Identify sent.');
+    }
   }
 
   final TextEditingController groupType =
