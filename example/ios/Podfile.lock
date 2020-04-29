@@ -7,7 +7,7 @@ PODS:
 
 DEPENDENCIES:
   - amplitude_flutter (from `.symlinks/plugins/amplitude_flutter/ios`)
-  - Flutter (from `.symlinks/flutter/ios`)
+  - Flutter (from `Flutter`)
 
 SPEC REPOS:
   trunk:
@@ -17,13 +17,13 @@ EXTERNAL SOURCES:
   amplitude_flutter:
     :path: ".symlinks/plugins/amplitude_flutter/ios"
   Flutter:
-    :path: ".symlinks/flutter/ios"
+    :path: Flutter
 
 SPEC CHECKSUMS:
   Amplitude: 1d3d18f82ba9852011aa7b9a741eac616d78fa82
   amplitude_flutter: 3341d2e7cf7321353140e2230531be45f5471bb2
   Flutter: 0e3d915762c693b495b44d77113d4970485de6ec
 
-PODFILE CHECKSUM: a182732193e6790303f39095277fce3e22df1dcd
+PODFILE CHECKSUM: 781964779c4d3a08769886e28094ffd2a1e5bcb2
 
 COCOAPODS: 1.9.1

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'app_state.dart';
+
 class GroupForm extends StatefulWidget {
   @override
   _GroupFormState createState() => _GroupFormState();
@@ -7,11 +9,11 @@ class GroupForm extends StatefulWidget {
 
 class _GroupFormState extends State<GroupForm> {
   void onPress() {
-//    if (groupType.text.isNotEmpty && groupValue.text.isNotEmpty) {
-//      AppState.of(context)
-//        ..analytics.setGroup(groupType.text, groupValue.text)
-//        ..setMessage('Group set.');
-//    }
+    if (groupType.text.isNotEmpty && groupValue.text.isNotEmpty) {
+      AppState.of(context)
+        ..analytics.setGroup(groupType.text, groupValue.text)
+        ..setMessage('Group set.');
+    }
   }
 
   final TextEditingController groupType =

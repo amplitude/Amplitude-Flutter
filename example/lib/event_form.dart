@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'app_state.dart';
+
 class EventForm extends StatefulWidget {
   @override
   _EventFormState createState() => _EventFormState();
@@ -10,9 +12,9 @@ class _EventFormState extends State<EventForm> {
       TextEditingController(text: 'Dart Click');
 
   void onPress() {
-//    AppState.of(context)
-//      ..analytics.logEvent(name: _controller.text)
-//      ..setMessage('Event sent.');
+    AppState.of(context)
+      ..analytics.logEvent(_controller.text)
+      ..setMessage('Event sent.');
   }
 
   @override

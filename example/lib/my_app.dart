@@ -49,6 +49,7 @@ class _MyAppState extends State<MyApp> {
     const Widget divider = Divider();
 
     return AppState(
+      analytics: analytics,
       setMessage: setMessage,
       child: MaterialApp(
         theme: ThemeData(

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'app_state.dart';
+
 class UserIdForm extends StatefulWidget {
   @override
   _UserIdFormState createState() => _UserIdFormState();
@@ -8,7 +10,7 @@ class UserIdForm extends StatefulWidget {
 class _UserIdFormState extends State<UserIdForm> {
   Function makeHandler(BuildContext context) {
     return (String userId) {
-//      AppState.of(context).analytics..setUserId(userId.isEmpty ? null : userId);
+      AppState.of(context).analytics..setUserId(userId.isEmpty ? null : userId);
     };
   }
 
