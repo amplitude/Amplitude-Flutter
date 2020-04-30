@@ -126,6 +126,9 @@ class AmplitudeFlutterPlugin : MethodCallHandler {
 
                result.success("identify called..")
             }
+            else -> {
+                result.notImplemented()
+            }
         }
     }
 
