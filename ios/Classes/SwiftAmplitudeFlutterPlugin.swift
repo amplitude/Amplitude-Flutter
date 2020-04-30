@@ -117,6 +117,16 @@ import Amplitude
                                                                               groupIdentify: identify,
                                                                               outOfSession: outOfSession)
                     result(true)
+                    
+                // User properties
+                case "setUserProperties":
+                    let eventProperties = args["userProperties"] as! [String: Any]?
+                    let replace = args["replace"] as! Bool
+                    Amplitude.instance(withName: instanceName)?.setUserProperties(eventProperties, replace: replace)
+                    result(true)
+                case "clearUserProperties":
+                    Amplitude.instance(withName: instanceName)?.clearUserProperties()
+                    result(true)
 
                 default:
                     result(FlutterMethodNotImplemented)

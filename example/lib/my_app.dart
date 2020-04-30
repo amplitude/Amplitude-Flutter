@@ -33,8 +33,13 @@ class _MyAppState extends State<MyApp> {
     analytics.setUserId("test_user");
     analytics.trackingSessionEvents(true);
     analytics.logEvent('MyApp startup', eventProperties: {
-      'friend_num': 10,
-      'is_heavy_user': true
+      'event_prop_1': 10,
+      'event_prop_2': true
+    });
+    analytics.setUserProperties({
+      'user_prop_1': 201231,
+      'user_prop_2': "prop2",
+      'user_prop_3': false
     });
   }
 

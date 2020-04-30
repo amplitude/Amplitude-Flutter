@@ -126,6 +126,18 @@ class AmplitudeFlutterPlugin : MethodCallHandler {
 
                result.success("identify called..")
             }
+            "setUserProperties" -> {
+                val client = Amplitude.getInstance(instanceName)
+                client.setUserProperties(json.getJSONObject("userProperties"))
+
+                result.success("setUserProperties called..")
+            }
+            "clearUserProperties" -> {
+                val client = Amplitude.getInstance(instanceName)
+                client.clearUserProperties()
+
+                result.success("clearUserProperties called..")
+            }
             else -> {
                 result.notImplemented()
             }

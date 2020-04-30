@@ -20,9 +20,7 @@ class _RevenueFormState extends State<RevenueForm> {
         num.tryParse(quantity.text) != null) {
 
       AppState.of(context)
-        ..analytics.logRevenue(productId.text,
-            price: num.tryParse(price.text),
-            quantity: num.tryParse(quantity.text))
+        ..analytics.logRevenue(productId.text, num.tryParse(quantity.text), num.tryParse(price.text))
         ..setMessage('Revenue Sent.');
     }
   }
