@@ -27,9 +27,15 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
 
-    analytics = Amplitude.getInstance();
+    analytics = Amplitude.getInstance(instanceName: "project");
     analytics.init(widget.apiKey);
-    analytics.logEvent('MyApp startup');
+    analytics.enableCoppaControl();
+    analytics.setUserId("test_user");
+    analytics.trackingSessionEvents(true);
+    analytics.logEvent('MyApp startup', eventProperties: {
+      'friend_num': 10,
+      'is_heavy_user': true
+    });
   }
 
   Future<void> _flushEvents() async {
