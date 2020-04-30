@@ -29,6 +29,9 @@ class _MyAppState extends State<MyApp> {
 
     analytics = Amplitude.getInstance();
     analytics.init(widget.apiKey);
+    analytics.enableCoppaControl();
+    analytics.setUserId("test_user");
+    analytics.trackingSessionEvents(true);
     analytics.logEvent('MyApp startup');
   }
 
