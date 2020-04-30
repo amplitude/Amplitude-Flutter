@@ -1,7 +1,6 @@
 name: amplitude_flutter
 description: Amplitude Flutter plugin
 version: 2.0.0
-author: Amplitude Inc
 homepage: https://www.amplitude.com
 
 environment:
@@ -17,5 +16,9 @@ dev_dependencies:
 
 flutter:
   plugin:
-    androidPackage: com.amplitude.amplitude_flutter
-    pluginClass: AmplitudeFlutterPlugin
+    platforms:
+      android:
+        package: com.amplitude.amplitude_flutter
+        pluginClass: AmplitudeFlutterPlugin
+      ios:
+        pluginClass: AmplitudeFlutterPlugin
