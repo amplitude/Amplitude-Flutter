@@ -21,6 +21,7 @@ dependencies:
 Import the module and use its APIs.
 ```dart
 import 'package:amplitude_flutter/amplitude.dart';
+import 'package:amplitude_flutter/identify.dart';
 
 class YourClass {
   Future<void> exampleForAmplitude() async {
