@@ -67,7 +67,7 @@ class Amplitude extends _Amplitude {
     return await _channel.invokeMethod('setLibraryVersion', jsonEncode(properties));
   }
 
-  Future<void> trackingSessionEvents(String trackingSessionEvents) async {
+  Future<void> trackingSessionEvents(bool trackingSessionEvents) async {
     Map<String, dynamic> properties = _baseProperties();
     properties['trackingSessionEvents'] = trackingSessionEvents;
 
