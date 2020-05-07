@@ -5,11 +5,10 @@
   <br />
 </p>
 
+[![pub package](https://img.shields.io/pub/v/amplitude_flutter.svg)](https://pub.dartlang.org/packages/amplitude_flutter)
+
 # Official Amplitude Flutter SDK
 This is the official Amplitude Flutter SDK developed and maintained by Amplitude Inc.
-
-## Links
-[![pub package](https://img.shields.io/pub/v/amplitude_flutter.svg)](https://pub.dartlang.org/packages/amplitude_flutter)
 
 ## Installation and Usage
 Add the dependency to your project.
