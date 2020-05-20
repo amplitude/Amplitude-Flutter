@@ -11,8 +11,10 @@
 This is the official Amplitude Flutter SDK developed and maintained by Amplitude Inc.
 
 ## Minimum Supported Versions
+```
 iOS - 10
 Android - API 21 (Lollipop)
+```
 
 ## Installation and Usage
 Add the dependency to your project.
