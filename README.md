@@ -20,7 +20,7 @@ Android - API 21 (Lollipop)
 Add the dependency to your project.
 ```yaml
 dependencies:
-  amplitude_flutter: ^2.0.0
+  amplitude_flutter: ^2.1.0
 ```
 
 Import the module and use its APIs.
