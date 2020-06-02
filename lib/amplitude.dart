@@ -197,6 +197,11 @@ class Amplitude extends _Amplitude {
     return await _channel.invokeMethod('clearUserProperties', jsonEncode(_baseProperties()));
   }
 
+  /// Upload all unsent events.
+  Future<void> uploadEvents() async {
+    return await _channel.invokeMethod('uploadEvents', jsonEncode(_baseProperties()));
+  }
+
   Map<String, dynamic> _baseProperties() {
     return {
       'instanceName': _instanceName

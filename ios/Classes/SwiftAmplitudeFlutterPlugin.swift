@@ -120,12 +120,15 @@ import Amplitude
                     
                 // User properties
                 case "setUserProperties":
-                    let eventProperties = args["userProperties"] as! [String: Any]?
-                    let replace = args["replace"] as! Bool
-                    Amplitude.instance(withName: instanceName)?.setUserProperties(eventProperties, replace: replace)
+                    let userProperties = args["userProperties"] as! [String: Any]?
+                    Amplitude.instance(withName: instanceName)?.setUserProperties(userProperties)
                     result(true)
                 case "clearUserProperties":
                     Amplitude.instance(withName: instanceName)?.clearUserProperties()
+                    result(true)
+                    
+                case "uploadEvents":
+                    Amplitude.instance(withName: instanceName)?.uploadEvents()
                     result(true)
 
                 default:
