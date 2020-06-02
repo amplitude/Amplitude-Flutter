@@ -12,7 +12,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 class AmplitudeFlutterPlugin : MethodCallHandler {
-    companion object {
+    companion object    {
         var ctxt: Context? = null
 
         @JvmStatic
@@ -137,6 +137,12 @@ class AmplitudeFlutterPlugin : MethodCallHandler {
                 client.clearUserProperties()
 
                 result.success("clearUserProperties called..")
+            }
+            "uploadEvents" -> {
+                val client = Amplitude.getInstance(instanceName)
+                client.uploadEvents()
+
+                result.success("uploadEvents called..")
             }
             else -> {
                 result.notImplemented()

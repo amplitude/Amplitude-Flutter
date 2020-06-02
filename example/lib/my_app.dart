@@ -36,15 +36,17 @@ class _MyAppState extends State<MyApp> {
       'event_prop_1': 10,
       'event_prop_2': true
     });
-    analytics.setUserProperties({
-      'user_prop_1': 201231,
-      'user_prop_2': "prop2",
-      'user_prop_3': false
-    });
+    Map<String, dynamic> userProps = {
+      'date': '01.06.2020',
+      'name': 'Name',
+      'buildNumber': '1.1.1',
+    };
+
+    analytics.setUserProperties(userProps);
   }
 
   Future<void> _flushEvents() async {
-//    await analytics.flushEvents();
+    await analytics.uploadEvents();
 
     setMessage('Events flushed.');
   }
