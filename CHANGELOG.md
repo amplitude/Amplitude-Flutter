@@ -1,3 +1,6 @@
+## 2.1.1
+* Fix calling `setUserId` with null crashes on iOS.
+
 ## 2.1.0
 * Fix the crash when calling `setUserProperties`
 * Add API `uploadEvents` to force uploading unsent events. 
