@@ -62,7 +62,10 @@ import Amplitude
                     Amplitude.instance(withName: instanceName)?.trackingSessionEvents = trackingSessionEvents
                     result(true)
                 case "setUserId":
-                    let userId = args["userId"] as! String
+                    var userId: String? = nil
+                    if !(args["userId"] is NSNull) {
+                        userId = args["userId"] as! String?
+                    }
                     let startNewSession = args["startNewSession"] == nil ? false : (args["startNewSession"] as! Bool)
 
                     Amplitude.instance(withName: instanceName)?.setUserId(userId, startNewSession: startNewSession)
