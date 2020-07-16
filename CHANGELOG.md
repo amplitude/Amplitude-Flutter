@@ -1,3 +1,6 @@
+## 2.2.0
+* Add `setServerUrl` API to customize server destination.
+
 ## 2.1.1
 * Fix calling `setUserId` with null crashes on iOS.
 

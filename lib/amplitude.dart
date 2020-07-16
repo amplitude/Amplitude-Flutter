@@ -88,6 +88,14 @@ class Amplitude extends _Amplitude {
     return await _channel.invokeMethod('setUserId', jsonEncode(properties));
   }
 
+  /// Customize the destination for server url.
+  Future<void> setServerUrl(String serverUrl) async {
+    Map<String, dynamic> properties = _baseProperties();
+    properties['serverUrl'] = serverUrl;
+
+    return await _channel.invokeMethod('setServerUrl', jsonEncode(properties));
+  }
+
   /// Tracks an event. Events are saved locally.
   ///
   /// Uploads are batched to occur every 30 events or every 30 seconds

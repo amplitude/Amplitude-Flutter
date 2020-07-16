@@ -79,6 +79,12 @@ class AmplitudeFlutterPlugin : MethodCallHandler {
 
                 result.success("setUserId called..")
             }
+            "setServerUrl" -> {
+                val client = Amplitude.getInstance(instanceName)
+                client.setServerUrl(json.optString("serverUrl", null))
+
+                result.success("setServerUrl called..")
+            }
 
             // Event logging
             "logEvent" -> {
