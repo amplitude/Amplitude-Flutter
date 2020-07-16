@@ -70,6 +70,14 @@ import Amplitude
 
                     Amplitude.instance(withName: instanceName)?.setUserId(userId, startNewSession: startNewSession)
                     result(true)
+                case "setServerUrl":
+                    var serverUrl: String? = nil
+                    if !(args["serverUrl"] is NSNull) {
+                        serverUrl = args["serverUrl"] as! String?
+                    }
+
+                    Amplitude.instance(withName: instanceName)?.setServerUrl(serverUrl)
+                    result(true)
 
                 // Event logging
                 case "logEvent":
