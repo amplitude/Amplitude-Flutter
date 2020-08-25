@@ -166,6 +166,9 @@ class AmplitudeFlutterPlugin : MethodCallHandler {
                     // ADD
                     "\$add" -> {
                         when (properties.get(key)) {
+                            is Int -> {
+                                identify.add(key, properties.getInt(key))
+                            }
                             is Long -> {
                                 identify.add(key, properties.getLong(key))
                             }
