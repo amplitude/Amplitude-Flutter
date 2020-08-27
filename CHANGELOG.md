@@ -1,3 +1,6 @@
+## 2.2.1
+* Fix addIdentity doesn't work correctly. Thanks @bradchien!
+
 ## 2.2.0
 * Add `setServerUrl` API to customize server destination.
 
