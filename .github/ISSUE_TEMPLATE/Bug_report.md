@@ -27,3 +27,4 @@ labels: 'bug'
 - SDK Version: <!--- E.g. v2.2.0 -->
 - Flutter Version: <!-- E.g. v1.20.2 -->
 - Device: <!-- E.g. iPhone 11, Samsung Galaxy S20 -->
+- Device OS and Version: <!-- E.g. iOS 13.3.1, Android 8.1.0 -->
