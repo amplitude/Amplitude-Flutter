@@ -82,7 +82,7 @@ class Amplitude extends _Amplitude {
     Map<String, dynamic> properties = _baseProperties();
     properties['userId'] = userId;
     if (startNewSession != null) {
-      properties['startNewSession'] = userId;
+      properties['startNewSession'] = startNewSession;
     }
 
     return await _channel.invokeMethod('setUserId', jsonEncode(properties));
