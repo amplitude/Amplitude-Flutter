@@ -1,13 +1,8 @@
 package com.example.amplitude_flutter_example
 
-import android.os.Bundle
-
-import io.flutter.app.FlutterActivity
-import io.flutter.plugins.GeneratedPluginRegistrant
+import io.flutter.embedding.android.FlutterActivity
 
 class MainActivity: FlutterActivity() {
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    GeneratedPluginRegistrant.registerWith(this)
-  }
+  // You can keep this empty class or remove it. Plugins on the new embedding
+  // now automatically registers plugins.
 }
