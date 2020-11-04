@@ -3,6 +3,7 @@ package com.amplitude.amplitude_flutter
 import android.content.Context
 import com.amplitude.api.Amplitude
 import com.amplitude.api.Identify
+import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
@@ -11,16 +12,29 @@ import io.flutter.plugin.common.PluginRegistry.Registrar
 import org.json.JSONArray
 import org.json.JSONObject
 
-class AmplitudeFlutterPlugin : MethodCallHandler {
-    companion object    {
+class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
+    companion object {
+
+        private const val methodChannelName = "amplitude_flutter"
+
         var ctxt: Context? = null
 
         @JvmStatic
         fun registerWith(registrar: Registrar) {
             ctxt = registrar.context()
-            val channel = MethodChannel(registrar.messenger(), "amplitude_flutter")
+            val channel = MethodChannel(registrar.messenger(), methodChannelName)
             channel.setMethodCallHandler(AmplitudeFlutterPlugin())
         }
+    }
+
+    override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
+        ctxt = binding.applicationContext
+        val channel = MethodChannel(binding.binaryMessenger, methodChannelName)
+        channel.setMethodCallHandler(AmplitudeFlutterPlugin())
+    }
+
+    override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
+
     }
 
     override fun onMethodCall(call: MethodCall, result: Result) {
