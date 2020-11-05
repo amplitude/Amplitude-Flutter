@@ -1,5 +1,6 @@
-### As of November 4, 2020 CHANGELOG.md is no longer manually updated. 
-Please check the [releases page](https://github.com/amplitude/Amplitude-Flutter/releases) for up to date changes.
+## 2.2.2
+* Fix - Fixing crash on iOS. Thanks @nishiths23!
+* Misc - Migrated plugin to android v2 embedding. Thanks @sergey-triputsco!
 
 ## 2.2.1
 * Fix addIdentity doesn't work correctly. Thanks @bradchien!
