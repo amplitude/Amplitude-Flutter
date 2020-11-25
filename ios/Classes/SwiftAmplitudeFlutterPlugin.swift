@@ -35,31 +35,35 @@ import Amplitude
                     }
 
                     let userId = args["userId"] as! String?
-                    Amplitude.instance(withName: instanceName)?.initializeApiKey(apiKey, userId: userId)
+                    Amplitude.instance(withName: instanceName).initializeApiKey(apiKey, userId: userId)
                     result(true)
 
                 // Setters
                 case "enableCoppaControl":
-                    Amplitude.instance(withName: instanceName)?.enableCoppaControl();
+                    Amplitude.instance(withName: instanceName).enableCoppaControl();
                     result(true)
                 case "disableCoppaControl":
-                    Amplitude.instance(withName: instanceName)?.disableCoppaControl();
+                    Amplitude.instance(withName: instanceName).disableCoppaControl();
                     result(true)
                 case "setOptOut":
                     let optOut = args["optOut"] as! Bool
-                    Amplitude.instance(withName: instanceName)?.optOut = optOut
+                    Amplitude.instance(withName: instanceName).optOut = optOut
                     result(true)
                 case "setLibraryName":
                     let libraryName = args["libraryName"] as! String
-                    Amplitude.instance(withName: instanceName)?.libraryName = libraryName
+                    Amplitude.instance(withName: instanceName).libraryName = libraryName
                     result(true)
                 case "setLibraryVersion":
                     let libraryVersion = args["libraryVersion"] as! String
-                    Amplitude.instance(withName: instanceName)?.libraryVersion = libraryVersion
+                    Amplitude.instance(withName: instanceName).libraryVersion = libraryVersion
                     result(true)
                 case "trackingSessionEvents":
                     let trackingSessionEvents = args["trackingSessionEvents"] as! Bool
-                    Amplitude.instance(withName: instanceName)?.trackingSessionEvents = trackingSessionEvents
+                    Amplitude.instance(withName: instanceName).trackingSessionEvents = trackingSessionEvents
+                    result(true)
+                case "setUseDynamicConfig":
+                    let useDynamicConfig = args["useDynamicConfig"] as! Bool
+                    Amplitude.instance(withName: instanceName).useDynamicConfig = useDynamicConfig
                     result(true)
                 case "setUserId":
                     var userId: String? = nil
@@ -68,15 +72,15 @@ import Amplitude
                     }
                     let startNewSession = args["startNewSession"] == nil ? false : (args["startNewSession"] as! Bool)
 
-                    Amplitude.instance(withName: instanceName)?.setUserId(userId, startNewSession: startNewSession)
+                    Amplitude.instance(withName: instanceName).setUserId(userId, startNewSession: startNewSession)
                     result(true)
                 case "setServerUrl":
-                    var serverUrl: String? = nil
                     if !(args["serverUrl"] is NSNull) {
-                        serverUrl = args["serverUrl"] as! String?
+                        if let serverUrl = args["serverUrl"] as! String? {
+                            Amplitude.instance(withName: instanceName).setServerUrl(serverUrl)
+                        }
                     }
 
-                    Amplitude.instance(withName: instanceName)?.setServerUrl(serverUrl)
                     result(true)
 
                 // Event logging
@@ -85,7 +89,7 @@ import Amplitude
                     let eventProperties = args["eventProperties"] as! [String: Any]?
                     let outOfSession = args["outOfSession"] == nil ? false : (args["outOfSession"] as! Bool)
 
-                    Amplitude.instance(withName: instanceName)?.logEvent(eventType,
+                    Amplitude.instance(withName: instanceName).logEvent(eventType,
                                                                          withEventProperties: eventProperties,
                                                                          outOfSession: outOfSession)
                     result(true)
@@ -94,27 +98,27 @@ import Amplitude
                     let quantity = args["quantity"] as! Int
                     let price = args["price"] as! Double
 
-                    Amplitude.instance(withName: instanceName)?.logRevenue(productIdentifier,
+                    Amplitude.instance(withName: instanceName).logRevenue(productIdentifier,
                                                                            quantity: quantity,
                                                                            price: NSNumber(value: price))
                     result(true)
 
                 case "logRevenueAmount":
                     let amount = args["amount"] as! Double
-                    Amplitude.instance(withName: instanceName)?.logRevenue(NSNumber(value: amount))
+                    Amplitude.instance(withName: instanceName).logRevenue(NSNumber(value: amount))
 
                     result(true)
 
                 case "identify":
                     let userProperties = args["userProperties"] as! [String: [String : NSObject]]
                     let identify: AMPIdentify = createIdentify(userProperties)
-                    Amplitude.instance(withName: instanceName)?.identify(identify)
+                    Amplitude.instance(withName: instanceName).identify(identify)
                     result(true)
 
                 case "setGroup":
                     let groupType = args["groupType"] as! String
                     let groupName = args["groupName"] as! NSObject
-                    Amplitude.instance(withName: instanceName)?.setGroup(groupType, groupName: groupName)
+                    Amplitude.instance(withName: instanceName).setGroup(groupType, groupName: groupName)
 
                     result(true)
                 case "groupIdentify":
@@ -123,7 +127,7 @@ import Amplitude
                     let userProperties = args["userProperties"] as! [String: [String : NSObject]]
                     let outOfSession = args["outOfSession"] == nil ? false : (args["outOfSession"] as! Bool)
                     let identify: AMPIdentify = createIdentify(userProperties)
-                    Amplitude.instance(withName: instanceName)?.groupIdentify(withGroupType: groupType,
+                    Amplitude.instance(withName: instanceName).groupIdentify(withGroupType: groupType,
                                                                               groupName: groupName,
                                                                               groupIdentify: identify,
                                                                               outOfSession: outOfSession)
@@ -131,15 +135,15 @@ import Amplitude
                     
                 // User properties
                 case "setUserProperties":
-                    let userProperties = args["userProperties"] as! [String: Any]?
-                    Amplitude.instance(withName: instanceName)?.setUserProperties(userProperties)
+                    let userProperties = args["userProperties"] as! [String: Any]? ?? [:]
+                    Amplitude.instance(withName: instanceName).setUserProperties(userProperties)
                     result(true)
                 case "clearUserProperties":
-                    Amplitude.instance(withName: instanceName)?.clearUserProperties()
+                    Amplitude.instance(withName: instanceName).clearUserProperties()
                     result(true)
                     
                 case "uploadEvents":
-                    Amplitude.instance(withName: instanceName)?.uploadEvents()
+                    Amplitude.instance(withName: instanceName).uploadEvents()
                     result(true)
 
                 default:

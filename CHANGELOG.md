@@ -1,3 +1,7 @@
+## 2.2.3
+* Bump iOS (7.2.0) and Android (2.29.2) Amplitude SDK versions
+* Add `setUseDynamicConfig` API to dynamically adjust server URL
+
 ## 2.2.2
 * Fix - Fixing crash on iOS. Thanks @nishiths23!
 * Misc - Migrated plugin to android v2 embedding. Thanks @sergey-triputsco!
