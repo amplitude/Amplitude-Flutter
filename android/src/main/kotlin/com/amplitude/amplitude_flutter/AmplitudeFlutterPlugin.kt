@@ -87,6 +87,12 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
 
                 result.success("trackingSessionEvents called..")
             }
+            "setUseDynamicConfig" -> {
+                val client = Amplitude.getInstance(instanceName)
+                client.trackSessionEvents(json.getBoolean("useDynamicConfig"))
+
+                result.success("setUseDynamicConfig called..")
+            }
             "setUserId" -> {
                 val client = Amplitude.getInstance(instanceName)
                 client.setUserId(json.optString("userId", null))

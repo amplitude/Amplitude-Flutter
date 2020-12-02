@@ -40,6 +40,6 @@ android {
 }
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation "com.amplitude:android-sdk:2.27.0"
+    implementation "com.amplitude:android-sdk:2.29.2"
     implementation "com.squareup.okhttp3:okhttp:4.2.2"
 }

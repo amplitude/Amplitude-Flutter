@@ -28,6 +28,7 @@ class _MyAppState extends State<MyApp> {
     super.initState();
 
     analytics = Amplitude.getInstance(instanceName: "project");
+    analytics.setUseDynamicConfig(true);
     analytics.setServerUrl("https://api2.amplitude.com");
     analytics.init(widget.apiKey);
     analytics.enableCoppaControl();
