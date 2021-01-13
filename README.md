@@ -12,7 +12,7 @@ This is the official Amplitude Flutter SDK developed and maintained by Amplitude
 
 ## Installation and Quick Start
 - Please visit our :100:[Developer Center](https://developers.amplitude.com/docs/flutter-setup) for instructions on installing and using our the SDK.
-- For developing the SDK, please visit our [CONTRIBUTING.md](https://github.com/amplitude/Amplitude-Flutter/blob/master/CONTRIBUTING.md) to get started.
+- For developing the SDK, please visit our [CONTRIBUTING.md](https://github.com/amplitude/Amplitude-Flutter/blob/main/CONTRIBUTING.md) to get started.
 
 ## Need Help?
 If you have any problems or issues over our SDK, feel free to create a github issue or submit a request on [Amplitude Help](https://help.amplitude.com/hc/en-us/requests/new).
