@@ -10,6 +10,7 @@ import 'group_identify_form.dart';
 import 'identify_form.dart';
 import 'revenue_form.dart';
 import 'user_id_form.dart';
+import 'regenerate_device.dart';
 
 class MyApp extends StatefulWidget {
   const MyApp(this.apiKey);
@@ -19,6 +20,7 @@ class MyApp extends StatefulWidget {
   @override
   _MyAppState createState() => _MyAppState();
 }
+
 class _MyAppState extends State<MyApp> {
   String _message = '';
   Amplitude analytics;
@@ -34,10 +36,8 @@ class _MyAppState extends State<MyApp> {
     analytics.enableCoppaControl();
     analytics.setUserId("test_user");
     analytics.trackingSessionEvents(true);
-    analytics.logEvent('MyApp startup', eventProperties: {
-      'event_prop_1': 10,
-      'event_prop_2': true
-    });
+    analytics.logEvent('MyApp startup',
+        eventProperties: {'event_prop_1': 10, 'event_prop_2': true});
     Map<String, dynamic> userProps = {
       'date': '01.06.2020',
       'name': 'Name',
@@ -79,6 +79,8 @@ class _MyAppState extends State<MyApp> {
             child: ListView(
               children: <Widget>[
                 UserIdForm(),
+                divider,
+                RegenerateDeviceBtn(),
                 divider,
                 EventForm(),
                 divider,
