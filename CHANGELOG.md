@@ -1,3 +1,6 @@
+## 2.3.0
+* Add `regenerateDeviceId` API to enable regenerate a new deviceId.
+
 ## 2.2.3
 * Bump iOS (7.2.0) and Android (2.29.2) Amplitude SDK versions
 * Add `setUseDynamicConfig` API to dynamically adjust server URL
