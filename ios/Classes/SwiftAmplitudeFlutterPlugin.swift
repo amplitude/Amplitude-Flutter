@@ -83,6 +83,11 @@ import Amplitude
 
                     result(true)
 
+                // Regenerates a new random deviceId for current user    
+                case "regenerateDeviceId":
+                    Amplitude.instance(withName: instanceName).regenerateDeviceId()
+                    result(true)
+
                 // Event logging
                 case "logEvent":
                     let eventType = args["eventType"] as! String

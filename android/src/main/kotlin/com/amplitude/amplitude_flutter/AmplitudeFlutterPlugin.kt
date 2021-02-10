@@ -106,6 +106,13 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
                 result.success("setServerUrl called..")
             }
 
+            // Regenerate new deviceId
+            "regenerateDeviceId" -> {
+                val client = Amplitude.getInstance(instanceName)
+                client.regenerateDeviceId();
+                result.success("regenerateDeviceId called..")
+            }
+
             // Event logging
             "logEvent" -> {
                 val client = Amplitude.getInstance(instanceName)

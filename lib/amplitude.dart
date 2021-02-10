@@ -19,7 +19,8 @@ class Amplitude extends _Amplitude {
       _instances = <String, Amplitude>{};
     }
 
-    return _instances.putIfAbsent(instanceName, () => new Amplitude(instanceName));
+    return _instances.putIfAbsent(
+        instanceName, () => new Amplitude(instanceName));
   }
 
   Amplitude(String instanceName) {
@@ -44,13 +45,15 @@ class Amplitude extends _Amplitude {
   /// This can be used by any customer that does not want to collect IDFA, IDFV,
   /// city, IP address and location tracking.
   Future<void> enableCoppaControl() async {
-    return await _channel.invokeMethod('enableCoppaControl', jsonEncode(_baseProperties()));
+    return await _channel.invokeMethod(
+        'enableCoppaControl', jsonEncode(_baseProperties()));
   }
 
   /// Disable COPPA (Children's Online Privacy Protection Act) restrictions on
   /// IDFA, IDFV, city, IP address and location tracking.
   Future<void> disableCoppaControl() async {
-    return await _channel.invokeMethod('disableCoppaControl', jsonEncode(_baseProperties()));
+    return await _channel.invokeMethod(
+        'disableCoppaControl', jsonEncode(_baseProperties()));
   }
 
   /// Enables tracking opt out.
@@ -73,7 +76,8 @@ class Amplitude extends _Amplitude {
     Map<String, dynamic> properties = _baseProperties();
     properties['trackingSessionEvents'] = trackingSessionEvents;
 
-    return await _channel.invokeMethod('trackingSessionEvents', jsonEncode(properties));
+    return await _channel.invokeMethod(
+        'trackingSessionEvents', jsonEncode(properties));
   }
 
   /// If your app has its own login system that you want to track users with,
@@ -96,12 +100,22 @@ class Amplitude extends _Amplitude {
     return await _channel.invokeMethod('setServerUrl', jsonEncode(properties));
   }
 
+  /// Regenerates a new random deviceId for current user.
+  /// Note: this is not recommended unless you know what you are doing.
+  /// This can be used in conjunction with setUserId(null) to anonymize users after they log out.
+  /// With a null userId and a completely new deviceId, the current user would appear as a brand new user in dashboard.
+  Future<void> regenerateDeviceId() async {
+    return await _channel.invokeMethod(
+        'regenerateDeviceId', jsonEncode(_baseProperties()));
+  }
+
   /// Dynamically adjust server URL
   Future<void> setUseDynamicConfig(bool useDynamicConfig) async {
     Map<String, dynamic> properties = _baseProperties();
     properties['useDynamicConfig'] = useDynamicConfig;
 
-    return await _channel.invokeMethod('setUseDynamicConfig', jsonEncode(properties));
+    return await _channel.invokeMethod(
+        'setUseDynamicConfig', jsonEncode(properties));
   }
 
   /// Tracks an event. Events are saved locally.
@@ -112,7 +126,8 @@ class Amplitude extends _Amplitude {
   /// [eventType] The name of the event you wish to track.
   /// [eventProperties] You can attach additional data to any event by passing a
   /// [Map] object with property: value pairs.
-  Future<void> logEvent(String eventType, {Map<String, dynamic> eventProperties, bool outOfSession}) async {
+  Future<void> logEvent(String eventType,
+      {Map<String, dynamic> eventProperties, bool outOfSession}) async {
     Map<String, dynamic> properties = _baseProperties();
     properties['eventType'] = eventType;
     if (eventProperties != null) {
@@ -129,7 +144,8 @@ class Amplitude extends _Amplitude {
   /// revenue on the Amplitude website, including average revenue per daily
   /// active user (ARPDAU), 7, 30, and 90 day revenue, lifetime value (LTV)
   /// estimates, and revenue by advertising campaign cohort and daily/weekly/monthly cohorts.
-  Future<void> logRevenue(String productIdentifier, int quantity, double price) async {
+  Future<void> logRevenue(
+      String productIdentifier, int quantity, double price) async {
     Map<String, dynamic> properties = _baseProperties();
     properties['productIdentifier'] = productIdentifier;
     properties['quantity'] = quantity;
@@ -146,7 +162,8 @@ class Amplitude extends _Amplitude {
     Map<String, dynamic> properties = _baseProperties();
     properties['amount'] = amount;
 
-    return await _channel.invokeMethod('logRevenueAmount', jsonEncode(properties));
+    return await _channel.invokeMethod(
+        'logRevenueAmount', jsonEncode(properties));
   }
 
   /// Update user properties using operations provided via Identify API.
@@ -186,7 +203,9 @@ class Amplitude extends _Amplitude {
 
   /// Use the Group Identify API to set or update properties of particular groups.
   /// However, these updates will only affect events going forward.
-  Future<void> groupIdentify(String groupType, String groupName, Identify groupIdentify, {bool outOfSession = false}) async {
+  Future<void> groupIdentify(
+      String groupType, String groupName, Identify groupIdentify,
+      {bool outOfSession = false}) async {
     Map<String, dynamic> properties = _baseProperties();
     properties['groupType'] = groupType;
     properties['groupName'] = groupName;
@@ -203,25 +222,26 @@ class Amplitude extends _Amplitude {
     Map<String, dynamic> properties = _baseProperties();
     properties['userProperties'] = userProperties;
 
-    return await _channel.invokeMethod('setUserProperties', jsonEncode(properties));
+    return await _channel.invokeMethod(
+        'setUserProperties', jsonEncode(properties));
   }
 
   /// Clears all properties that are tracked on the user level.
   ///
   /// Note: This operation is irreversible!!
   Future<void> clearUserProperties() async {
-    return await _channel.invokeMethod('clearUserProperties', jsonEncode(_baseProperties()));
+    return await _channel.invokeMethod(
+        'clearUserProperties', jsonEncode(_baseProperties()));
   }
 
   /// Upload all unsent events.
   Future<void> uploadEvents() async {
-    return await _channel.invokeMethod('uploadEvents', jsonEncode(_baseProperties()));
+    return await _channel.invokeMethod(
+        'uploadEvents', jsonEncode(_baseProperties()));
   }
 
   Map<String, dynamic> _baseProperties() {
-    return {
-      'instanceName': _instanceName
-    };
+    return {'instanceName': _instanceName};
   }
 
   // Private bridging calls
@@ -229,13 +249,15 @@ class Amplitude extends _Amplitude {
     Map<String, dynamic> properties = _baseProperties();
     properties['libraryName'] = libraryName;
 
-    return await _channel.invokeMethod('setLibraryName', jsonEncode(properties));
+    return await _channel.invokeMethod(
+        'setLibraryName', jsonEncode(properties));
   }
 
   Future<void> _setLibraryVersion(String libraryVersion) async {
     Map<String, dynamic> properties = _baseProperties();
     properties['libraryVersion'] = libraryVersion;
 
-    return await _channel.invokeMethod('setLibraryVersion', jsonEncode(properties));
+    return await _channel.invokeMethod(
+        'setLibraryVersion', jsonEncode(properties));
   }
 }
