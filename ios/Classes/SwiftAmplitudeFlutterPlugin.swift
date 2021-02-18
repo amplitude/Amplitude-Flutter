@@ -45,6 +45,11 @@ import Amplitude
                 case "disableCoppaControl":
                     Amplitude.instance(withName: instanceName).disableCoppaControl();
                     result(true)
+                case "adSupportBlock":
+                    print("in support block")
+                    let adSupportBlock = args["adSupportBlock"] as! AMPAdSupportBlock;
+                    Amplitude.instance(withName: instanceName).adSupportBlock = adSupportBlock;
+                    result(true);
                 case "setOptOut":
                     let optOut = args["optOut"] as! Bool
                     Amplitude.instance(withName: instanceName).optOut = optOut

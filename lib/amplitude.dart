@@ -13,6 +13,7 @@ class Amplitude extends _Amplitude {
   static Map<String, Amplitude> _instances;
 
   String _instanceName;
+  //Function adSupportBlock;
 
   static Amplitude getInstance({String instanceName = '\$default_instance'}) {
     if (_instances == null) {
@@ -27,6 +28,12 @@ class Amplitude extends _Amplitude {
     this._instanceName = instanceName;
     _setLibraryName(Constants.packageName);
     _setLibraryVersion(Constants.packageVersion);
+  }
+
+  Future<void> adSupportBlock(Function adSupportBlock) async {
+    Map<String, dynamic> properties = _baseProperties();
+    properties['adSupportBlock'] = adSupportBlock; 
+    return await _channel.invokeMethod('adSupportBlock', jsonEncode(properties));
   }
 
   Future<void> init(String apiKey, {String userId}) async {
