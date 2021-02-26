@@ -1,3 +1,6 @@
+## 2.3.1
+* Add `setEventUploadThreshold` API
+
 ## 2.3.0
 * Add `regenerateDeviceId` API to enable regenerate a new deviceId.
 
