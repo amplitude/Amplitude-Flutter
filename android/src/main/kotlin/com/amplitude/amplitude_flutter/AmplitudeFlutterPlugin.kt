@@ -81,6 +81,12 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
 
                 result.success("setLibraryVersion called..")
             }
+            "setEventUploadThreshold" -> {
+                val client = Amplitude.getInstance(instanceName)
+                client.setEventUploadThreshold(json.getInt("eventUploadThreshold"));
+
+                result.success("setEventUploadThreshold called..")
+            }
             "trackingSessionEvents" -> {
                 val client = Amplitude.getInstance(instanceName)
                 client.trackSessionEvents(json.getBoolean("trackingSessionEvents"))

@@ -57,6 +57,10 @@ import Amplitude
                     let libraryVersion = args["libraryVersion"] as! String
                     Amplitude.instance(withName: instanceName).libraryVersion = libraryVersion
                     result(true)
+                case "setEventUploadThreshold":
+                    let eventUploadThreshold = args["eventUploadThreshold"] as! Int32
+                    Amplitude.instance(withName: instanceName).eventUploadThreshold = eventUploadThreshold
+                    result(true)
                 case "trackingSessionEvents":
                     let trackingSessionEvents = args["trackingSessionEvents"] as! Bool
                     Amplitude.instance(withName: instanceName).trackingSessionEvents = trackingSessionEvents
