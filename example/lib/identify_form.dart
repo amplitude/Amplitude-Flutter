@@ -35,7 +35,7 @@ class _IdentifyFormState extends State<IdentifyForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text('Identify', style: Theme.of(context).textTheme.headline),
+        Text('Identify', style: Theme.of(context).textTheme.headline5),
         const SizedBox(height: 10),
         Row(children: <Widget>[
           Expanded(
@@ -50,7 +50,7 @@ class _IdentifyFormState extends State<IdentifyForm> {
                 onChanged: (String s) => userPropValue = s),
           ),
         ]),
-        RaisedButton(child: const Text('Send Identify'), onPressed: onPress)
+        ElevatedButton(child: const Text('Send Identify'), onPressed: onPress)
       ],
     );
   }

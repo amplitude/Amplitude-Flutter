@@ -23,7 +23,8 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   String _message = '';
-  Amplitude analytics;
+
+  late final Amplitude analytics;
 
   @override
   void initState() {
@@ -94,11 +95,11 @@ class _MyAppState extends State<MyApp> {
                 divider,
                 RevenueForm(),
                 divider,
-                RaisedButton(
+                ElevatedButton(
                   child: const Text('Flush Events'),
                   onPressed: _flushEvents,
                 ),
-                Text(_message, style: Theme.of(context).textTheme.body1)
+                Text(_message, style: Theme.of(context).textTheme.bodyText1)
               ],
             ),
           ),

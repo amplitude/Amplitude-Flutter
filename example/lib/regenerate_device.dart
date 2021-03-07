@@ -16,7 +16,7 @@ class _DeviceState extends State<RegenerateDeviceBtn> {
 
   @override
   Widget build(BuildContext context) {
-    return RaisedButton(
+    return ElevatedButton(
         child: const Text('Regenerate DeviceId'), onPressed: onPress);
   }
 }
