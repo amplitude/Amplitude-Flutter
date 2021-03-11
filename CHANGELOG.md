@@ -1,3 +1,6 @@
+## 3.0.0
+* Migrate package to null-safety 
+
 ## 2.3.1
 * Add `setEventUploadThreshold` API
 
