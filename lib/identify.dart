@@ -1,9 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 class Identify {
-  Identify() {
-    payload = <String, dynamic>{};
-  }
+  Identify() : payload = <String, dynamic>{};
 
   static const String OP_SET = r'$set';
   static const String OP_SET_ONCE = r'$setOnce';
@@ -11,7 +9,7 @@ class Identify {
   static const String OP_APPEND = r'$append';
   static const String OP_UNSET = r'$unset';
 
-  Map<String, dynamic> payload;
+  final Map<String, dynamic> payload;
 
   void set(String key, dynamic value) {
     addOp(OP_SET, key, value);

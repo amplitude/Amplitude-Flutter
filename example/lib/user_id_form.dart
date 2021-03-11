@@ -8,7 +8,7 @@ class UserIdForm extends StatefulWidget {
 }
 
 class _UserIdFormState extends State<UserIdForm> {
-  Function makeHandler(BuildContext context) {
+  void Function(String) makeHandler(BuildContext context) {
     return (String userId) {
       AppState.of(context).analytics..setUserId(userId.isEmpty ? null : userId);
     };

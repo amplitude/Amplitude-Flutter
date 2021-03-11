@@ -22,7 +22,7 @@ class _EventFormState extends State<EventForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text('Event', style: Theme.of(context).textTheme.headline),
+        Text('Event', style: Theme.of(context).textTheme.headline5),
         const SizedBox(height: 10),
         TextField(
             decoration: InputDecoration(
@@ -31,7 +31,7 @@ class _EventFormState extends State<EventForm> {
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 labelText: 'Event Name'),
             controller: _controller),
-        RaisedButton(child: const Text('Send Event'), onPressed: onPress)
+        ElevatedButton(child: const Text('Send Event'), onPressed: onPress)
       ],
     );
   }

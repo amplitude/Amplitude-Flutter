@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 
 class AppState extends InheritedWidget {
   const AppState({
-    Key key,
-    @required this.analytics,
-    @required this.setMessage,
-    @required Widget child,
+    Key? key,
+    required this.analytics,
+    required this.setMessage,
+    required Widget child,
   }) : super(key: key, child: child);
 
   final Amplitude analytics;
@@ -19,6 +19,6 @@ class AppState extends InheritedWidget {
   }
 
   static AppState of(BuildContext context) {
-    return context.inheritFromWidgetOfExactType(AppState);
+    return context.dependOnInheritedWidgetOfExactType<AppState>()!;
   }
 }

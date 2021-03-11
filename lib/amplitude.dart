@@ -10,26 +10,25 @@ abstract class _Amplitude {
 }
 
 class Amplitude extends _Amplitude {
-  static Map<String, Amplitude> _instances;
+  static Map<String, Amplitude>? _instances;
 
-  String _instanceName;
+  final String _instanceName;
 
   static Amplitude getInstance({String instanceName = '\$default_instance'}) {
     if (_instances == null) {
       _instances = <String, Amplitude>{};
     }
 
-    return _instances.putIfAbsent(
-        instanceName, () => new Amplitude(instanceName));
+    return _instances!
+        .putIfAbsent(instanceName, () => new Amplitude(instanceName));
   }
 
-  Amplitude(String instanceName) {
-    this._instanceName = instanceName;
+  Amplitude(String instanceName) : _instanceName = instanceName {
     _setLibraryName(Constants.packageName);
     _setLibraryVersion(Constants.packageVersion);
   }
 
-  Future<void> init(String apiKey, {String userId}) async {
+  Future<void> init(String apiKey, {String? userId}) async {
     Map<String, dynamic> properties = _baseProperties();
     properties['apiKey'] = apiKey;
     if (userId != null) {
@@ -82,7 +81,7 @@ class Amplitude extends _Amplitude {
 
   /// If your app has its own login system that you want to track users with,
   /// you can set the userId.
-  Future<void> setUserId(String userId, {bool startNewSession}) async {
+  Future<void> setUserId(String? userId, {bool? startNewSession}) async {
     Map<String, dynamic> properties = _baseProperties();
     properties['userId'] = userId;
     if (startNewSession != null) {
@@ -104,7 +103,8 @@ class Amplitude extends _Amplitude {
     Map<String, dynamic> properties = _baseProperties();
     properties['eventUploadThreshold'] = value;
 
-    await _channel.invokeMethod('setEventUploadThreshold', jsonEncode(properties));
+    await _channel.invokeMethod(
+        'setEventUploadThreshold', jsonEncode(properties));
   }
 
   /// Regenerates a new random deviceId for current user.
@@ -134,7 +134,7 @@ class Amplitude extends _Amplitude {
   /// [eventProperties] You can attach additional data to any event by passing a
   /// [Map] object with property: value pairs.
   Future<void> logEvent(String eventType,
-      {Map<String, dynamic> eventProperties, bool outOfSession}) async {
+      {Map<String, dynamic>? eventProperties, bool? outOfSession}) async {
     Map<String, dynamic> properties = _baseProperties();
     properties['eventType'] = eventType;
     if (eventProperties != null) {

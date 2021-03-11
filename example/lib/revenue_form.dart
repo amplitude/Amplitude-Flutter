@@ -16,11 +16,14 @@ class _RevenueFormState extends State<RevenueForm> {
 
   void onPress() {
     if (productId.text.isNotEmpty &&
-        num.tryParse(price.text) != null &&
-        num.tryParse(quantity.text) != null) {
-
+        double.tryParse(price.text) != null &&
+        int.tryParse(quantity.text) != null) {
       AppState.of(context)
-        ..analytics.logRevenue(productId.text, num.tryParse(quantity.text), num.tryParse(price.text))
+        ..analytics.logRevenue(
+          productId.text,
+          int.tryParse(quantity.text)!,
+          double.tryParse(price.text)!,
+        )
         ..setMessage('Revenue Sent.');
     }
   }
@@ -35,23 +38,23 @@ class _RevenueFormState extends State<RevenueForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text('Revenue', style: Theme.of(context).textTheme.headline),
+        Text('Revenue', style: Theme.of(context).textTheme.headline5),
         const SizedBox(height: 10),
         TextField(
             decoration: dec.copyWith(labelText: 'Product Id'),
             controller: productId),
         vertSpace,
         TextField(inputFormatters: <TextInputFormatter>[
-          WhitelistingTextInputFormatter(RegExp(r'[\d\.]'))
+          FilteringTextInputFormatter.allow(RegExp(r'[\d\.]'))
         ], decoration: dec.copyWith(labelText: 'Price'), controller: price),
         vertSpace,
         TextField(
             inputFormatters: <TextInputFormatter>[
-              WhitelistingTextInputFormatter(RegExp(r'\d'))
+              FilteringTextInputFormatter.allow(RegExp(r'\d'))
             ],
             decoration: dec.copyWith(labelText: 'Quantity'),
             controller: quantity),
-        RaisedButton(child: const Text('Send Revenue'), onPressed: onPress)
+        ElevatedButton(child: const Text('Send Revenue'), onPressed: onPress)
       ],
     );
   }
