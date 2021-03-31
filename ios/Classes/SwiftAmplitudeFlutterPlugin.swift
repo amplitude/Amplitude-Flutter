@@ -155,6 +155,14 @@ import Amplitude
                     Amplitude.instance(withName: instanceName).uploadEvents()
                     result(true)
 
+                case "deviceId":
+                    let deviceId = Amplitude.instance(withName: instanceName).deviceId
+                    result(deviceId)
+
+                case "sessionId":
+                    let sessionId = Amplitude.instance(withName: instanceName).getSessionId()
+                   result(sessionId)
+
                 default:
                     result(FlutterMethodNotImplemented)
                 }
