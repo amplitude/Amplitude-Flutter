@@ -183,6 +183,18 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
 
                 result.success("uploadEvents called..")
             }
+            "deviceId" -> {
+                val client = Amplitude.getInstance(instanceName)
+                val deviceId = client.deviceId
+
+                result.success(deviceId)
+            }
+            "sessionId" -> {
+                val client = Amplitude.getInstance(instanceName)
+                val sessionId = client.sessionId
+
+                result.success(sessionId)
+            }
             else -> {
                 result.notImplemented()
             }

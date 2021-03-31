@@ -247,6 +247,16 @@ class Amplitude extends _Amplitude {
         'uploadEvents', jsonEncode(_baseProperties()));
   }
 
+  /// deviceId.
+  Future<String> deviceId() async {
+    return await _channel.invokeMethod('deviceId', jsonEncode(_baseProperties()));
+  }
+
+  /// sessionId.
+  Future<int> sessionId() async {
+    return await _channel.invokeMethod('sessionId', jsonEncode(_baseProperties()));
+  }
+
   Map<String, dynamic> _baseProperties() {
     return {'instanceName': _instanceName};
   }
