@@ -1,3 +1,4 @@
+# Creates jira tickets for new github issues to help triage
 name: Jira Issue Creator
 
 on:
@@ -24,7 +25,7 @@ jobs:
           project: ${{ secrets.JIRA_PROJECT }}
           issuetype: Task
           summary: |
-            [SDK - iOS] ${{ github.event.issue.title }}
+            [SDK - Flutter] ${{ github.event.issue.title }}
           description: |
             ${{ github.event.issue.url}}
           fields: '{"customfield_10006": 1039, "customfield_11481": {"value": "Data Management"}, "customfield_11200": {"value": "SDK"}}' # sprint, pillar, pod
