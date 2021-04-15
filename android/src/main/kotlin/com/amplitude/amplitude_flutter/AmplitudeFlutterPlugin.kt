@@ -118,7 +118,14 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
                 client.regenerateDeviceId();
                 result.success("regenerateDeviceId called..")
             }
-
+            
+            // Get current deviceId, deviceId could be none if the deviceId hasn't been initialized yet.
+            "getDeviceId" -> {
+                val client = Amplitude.getInstance(instanceName)
+                val deviceId = client.getDeviceId();
+                result.success(deviceId)
+            }
+            
             // Event logging
             "logEvent" -> {
                 val client = Amplitude.getInstance(instanceName)

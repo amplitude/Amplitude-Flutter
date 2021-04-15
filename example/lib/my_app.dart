@@ -46,6 +46,8 @@ class _MyAppState extends State<MyApp> {
     };
 
     analytics.setUserProperties(userProps);
+    var deviceId = analytics.getDeviceId();
+    print('the deviceId is $deviceId');
   }
 
   Future<void> _flushEvents() async {

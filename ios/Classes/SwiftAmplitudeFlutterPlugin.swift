@@ -86,11 +86,14 @@ import Amplitude
                     }
 
                     result(true)
-
-                // Regenerates a new random deviceId for current user    
+                // Regenerates a new random deviceId for current user
                 case "regenerateDeviceId":
                     Amplitude.instance(withName: instanceName).regenerateDeviceId()
                     result(true)
+                
+                case "getDeviceId":
+                    let deviceId = Amplitude.instance(withName: instanceName).getDeviceId()
+                    result(deviceId)
 
                 // Event logging
                 case "logEvent":
