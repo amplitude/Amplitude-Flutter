@@ -38,6 +38,15 @@ import Amplitude
                     Amplitude.instance(withName: instanceName).initializeApiKey(apiKey, userId: userId)
                     result(true)
 
+                // Get deviceId
+                case "getDeviceId":
+                    let deviceId = Amplitude.instance(withName: instanceName).getDeviceId()
+                    result(deviceId)
+                // Get sessionId
+                case "getSessionId":
+                    let sessionId = Amplitude.instance(withName: instanceName).getSessionId()
+                    result(sessionId)
+
                 // Setters
                 case "enableCoppaControl":
                     Amplitude.instance(withName: instanceName).enableCoppaControl();
@@ -87,7 +96,7 @@ import Amplitude
 
                     result(true)
 
-                // Regenerates a new random deviceId for current user    
+                // Regenerates a new random deviceId for current user
                 case "regenerateDeviceId":
                     Amplitude.instance(withName: instanceName).regenerateDeviceId()
                     result(true)
@@ -141,7 +150,7 @@ import Amplitude
                                                                               groupIdentify: identify,
                                                                               outOfSession: outOfSession)
                     result(true)
-                    
+
                 // User properties
                 case "setUserProperties":
                     let userProperties = args["userProperties"] as! [String: Any]? ?? [:]
@@ -150,7 +159,7 @@ import Amplitude
                 case "clearUserProperties":
                     Amplitude.instance(withName: instanceName).clearUserProperties()
                     result(true)
-                    
+
                 case "uploadEvents":
                     Amplitude.instance(withName: instanceName).uploadEvents()
                     result(true)
