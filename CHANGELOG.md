@@ -1,5 +1,8 @@
+## 3.1.0
+* Add `getSessionId` and `getDeviceId` API
+
 ## 3.0.0
-* Migrate package to null-safety 
+* Migrate package to null-safety
 
 ## 2.3.1
 * Add `setEventUploadThreshold` API
