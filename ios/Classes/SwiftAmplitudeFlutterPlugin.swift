@@ -45,7 +45,7 @@ import Amplitude
                 //Get sessionId
                 case "getSessionId":
                     let sessionId = Amplitude.instance(withName: instanceName).getSessionId()
-                   result(sessionId)
+                    result(sessionId)
 
                 // Setters
                 case "enableCoppaControl":

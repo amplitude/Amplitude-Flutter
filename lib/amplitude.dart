@@ -268,13 +268,15 @@ class Amplitude extends _Amplitude {
         'setLibraryVersion', jsonEncode(properties));
   }
 
-  // Get deviceId
+  // Fetches the deviceId, a unique identifier shared between multiple users using the same app on the same device.
+  // @returns the deviceId.
   Future<String?> getDeviceId() async {
     return await _channel.invokeMethod(
         'getDeviceId', jsonEncode(_baseProperties()));
   }
 
-  // Get sessionId
+  // Fetches the current sessionId, an identifier used by Amplitude to group together events tracked during the same session.
+  // @returns the sessionId.
   Future<int?> getSessionId() async {
     return await _channel.invokeMethod(
         'getSessionId', jsonEncode(_baseProperties()));
