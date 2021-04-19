@@ -251,7 +251,7 @@ class Amplitude extends _Amplitude {
     return {'instanceName': _instanceName};
   }
 
-  // Private bridging calls
+  /// Private bridging calls
   Future<void> _setLibraryName(String libraryName) async {
     Map<String, dynamic> properties = _baseProperties();
     properties['libraryName'] = libraryName;
@@ -268,15 +268,15 @@ class Amplitude extends _Amplitude {
         'setLibraryVersion', jsonEncode(properties));
   }
 
-  // Fetches the deviceId, a unique identifier shared between multiple users using the same app on the same device.
-  // @returns the deviceId.
+  /// Fetches the deviceId, a unique identifier shared between multiple users using the same app on the same device.
+  /// @returns the deviceId.
   Future<String?> getDeviceId() async {
     return await _channel.invokeMethod(
         'getDeviceId', jsonEncode(_baseProperties()));
   }
 
-  // Fetches the current sessionId, an identifier used by Amplitude to group together events tracked during the same session.
-  // @returns the sessionId.
+  /// Fetches the current sessionId, an identifier used by Amplitude to group together events tracked during the same session.
+  /// @returns the sessionId.
   Future<int?> getSessionId() async {
     return await _channel.invokeMethod(
         'getSessionId', jsonEncode(_baseProperties()));
