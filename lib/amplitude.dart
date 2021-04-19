@@ -267,4 +267,16 @@ class Amplitude extends _Amplitude {
     return await _channel.invokeMethod(
         'setLibraryVersion', jsonEncode(properties));
   }
+
+  // Get deviceId
+  Future<String?> getDeviceId() async {
+    return await _channel.invokeMethod(
+        'getDeviceId', jsonEncode(_baseProperties()));
+  }
+
+  // Get sessionId
+  Future<int?> getSessionId() async {
+    return await _channel.invokeMethod(
+        'getSessionId', jsonEncode(_baseProperties()));
+  }
 }

@@ -11,6 +11,7 @@ import 'identify_form.dart';
 import 'revenue_form.dart';
 import 'user_id_form.dart';
 import 'regenerate_device.dart';
+import 'deviceid_sessionid.dart';
 
 class MyApp extends StatefulWidget {
   const MyApp(this.apiKey);
@@ -79,6 +80,8 @@ class _MyAppState extends State<MyApp> {
             padding: const EdgeInsets.all(10.0),
             child: ListView(
               children: <Widget>[
+                DeviceIdSessionId(),
+                divider,
                 UserIdForm(),
                 divider,
                 RegenerateDeviceBtn(),

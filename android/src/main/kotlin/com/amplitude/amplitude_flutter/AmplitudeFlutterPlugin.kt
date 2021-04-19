@@ -49,7 +49,20 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
 
                 result.success("Init success..")
             }
+            //Get deviceId
+            "getDeviceId" -> {
+                val client = Amplitude.getInstance(instanceName)
+                val deviceId = client.getDeviceId()
 
+                result.success(deviceId)
+            }
+            //Get sessionId
+            "getSessionId" -> {
+                val client = Amplitude.getInstance(instanceName)
+                val sessionId = client.getSessionId()
+
+                result.success(sessionId)
+            }
             // Settings
             "enableCoppaControl" -> {
                 val client = Amplitude.getInstance(instanceName)
