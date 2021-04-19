@@ -38,11 +38,11 @@ import Amplitude
                     Amplitude.instance(withName: instanceName).initializeApiKey(apiKey, userId: userId)
                     result(true)
 
-                //Get deviceId
+                // Get deviceId
                 case "getDeviceId":
                     let deviceId = Amplitude.instance(withName: instanceName).getDeviceId()
                     result(deviceId)
-                //Get sessionId
+                // Get sessionId
                 case "getSessionId":
                     let sessionId = Amplitude.instance(withName: instanceName).getSessionId()
                     result(sessionId)
