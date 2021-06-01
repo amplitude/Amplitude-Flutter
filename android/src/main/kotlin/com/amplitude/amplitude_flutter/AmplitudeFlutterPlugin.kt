@@ -233,6 +233,9 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
                     // APPEND
                     "\$append" -> {
                         when (properties.get(key)) {
+                            is Int -> {
+                                identify.append(key, properties.getInt(key))
+                            }
                             is Long -> {
                                 identify.append(key, properties.getLong(key))
                             }
@@ -257,6 +260,9 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
                     // PREPEND
                     "\$prepend" -> {
                         when (properties.get(key)) {
+                            is Int -> {
+                                identify.prepend(key, properties.getInt(key))
+                            }
                             is Long -> {
                                 identify.prepend(key, properties.getLong(key))
                             }
@@ -281,6 +287,9 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
                     // SET
                     "\$set" -> {
                         when (properties.get(key)) {
+                            is Int -> {
+                                identify.set(key, properties.getInt(key))
+                            }
                             is Long -> {
                                 identify.set(key, properties.getLong(key))
                             }
@@ -305,6 +314,9 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
                     // SETONCE
                     "\$setOnce" -> {
                         when (properties.get(key)) {
+                            is Int -> {
+                                identify.setOnce(key, properties.getInt(key))
+                            }
                             is Long -> {
                                 identify.setOnce(key, properties.getLong(key))
                             }
