@@ -1,3 +1,6 @@
+## 3.1.1
+* Fix `Identify` set and other methods cannot pass int as value on Android.
+
 ## 3.1.0
 * Add `getSessionId` and `getDeviceId` API
 
