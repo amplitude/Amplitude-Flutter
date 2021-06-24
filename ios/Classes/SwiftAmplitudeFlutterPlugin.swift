@@ -34,8 +34,13 @@ import Amplitude
                         return
                     }
 
-                    let userId = args["userId"] as! String?
-                    Amplitude.instance(withName: instanceName).initializeApiKey(apiKey, userId: userId)
+                    if let userId = args["userId"] as? String {
+                        Amplitude.instance(withName: instanceName).initializeApiKey(apiKey, userId: userId)
+                    }
+                    else {
+                        Amplitude.instance(withName: instanceName).initializeApiKey(apiKey)
+                    }   
+                    
                     result(true)
 
                 // Get deviceId
