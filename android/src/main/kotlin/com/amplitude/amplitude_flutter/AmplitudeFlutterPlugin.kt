@@ -49,6 +49,11 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
 
                 result.success("Init success..")
             }
+            // Get userId
+            "getUserId" -> {
+                val client = Amplitude.getInstance(instanceName)
+                result.success(client.userId)
+            }
             // Get deviceId
             "getDeviceId" -> {
                 val client = Amplitude.getInstance(instanceName)

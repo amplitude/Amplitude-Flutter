@@ -38,6 +38,9 @@ import Amplitude
                     Amplitude.instance(withName: instanceName).initializeApiKey(apiKey, userId: userId)
                     result(true)
 
+                // Get userId
+                case "getUserId":
+                    result(Amplitude.instance(withName: instanceName).userId);
                 // Get deviceId
                 case "getDeviceId":
                     let deviceId = Amplitude.instance(withName: instanceName).getDeviceId()

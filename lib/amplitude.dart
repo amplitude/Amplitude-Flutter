@@ -275,6 +275,12 @@ class Amplitude extends _Amplitude {
         'getDeviceId', jsonEncode(_baseProperties()));
   }
 
+  /// Fetches the userId, a unique identifier for tracking a user.
+  /// @returns the userId
+  Future<String?> getUserId() async {
+    return await _channel.invokeMethod('getUserId', jsonEncode(_baseProperties()));
+  }
+
   /// Fetches the current sessionId, an identifier used by Amplitude to group together events tracked during the same session.
   /// @returns the sessionId.
   Future<int?> getSessionId() async {
