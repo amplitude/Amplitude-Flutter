@@ -1,3 +1,7 @@
+## 3.2.1
+* Add `getUserId` API. Thanks @keke-dandois!
+* Fix iOS initializeApiKey have a wrong flow When passe null as the userid. Thanks @keke-dandois!
+
 ## 3.1.1
 * Fix `Identify` set and other methods cannot pass int as value on Android.
 
