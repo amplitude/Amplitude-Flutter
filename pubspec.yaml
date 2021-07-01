@@ -1,6 +1,6 @@
 name: amplitude_flutter
 description: Amplitude Flutter plugin
-version: 3.1.1
+version: 3.2.1
 homepage: https://www.amplitude.com
 
 environment:
