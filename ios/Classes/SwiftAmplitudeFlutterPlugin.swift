@@ -172,6 +172,10 @@ import Amplitude
                     Amplitude.instance(withName: instanceName).uploadEvents()
                     result(true)
 
+                // this method is for android only
+                case "useAppSetIdForDeviceId":
+                    result(false)
+
                 default:
                     result(FlutterMethodNotImplemented)
                 }
