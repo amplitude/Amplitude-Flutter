@@ -278,7 +278,8 @@ class Amplitude extends _Amplitude {
   /// Fetches the userId, a unique identifier for tracking a user.
   /// @returns the userId
   Future<String?> getUserId() async {
-    return await _channel.invokeMethod('getUserId', jsonEncode(_baseProperties()));
+    return await _channel.invokeMethod(
+        'getUserId', jsonEncode(_baseProperties()));
   }
 
   /// Fetches the current sessionId, an identifier used by Amplitude to group together events tracked during the same session.
@@ -286,5 +287,14 @@ class Amplitude extends _Amplitude {
   Future<int?> getSessionId() async {
     return await _channel.invokeMethod(
         'getSessionId', jsonEncode(_baseProperties()));
+  }
+
+  /// Defines a custom session expiration time where the timeout input is in milliseconds.
+  Future<void> setMinTimeBetweenSessionsMillis(int timeInMillis) async {
+    Map<String, dynamic> properties = _baseProperties();
+    properties['timeInMillis'] = timeInMillis;
+
+    return await _channel.invokeMethod(
+        'setMinTimeBetweenSessionsMillis', jsonEncode(properties));
   }
 }

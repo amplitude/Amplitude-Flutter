@@ -4,14 +4,14 @@ import 'package:amplitude_flutter/amplitude.dart';
 import 'package:flutter/material.dart';
 
 import 'app_state.dart';
+import 'deviceid_sessionid.dart';
 import 'event_form.dart';
 import 'group_form.dart';
 import 'group_identify_form.dart';
 import 'identify_form.dart';
+import 'regenerate_device.dart';
 import 'revenue_form.dart';
 import 'user_id_form.dart';
-import 'regenerate_device.dart';
-import 'deviceid_sessionid.dart';
 
 class MyApp extends StatefulWidget {
   const MyApp(this.apiKey);
@@ -38,6 +38,7 @@ class _MyAppState extends State<MyApp> {
     analytics.enableCoppaControl();
     analytics.setUserId("test_user");
     analytics.trackingSessionEvents(true);
+    analytics.setMinTimeBetweenSessionsMillis(5000);
     analytics.logEvent('MyApp startup',
         eventProperties: {'event_prop_1': 10, 'event_prop_2': true});
     Map<String, dynamic> userProps = {

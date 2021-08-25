@@ -171,7 +171,11 @@ import Amplitude
                 case "uploadEvents":
                     Amplitude.instance(withName: instanceName).uploadEvents()
                     result(true)
-
+                case "setMinTimeBetweenSessionsMillis":
+                     let timeInMillis = args["timeInMillis"] as! Int
+                    Amplitude.instance(withName: instanceName).minTimeBetweenSessionsMillis = timeInMillis
+                    result(true)
+            
                 default:
                     result(FlutterMethodNotImplemented)
                 }
