@@ -176,6 +176,11 @@ import Amplitude
                 case "useAppSetIdForDeviceId":
                     result(false)
 
+                case "setMinTimeBetweenSessionsMillis":
+                     let timeInMillis = args["timeInMillis"] as! Int
+                    Amplitude.instance(withName: instanceName).minTimeBetweenSessionsMillis = timeInMillis
+                    result(true)
+
                 default:
                     result(FlutterMethodNotImplemented)
                 }

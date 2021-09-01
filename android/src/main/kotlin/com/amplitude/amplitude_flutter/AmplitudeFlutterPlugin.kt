@@ -201,11 +201,18 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
 
                 result.success("uploadEvents called..")
             }
+
             "useAppSetIdForDeviceId" -> {
                 val client = Amplitude.getInstance(instanceName)
                 client.useAppSetIdForDeviceId()
 
                 result.success("useAppSetIdForDeviceId called..")
+            }
+
+            "setMinTimeBetweenSessionsMillis" -> {
+                val client = Amplitude.getInstance(instanceName)
+                client.setMinTimeBetweenSessionsMillis(json.getLong("timeInMillis"))
+                result.success("setMinTimeBetweenSessionsMillis called..")
             }
             else -> {
                 result.notImplemented()
