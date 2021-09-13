@@ -12,6 +12,7 @@ class Identify {
   static const String OP_PREINSERT = r'$preInsert';
   static const String OP_POSTINSERT = r'$postInsert';
   static const String OP_REMOVE = r'$remove';
+  static const String OP_CLEAR_ALL = r'$clearAll';
 
   final Map<String, dynamic> payload;
 
@@ -51,6 +52,10 @@ class Identify {
     addOp(OP_REMOVE, key, value);
   }
 
+  void clearAll() {
+    addOp(OP_CLEAR_ALL, '-', '-');
+  }
+
   @visibleForTesting
   void addOp(String op, String key, dynamic value) {
     assert([
@@ -62,7 +67,8 @@ class Identify {
       OP_PREPEND,
       OP_PREINSERT,
       OP_POSTINSERT,
-      OP_REMOVE
+      OP_REMOVE,
+      OP_CLEAR_ALL,
     ].contains(op));
 
     _opMap(op)[key] = value;

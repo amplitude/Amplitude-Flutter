@@ -434,6 +434,11 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
                         identify.unset(key);
                     }
 
+                    // CLEARALL
+                    "\$clearAll" -> {
+                        identify.clearAll();
+                    }
+
                 }
             }
         }

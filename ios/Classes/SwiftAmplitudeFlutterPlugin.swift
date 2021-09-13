@@ -210,6 +210,8 @@ import Amplitude
                     identify.postInsert(key, value: value)
                 case "$remove":
                     identify.remove(key, value: value)
+                case "$clearAll":
+                    identify.clearAll()
                 default:
                     break
                 }
