@@ -206,9 +206,9 @@ import Amplitude
                     identify.unset(key) // value is default to `-`
                 case "$preInsert":
                     identify.preInsert(key, value: value)
-                case "$postInsert"
+                case "$postInsert":
                     identify.postInsert(key, value: value)
-                case "$remove"
+                case "$remove":
                     identify.remove(key, value: value)
                 default:
                     break
