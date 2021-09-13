@@ -1,7 +1,7 @@
 PODS:
-  - Amplitude (7.2.0)
+  - Amplitude (8.3.0)
   - amplitude_flutter (0.0.1):
-    - Amplitude (= 7.2.0)
+    - Amplitude (= 8.3.0)
     - Flutter
   - Flutter (1.0.0)
 
@@ -20,10 +20,10 @@ EXTERNAL SOURCES:
     :path: Flutter
 
 SPEC CHECKSUMS:
-  Amplitude: c948c6f99c7f798c196523b2a5584367401d910f
-  amplitude_flutter: 5c934cf8331619b62bbd5a69f3cfea9090b3ca94
-  Flutter: 0e3d915762c693b495b44d77113d4970485de6ec
+  Amplitude: 5627b4574e36d789a75c1656ba39b3278edf1ade
+  amplitude_flutter: 1d309a857273856f67e827d68bce547518ed527f
+  Flutter: 434fef37c0980e73bb6479ef766c45957d4b510c
 
-PODFILE CHECKSUM: 7c0562dd817e722f66e06d0beb6e4108968d2c23
+PODFILE CHECKSUM: fe0e1ee7f3d1f7d00b11b474b62dd62134535aea
 
 COCOAPODS: 1.10.1
