@@ -8,6 +8,10 @@ class Identify {
   static const String OP_ADD = r'$add';
   static const String OP_APPEND = r'$append';
   static const String OP_UNSET = r'$unset';
+  static const String OP_PREPEND = r'$prepend';
+  static const String OP_PREINSERT = r'$preInsert';
+  static const String OP_POSTINSERT = r'$postInsert';
+  static const String OP_REMOVE = r'$remove';
 
   final Map<String, dynamic> payload;
 
@@ -23,17 +27,43 @@ class Identify {
     addOp(OP_ADD, key, value);
   }
 
-  void unset(String key) {
-    addOp(OP_UNSET, key, '-');
-  }
-
   void append(String key, dynamic value) {
     addOp(OP_APPEND, key, value);
   }
 
+  void unset(String key) {
+    addOp(OP_UNSET, key, '-');
+  }
+
+  void prepend(String key, dynamic value) {
+    addOp(OP_PREPEND, key, value);
+  }
+
+  void preInsert(String key, dynamic value) {
+    addOp(OP_PREINSERT, key, value);
+  }
+
+  void postInsert(String key, dynamic value) {
+    addOp(OP_POSTINSERT, key, value);
+  }
+
+  void remove(String key, dynamic value) {
+    addOp(OP_REMOVE, key, value);
+  }
+
   @visibleForTesting
   void addOp(String op, String key, dynamic value) {
-    assert([OP_SET, OP_SET_ONCE, OP_ADD, OP_APPEND, OP_UNSET].contains(op));
+    assert([
+      OP_SET,
+      OP_SET_ONCE,
+      OP_ADD,
+      OP_APPEND,
+      OP_UNSET,
+      OP_PREPEND,
+      OP_PREINSERT,
+      OP_POSTINSERT,
+      OP_REMOVE
+    ].contains(op));
 
     _opMap(op)[key] = value;
   }
