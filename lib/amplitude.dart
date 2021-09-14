@@ -289,6 +289,12 @@ class Amplitude extends _Amplitude {
         'getSessionId', jsonEncode(_baseProperties()));
   }
 
+  // Android only, supports to use android app set id as device id
+  Future<void> useAppSetIdForDeviceId() async {
+    return await _channel.invokeMethod(
+        'useAppSetIdForDeviceId', jsonEncode(_baseProperties()));
+  }
+
   /// Defines a custom session expiration time where the timeout input is in milliseconds.
   Future<void> setMinTimeBetweenSessionsMillis(int timeInMillis) async {
     Map<String, dynamic> properties = _baseProperties();
