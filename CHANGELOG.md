@@ -1,3 +1,8 @@
+## 3.4.0
+* Add `useAppSetIdForDeviceId` API for Android.
+* Upgrade kotlin gradle plugin to '1.5.30'.
+
+
 ## 3.3.0
 * Add `setMinTimeBetweenSessionsMillis` API. Thanks @chillbrodev!
 
