@@ -275,6 +275,33 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
                         }
                     }
 
+                    // REMOVE
+                    "\$remove" -> {
+                        when (properties.get(key)) {
+                            is Int -> {
+                                identify.remove(key, properties.getInt(key))
+                            }
+                            is Long -> {
+                                identify.remove(key, properties.getLong(key))
+                            }
+                            is Double -> {
+                                identify.remove(key, properties.getDouble(key))
+                            }
+                            is String -> {
+                                identify.remove(key, properties.getString(key))
+                            }
+                            is Boolean -> {
+                                identify.remove(key, properties.getBoolean(key))
+                            }
+                            is JSONObject -> {
+                                identify.remove(key, properties.getJSONObject(key))
+                            }
+                            is JSONArray -> {
+                                identify.remove(key, properties.getJSONArray(key))
+                            }
+                        }
+                    }
+
                     // PREPEND
                     "\$prepend" -> {
                         when (properties.get(key)) {
@@ -356,9 +383,68 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
                         }
                     }
 
+                    // PREINSERT
+                    "\$preInsert" -> {
+                        when (properties.get(key)) {
+                            is Int -> {
+                                identify.preInsert(key, properties.getInt(key))
+                            }
+                            is Long -> {
+                                identify.preInsert(key, properties.getLong(key))
+                            }
+                            is Double -> {
+                                identify.preInsert(key, properties.getDouble(key))
+                            }
+                            is String -> {
+                                identify.preInsert(key, properties.getString(key))
+                            }
+                            is Boolean -> {
+                                identify.preInsert(key, properties.getBoolean(key))
+                            }
+                            is JSONObject -> {
+                                identify.preInsert(key, properties.getJSONObject(key))
+                            }
+                            is JSONArray -> {
+                                identify.preInsert(key, properties.getJSONArray(key))
+                            }
+                        }
+                    }
+
+                    // POSTINSERT
+                    "\$postInsert" -> {
+                        when (properties.get(key)) {
+                            is Int -> {
+                                identify.postInsert(key, properties.getInt(key))
+                            }
+                            is Long -> {
+                                identify.postInsert(key, properties.getLong(key))
+                            }
+                            is Double -> {
+                                identify.postInsert(key, properties.getDouble(key))
+                            }
+                            is String -> {
+                                identify.postInsert(key, properties.getString(key))
+                            }
+                            is Boolean -> {
+                                identify.postInsert(key, properties.getBoolean(key))
+                            }
+                            is JSONObject -> {
+                                identify.postInsert(key, properties.getJSONObject(key))
+                            }
+                            is JSONArray -> {
+                                identify.postInsert(key, properties.getJSONArray(key))
+                            }
+                        }
+                    }
+
                     // UNSET
                     "\$unset" -> {
                         identify.unset(key);
+                    }
+
+                    // CLEARALL
+                    "\$clearAll" -> {
+                        identify.clearAll();
                     }
 
                 }
