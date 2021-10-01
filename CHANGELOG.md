@@ -1,3 +1,6 @@
+## 3.5.0
+* Add `preInsert`, `postInsert`, `remove`, `clearAll` methods for `Identify`. Thanks @reeichert!
+
 ## 3.4.0
 * Add `useAppSetIdForDeviceId` API for Android.
 * Upgrade kotlin gradle plugin to '1.5.30'.
