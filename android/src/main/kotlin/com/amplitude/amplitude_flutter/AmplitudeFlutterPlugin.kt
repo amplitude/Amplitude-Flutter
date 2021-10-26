@@ -2,6 +2,7 @@ package com.amplitude.amplitude_flutter
 
 import android.content.Context
 import com.amplitude.api.Amplitude
+import com.amplitude.api.AmplitudeServerZone
 import com.amplitude.api.Identify
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
@@ -214,6 +215,16 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
                 client.setMinTimeBetweenSessionsMillis(json.getLong("timeInMillis"))
                 result.success("setMinTimeBetweenSessionsMillis called..")
             }
+
+            "setServerZone" -> {
+                val client = Amplitude.getInstance(instanceName)
+                val serverZone = json.getString("serverZone")
+                val amplitudeServerZone = if (serverZone == "EU") AmplitudeServerZone.EU else AmplitudeServerZone.US
+                client.setServerZone(amplitudeServerZone, json.getBoolean("updateServerUrl"))
+
+                result.success("setServerZone called..")
+            }
+
             else -> {
                 result.notImplemented()
             }

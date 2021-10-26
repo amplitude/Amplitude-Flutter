@@ -177,8 +177,15 @@ import Amplitude
                     result(false)
 
                 case "setMinTimeBetweenSessionsMillis":
-                     let timeInMillis = args["timeInMillis"] as! Int
+                    let timeInMillis = args["timeInMillis"] as! Int
                     Amplitude.instance(withName: instanceName).minTimeBetweenSessionsMillis = timeInMillis
+                    result(true)
+
+                case "setServerZone":
+                    let serverZone = args["serverZone"] as! String
+                    let updateServerUrl = args["updateServerUrl"] as! Bool
+                    let ampServerZone = serverZone == "EU" ? AMPServerZone.EU : AMPServerZone.US
+                    Amplitude.instance(withName: instanceName).setServerZone(ampServerZone, updateServerUrl: updateServerUrl)
                     result(true)
 
                 default:

@@ -303,4 +303,15 @@ class Amplitude extends _Amplitude {
     return await _channel.invokeMethod(
         'setMinTimeBetweenSessionsMillis', jsonEncode(properties));
   }
+
+  ///  Set Amplitude Server Zone, switch to zone related configuration, including dynamic configuration and server url.
+  /// To send data to Amplitude's EU servers, you need to configure the serverZone to EU like client.setServerZone("EU");
+  Future<void> setServerZone(String serverZone,
+      {bool updateServerUrl = true}) async {
+    Map<String, dynamic> properties = _baseProperties();
+    properties['serverZone'] = serverZone;
+    properties['updateServerUrl'] = updateServerUrl;
+
+    return await _channel.invokeMethod('setServerZone', jsonEncode(properties));
+  }
 }
