@@ -1,3 +1,6 @@
+## 3.6.0
+* Add `setServerZone` method for EU server zone support.
+
 ## 3.5.0
 * Add `preInsert`, `postInsert`, `remove`, `clearAll` methods for `Identify`. Thanks @reeichert!
 
