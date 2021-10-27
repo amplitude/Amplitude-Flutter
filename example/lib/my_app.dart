@@ -39,6 +39,7 @@ class _MyAppState extends State<MyApp> {
     analytics.setUserId("test_user");
     analytics.trackingSessionEvents(true);
     analytics.setMinTimeBetweenSessionsMillis(5000);
+    analytics.setServerZone("US");
     analytics.logEvent('MyApp startup',
         eventProperties: {'event_prop_1': 10, 'event_prop_2': true});
     Map<String, dynamic> userProps = {
