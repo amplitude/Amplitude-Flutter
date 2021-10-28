@@ -1,3 +1,6 @@
+## 3.7.0
+* Downgrade the kotlin gradle plugin to '1.3.40' to fix amplitude_flutter incompatible to project with kotlin gradle plugin version < 1.4.0.
+
 ## 3.6.0
 * Add `setServerZone` method for EU server zone support.
 
