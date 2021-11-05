@@ -49,7 +49,11 @@ class AmplitudeFlutterPlugin {
           return true;
         }
       default:
-      //(FlutterMethodNotImplemented)
+        throw PlatformException(
+          code: 'Unimplemented',
+          details:
+              "The amplitude_flutter plugin for web doesn't implement the method '${call.method}'",
+        );
     }
   }
 }
