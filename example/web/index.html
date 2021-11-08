@@ -18,21 +18,18 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="description" content="An Amplitude Flutter Web  project.">
 
-  <!-- iOS meta tags & icons -->
+  <!-- iOS meta tags -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="example">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <meta name="apple-mobile-web-app-title" content="amplitude-example">
 
-  <title>example</title>
-  <link rel="manifest" href="manifest.json">
+  <title>Amplitude Example</title>
 </head>
 <body>
 
   <script type="text/javascript" defer>
-    console.log("in lib script snippeit");
       (function (e, t) {
         var n = e.amplitude || { _q: [], _iq: {} }; var r = t.createElement("script")
           ; r.type = "text/javascript"
@@ -63,6 +60,7 @@
             function t(t) {
         e[t] = function () {
           e._q.push([t].concat(Array.prototype.slice.call(arguments, 0)))
+
         }
             }
             for (var n = 0; n < d.length; n++) { t(d[n]) }
@@ -131,7 +129,7 @@
         setTimeout(() => {
           if (!scriptLoaded) {
             console.warn(
-              'Failed to load app from service worker. Falling back to plain <script> tag.',
+              '[Amplitude] Failed to load app from service worker. Falling back to plain <script> tag.',
             );
             loadMainDartJs();
           }
