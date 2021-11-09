@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
+import 'package:js/js_util.dart' as js;
 import 'web/amplitude_js.dart';
 import 'dart:async';
 
@@ -27,12 +28,16 @@ class AmplitudeFlutterPlugin {
       case "init":
         {
           String apiKey = args['apiKey'];
-          return amplitude.init(apiKey, args['userId'] ?? null);
+          var userId = args['userId'] ?? null;
+          return amplitude.init(apiKey, userId);
         }
       case "logEvent":
         {
           String eventType = args['eventType'];
-          return amplitude.logEvent(eventType, args['eventProperties'] ?? null);
+          var eventProperties = (args['eventProperties'] != null)
+              ? mapToJSObj(args['eventProperties'])
+              : null;
+          return amplitude.logEvent(eventType, eventProperties);
           //TODO: support outOfSession
         }
       default:
@@ -42,5 +47,15 @@ class AmplitudeFlutterPlugin {
               "The amplitude_flutter plugin for web doesn't implement the method '${call.method}'",
         );
     }
+  }
+
+  Object mapToJSObj(Map<dynamic, dynamic> map) {
+    var object = js.newObject();
+    map.forEach((k, v) {
+      var key = k;
+      var value = v;
+      js.setProperty(object, key, value);
+    });
+    return object;
   }
 }

@@ -7,7 +7,6 @@ class Amplitude {
   external Amplitude(String instanceName);
   external static Amplitude getInstance(String instanceName);
   external void init(String api, String? userId);
-  external void logEvent(
-      String eventType, Map<String, dynamic>? eventProperties);
+  external void logEvent(String eventType, Object? eventProperties);
   //TODO: support outOfSession
 }
