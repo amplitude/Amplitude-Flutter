@@ -36,9 +36,9 @@ class AmplitudeFlutterPlugin {
           bool optOut = args['optOut'];
           return amplitude.setOptOut(optOut);
         }
-      case "trackingSessionEvents": 
+      case "trackingSessionEvents":
         {
-         return true;
+          return true;
         }
       case "setUserId":
         {
@@ -46,11 +46,11 @@ class AmplitudeFlutterPlugin {
           return amplitude.setUserId(userId);
           //TODO: support startNewSession
         }
-      case "setServerUrl": 
+      case "setServerUrl":
         {
           return true;
         }
-      case "setEventUploadThreshold": 
+      case "setEventUploadThreshold":
         {
           return true;
         }
@@ -90,7 +90,7 @@ class AmplitudeFlutterPlugin {
       case "setGroup":
         {
           String groupType = args['groupType'];
-          String groupName = args['groupName'];
+          dynamic groupName = args['groupName'];
           return amplitude.setGroup(groupType, groupName);
         }
       case "groupIdentify":
