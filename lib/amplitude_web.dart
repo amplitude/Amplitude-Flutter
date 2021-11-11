@@ -31,6 +31,25 @@ class AmplitudeFlutterPlugin {
           var userId = args['userId'] ?? null;
           return amplitude.init(apiKey, userId);
         }
+      case "setOptOut":
+        {
+          bool optOut = args['optOut'];
+          return amplitude.setOptOut(optOut);
+        }
+      case "trackingSessionEvents":
+      case "setUserId":
+        {
+          String userId = args['userId'] ?? null;
+          return amplitude.setUserId(userId);
+          //TODO: support startNewSession
+        }
+      case "setServerUrl":
+      case "setEventUploadThreshold":
+      case "regenerateDeviceId":
+        {
+          return amplitude.regenerateDeviceId();
+        }
+      case "setUseDynamicConfig":
       case "logEvent":
         {
           String eventType = args['eventType'];
@@ -40,6 +59,51 @@ class AmplitudeFlutterPlugin {
           return amplitude.logEvent(eventType, eventProperties);
           //TODO: support outOfSession
         }
+      case "logRevenue":
+        {
+          double price = args['price'] ?? 0;
+          int quantity = args['quantity'] ?? 1;
+          var productIdentifier = args['productIdentifier'] ?? null;
+          return amplitude.logRevenue(price, quantity, productIdentifier);
+        }
+      case "logRevenueAmount":
+        {
+          double amount = args['amount'] ?? 0;
+          return amplitude.logRevenue(amount, 1, null);
+        }
+      case "identify":
+      case "setGroup":
+        {
+          String groupType = args['groupType'];
+          String groupName = args['groupName'];
+          return amplitude.setGroup(groupType, groupName);
+        }
+      case "groupIdentify":
+      case "setUserProperties":
+        {
+          Map<String, dynamic> userProperties = new Map();
+          if (args['setUserProperties'] != null) {
+            userProperties = jsonDecode(args['setUserProperties'].toString())
+                as Map<String, dynamic>;
+          }
+          return amplitude.setUserProperties(userProperties);
+        }
+      case "clearUserProperties":
+        {
+          return amplitude.clearUserProperties();
+        }
+      case "uploadEvents":
+      case "setLibraryName":
+      case "setLibraryVersion":
+      case "getUserId":
+      case "getDeviceId":
+      case "getSessionId":
+        {
+          return amplitude.getSessionId();
+        }
+      case "useAppSetIdForDeviceId":
+      case "setMinTimeBetweenSessionsMillis":
+      case "setServerZone":
       default:
         throw PlatformException(
           code: 'Unimplemented',
