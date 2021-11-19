@@ -47,7 +47,7 @@ class _MyAppState extends State<MyApp> {
       'name': 'Name',
       'buildNumber': '1.1.1',
     };
-
+    analytics.logRevenueAmount(21.9);
     analytics.setUserProperties(userProps);
   }
 
