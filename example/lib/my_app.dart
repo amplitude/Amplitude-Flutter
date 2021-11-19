@@ -39,6 +39,7 @@ class _MyAppState extends State<MyApp> {
     analytics.setUserId("test_user");
     analytics.trackingSessionEvents(true);
     analytics.setMinTimeBetweenSessionsMillis(5000);
+    analytics.setEventUploadThreshold(5);
     analytics.setServerZone("US");
     analytics.logEvent('MyApp startup',
         eventProperties: {'event_prop_1': 10, 'event_prop_2': true});
@@ -93,8 +94,6 @@ class _MyAppState extends State<MyApp> {
                 IdentifyForm(),
                 divider,
                 GroupForm(),
-                divider,
-                GroupIdentifyForm(),
                 divider,
                 GroupIdentifyForm(),
                 divider,

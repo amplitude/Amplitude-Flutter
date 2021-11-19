@@ -120,7 +120,7 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
             }
             "setUserId" -> {
                 val client = Amplitude.getInstance(instanceName)
-                client.setUserId(json.optString("userId", null))
+                client.setUserId(json.optString("userId", null), json.optBoolean("startNewSession", false))
 
                 result.success("setUserId called..")
             }
