@@ -103,7 +103,7 @@ class AmplitudeFlutterPlugin {
           Identify groupIdentify = createIdentify(userProperties);
           bool outOfSession = args['outOfSession'] ?? false;
           return amplitude.groupIdentify(
-              groupType, groupName, groupIdentify, outOfSession);
+              groupType, groupName, groupIdentify, null, null, outOfSession);
         }
       case "setUserProperties":
         {

@@ -28,8 +28,13 @@ class Amplitude {
   external void setMinTimeBetweenSessionsMillis(int timeInMillis);
   external void setServerZone(String serverZone, bool updateServerUrl);
   external void identify(Identify identify);
-  external void groupIdentify(String groupType, String groupName,
-      Identify groupIdentify, bool? outOfSession);
+  external void groupIdentify(
+      String groupType,
+      String groupName,
+      Identify groupIdentify,
+      Function? opt_callback,
+      Function? opt_error_callback,
+      bool? outOfSession);
 }
 
 @JS('amplitude.Identify')
