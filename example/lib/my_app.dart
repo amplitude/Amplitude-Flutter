@@ -36,12 +36,18 @@ class _MyAppState extends State<MyApp> {
     analytics.setServerUrl("https://api2.amplitude.com");
     analytics.init(widget.apiKey);
     analytics.enableCoppaControl();
-    analytics.setUserId("test_user");
+    analytics.setUserId("test_user", startNewSession: true);
     analytics.trackingSessionEvents(true);
     analytics.setMinTimeBetweenSessionsMillis(5000);
+    analytics.setEventUploadThreshold(5);
     analytics.setServerZone("US");
     analytics.logEvent('MyApp startup',
         eventProperties: {'event_prop_1': 10, 'event_prop_2': true});
+    analytics.logEvent('Out of Session Event', outOfSession: true);
+    analytics.setOptOut(true);
+    analytics.logEvent('Opt Out Event');
+    analytics.setOptOut(false);
+
     Map<String, dynamic> userProps = {
       'date': '01.06.2020',
       'name': 'Name',
@@ -93,8 +99,6 @@ class _MyAppState extends State<MyApp> {
                 IdentifyForm(),
                 divider,
                 GroupForm(),
-                divider,
-                GroupIdentifyForm(),
                 divider,
                 GroupIdentifyForm(),
                 divider,

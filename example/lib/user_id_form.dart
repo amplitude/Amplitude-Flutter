@@ -16,9 +16,24 @@ class _UserIdFormState extends State<UserIdForm> {
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-        autocorrect: false,
-        decoration: InputDecoration(labelText: 'User Id'),
-        onChanged: makeHandler(context));
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text('Current User Id', style: Theme.of(context).textTheme.headline5),
+        FutureBuilder(
+          future: AppState.of(context).analytics.getUserId(),
+          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+            return Text(snapshot.data.toString());
+          },
+        ),
+        const SizedBox(height: 10),
+        Text('User Id', style: Theme.of(context).textTheme.headline5),
+        const SizedBox(height: 10),
+        new TextField(
+            autocorrect: false,
+            decoration: InputDecoration(labelText: 'User Id'),
+            onChanged: makeHandler(context)),
+      ],
+    );
   }
 }
