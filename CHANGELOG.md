@@ -1,3 +1,6 @@
+## 3.8.0
+*  Support Flutter Web. Please check the example app or go to developer center to see the usage(https://developers.amplitude.com/docs/flutter-setup#flutter-web-support).
+
 ## 3.7.0
 * Downgrade the kotlin gradle plugin to '1.3.40' to fix amplitude_flutter incompatible to project with kotlin gradle plugin version < 1.4.0.
 
@@ -53,7 +56,7 @@
 
 ## 2.1.0
 * Fix the crash when calling `setUserProperties`
-* Add API `uploadEvents` to force uploading unsent events. 
+* Add API `uploadEvents` to force uploading unsent events.
 
 ## 2.0.0
 * A whole new Flutter SDK which is based on much more stable Amplitude native iOS, Android SDKs
