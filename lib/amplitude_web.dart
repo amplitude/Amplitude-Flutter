@@ -31,10 +31,22 @@ class AmplitudeFlutterPlugin {
           var userId = args['userId'] ?? null;
           return amplitude.init(apiKey, userId);
         }
+      case "enableCoppaControl":
+        {
+          return false;
+        }
+      case "disableCoppaControl":
+        {
+          return false;
+        }
       case "setOptOut":
         {
           bool optOut = args['optOut'];
           return amplitude.setOptOut(optOut);
+        }
+      case "trackingSessionEvents":
+        {
+          return false;
         }
       case "setUserId":
         {
@@ -139,6 +151,10 @@ class AmplitudeFlutterPlugin {
       case "getSessionId":
         {
           return amplitude.getSessionId();
+        }
+      case "useAppSetIdForDeviceId":
+        {
+          return false;
         }
       case "setMinTimeBetweenSessionsMillis":
         {
