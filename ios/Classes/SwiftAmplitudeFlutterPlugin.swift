@@ -120,18 +120,19 @@ import Amplitude
                                                                          outOfSession: outOfSession)
                     result(true)
                 case "logRevenue":
-                    let productIdentifier = args["productIdentifier"] as! String
-                    let quantity = args["quantity"] as! Int
-                    let price = args["price"] as! Double
-
-                    Amplitude.instance(withName: instanceName).logRevenue(productIdentifier,
-                                                                           quantity: quantity,
-                                                                           price: NSNumber(value: price))
+                    let revenue = AMPRevenue()
+                    revenue.setProductIdentifier((args["productIdentifier"] as! String))
+                    revenue.setQuantity(args["quantity"] as! Int)
+                    revenue.setPrice(NSNumber(value: args["price"] as! Double))
+                    
+                    Amplitude.instance(withName: instanceName).logRevenueV2(revenue)
+                    
                     result(true)
 
                 case "logRevenueAmount":
-                    let amount = args["amount"] as! Double
-                    Amplitude.instance(withName: instanceName).logRevenue(NSNumber(value: amount))
+                    let revenue = AMPRevenue();
+                    revenue.setPrice(NSNumber(value: args["amount"] as! Double))
+                    Amplitude.instance(withName: instanceName).logRevenueV2(revenue)
 
                     result(true)
 
