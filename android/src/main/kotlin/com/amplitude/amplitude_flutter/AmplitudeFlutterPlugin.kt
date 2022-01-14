@@ -1,6 +1,7 @@
 package com.amplitude.amplitude_flutter
 
 import android.content.Context
+import android.app.Application
 import com.amplitude.api.Amplitude
 import com.amplitude.api.AmplitudeServerZone
 import com.amplitude.api.Identify
@@ -47,6 +48,10 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
                 val client = Amplitude.getInstance(instanceName)
                 client.initialize(ctxt, json.getString("apiKey"),
                         json.optString("userId", null))
+                val application = ctxt?.applicationContext
+                if (application is Application) {
+                    client.enableForegroundTracking(application)
+                }
 
                 result.success("Init success..")
             }
