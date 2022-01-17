@@ -1,5 +1,3 @@
-## 3.8.2
-*  Migrating from jcenter to mavenCentral
 ## 3.8.1
 *  Fix setUseDynamicConfig in Android
 *  Enable foreground tracking on Android by default. Thanks @vishna!
