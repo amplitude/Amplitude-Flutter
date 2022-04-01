@@ -18,6 +18,7 @@ rootProject.allprojects {
     repositories {
         google()
         mavenCentral()
+        maven { url 'https://jitpack.io' }
     }
 }
 
@@ -40,6 +41,7 @@ android {
 }
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation "com.amplitude:android-sdk:2.34.0"
+    //implementation "com.amplitude:android-sdk:2.34.0"
+    implementation 'com.github.vishna:Amplitude-Android:1a57fa2a56b59527de1be94b9c8ecb5f44c5ffa4' // custom_advertising_id branch
     implementation "com.squareup.okhttp3:okhttp:4.2.2"
 }

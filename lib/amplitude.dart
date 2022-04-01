@@ -304,6 +304,15 @@ class Amplitude extends _Amplitude {
         'setMinTimeBetweenSessionsMillis', jsonEncode(properties));
   }
 
+  /// Android only, allows to provide a custom advertising id
+  Future<void> setCustomAdvertisingId(String advertisingId) async {
+    Map<String, dynamic> properties = _baseProperties();
+    properties['advertisingId'] = advertisingId;
+
+    return await _channel.invokeMethod(
+        'setCustomAdvertisingId', jsonEncode(properties));
+  }
+
   /// Set Amplitude Server Zone, switch to zone related configuration, including dynamic configuration and server url.
   /// To send data to Amplitude's EU servers, you need to configure the serverZone to EU like client.setServerZone("EU");
   /// serverZone could be EU or US. Recommend to keep updateServerUrl to be true for alignment.
