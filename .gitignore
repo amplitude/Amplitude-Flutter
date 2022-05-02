@@ -10,3 +10,7 @@ doc/
 **/ios/Flutter/flutter_export_environment.sh
 .flutter-plugins-dependencies
 .last_build_id
+
+# Library packages should not commit the "pubspec.lock" file. Source:
+# https://dart.dev/guides/libraries/private-files#pubspeclock
+pubspec.lock
