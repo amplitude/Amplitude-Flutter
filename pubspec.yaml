@@ -2,6 +2,8 @@ name: amplitude_flutter
 description: Amplitude Flutter plugin
 version: 3.8.1
 homepage: https://www.amplitude.com
+repository: https://github.com/amplitude/Amplitude-Flutter
+
 
 environment:
   sdk: ">=2.12.0 <3.0.0"
