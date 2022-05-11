@@ -1,6 +1,10 @@
+## 3.9.0
+* Bump Android (2.37.0) Amplitude SDK versions
+
 ## 3.8.1
 *  Fix setUseDynamicConfig in Android
 *  Enable foreground tracking on Android by default. Thanks @vishna!
+
 ## 3.8.0
 *  Support Flutter Web. Please check the example app or go to developer center to see the usage(https://developers.amplitude.com/docs/flutter-setup#flutter-web-support).
 
