@@ -1,3 +1,6 @@
+## 3.10.0
+* Fix the Amplitude Flutter Web throw exception on setting userId to null
+
 ## 3.9.0
 * Bump Android (2.37.0) Amplitude SDK versions
 
