@@ -50,7 +50,7 @@ class AmplitudeFlutterPlugin {
         }
       case "setUserId":
         {
-          String userId = args['userId'] ?? null;
+          String? userId = args['userId'] ?? null;
           bool startNewSession = args['startNewSession'] ?? false;
           return amplitude.setUserId(userId, startNewSession);
         }
