@@ -131,7 +131,6 @@ import Amplitude
 
                 case "logRevenueAmount":
                     let revenue = AMPRevenue()
-                    revenue.setQuantity(1)
                     revenue.setPrice(NSNumber(value: args["amount"] as! Double))
                     Amplitude.instance(withName: instanceName).logRevenueV2(revenue)
 

@@ -168,7 +168,6 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
             "logRevenueAmount" -> {
                 val client = Amplitude.getInstance(instanceName)
                 val revenue = Revenue().setPrice(json.getDouble("amount"))
-                    .setQuantity(1)
                 client.logRevenueV2(revenue)
 
                 result.success("logRevenueAmount called..")
