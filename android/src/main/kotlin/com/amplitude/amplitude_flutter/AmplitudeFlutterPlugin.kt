@@ -1,10 +1,11 @@
 package com.amplitude.amplitude_flutter
 
-import android.content.Context
 import android.app.Application
+import android.content.Context
 import com.amplitude.api.Amplitude
 import com.amplitude.api.AmplitudeServerZone
 import com.amplitude.api.Identify
+import com.amplitude.api.Revenue
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -36,7 +37,6 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
-
     }
 
     override fun onMethodCall(call: MethodCall, result: Result) {
@@ -46,8 +46,10 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
         when (call.method) {
             "init" -> {
                 val client = Amplitude.getInstance(instanceName)
-                client.initialize(ctxt, json.getString("apiKey"),
-                        json.optString("userId", null))
+                client.initialize(
+                    ctxt, json.getString("apiKey"),
+                    json.optString("userId", null)
+                )
                 val application = ctxt?.applicationContext
                 if (application is Application) {
                     client.enableForegroundTracking(application)
@@ -107,7 +109,7 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
             }
             "setEventUploadThreshold" -> {
                 val client = Amplitude.getInstance(instanceName)
-                client.setEventUploadThreshold(json.getInt("eventUploadThreshold"));
+                client.setEventUploadThreshold(json.getInt("eventUploadThreshold"))
 
                 result.success("setEventUploadThreshold called..")
             }
@@ -139,30 +141,34 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
             // Regenerate new deviceId
             "regenerateDeviceId" -> {
                 val client = Amplitude.getInstance(instanceName)
-                client.regenerateDeviceId();
+                client.regenerateDeviceId()
                 result.success("regenerateDeviceId called..")
             }
 
             // Event logging
             "logEvent" -> {
                 val client = Amplitude.getInstance(instanceName)
-                client.logEvent(json.getString("eventType"),
-                        json.optJSONObject("eventProperties"),
-                        json.optBoolean("outOfSession", false))
+                client.logEvent(
+                    json.getString("eventType"),
+                    json.optJSONObject("eventProperties"),
+                    json.optBoolean("outOfSession", false)
+                )
 
                 result.success("logEvent called..")
             }
             "logRevenue" -> {
                 val client = Amplitude.getInstance(instanceName)
-                client.logRevenue(json.getString("productIdentifier"),
-                        json.getInt("quantity"),
-                        json.getDouble("price"))
+                val revenue = Revenue().setProductId(json.getString("productIdentifier"))
+                    .setPrice(json.getDouble("price"))
+                    .setQuantity(json.getInt("quantity"))
+                client.logRevenueV2(revenue)
 
                 result.success("logRevenue called..")
             }
             "logRevenueAmount" -> {
                 val client = Amplitude.getInstance(instanceName)
-                client.logRevenue(json.getDouble("amount"))
+                val revenue = Revenue().setPrice(json.getDouble("amount"))
+                client.logRevenueV2(revenue)
 
                 result.success("logRevenueAmount called..")
             }
@@ -182,12 +188,14 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
             "groupIdentify" -> {
                 val client = Amplitude.getInstance(instanceName)
                 val identify = createIdentify(json.getJSONObject("userProperties"))
-                client.groupIdentify(json.getString("groupType"),
-                        json.getString("groupName"),
-                        identify,
-                        json.optBoolean("outOfSession", false));
+                client.groupIdentify(
+                    json.getString("groupType"),
+                    json.getString("groupName"),
+                    identify,
+                    json.optBoolean("outOfSession", false)
+                )
 
-               result.success("identify called..")
+                result.success("identify called..")
             }
             "setUserProperties" -> {
                 val client = Amplitude.getInstance(instanceName)
@@ -455,14 +463,13 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
 
                     // UNSET
                     "\$unset" -> {
-                        identify.unset(key);
+                        identify.unset(key)
                     }
 
                     // CLEARALL
                     "\$clearAll" -> {
-                        identify.clearAll();
+                        identify.clearAll()
                     }
-
                 }
             }
         }
