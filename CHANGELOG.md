@@ -1,3 +1,6 @@
+## 3.11.0
+* Bump up the kotlin version to support latest gradle on Android.
+
 ## 3.10.0
 * Fix the Amplitude Flutter Web throw exception on setting userId to null
 
