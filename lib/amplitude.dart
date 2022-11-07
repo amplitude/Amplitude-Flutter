@@ -152,11 +152,21 @@ class Amplitude extends _Amplitude {
   /// active user (ARPDAU), 7, 30, and 90 day revenue, lifetime value (LTV)
   /// estimates, and revenue by advertising campaign cohort and daily/weekly/monthly cohorts.
   Future<void> logRevenue(
-      String productIdentifier, int quantity, double price) async {
+      String productIdentifier, int quantity, double price,
+      {String? revenueType, String? receipt, String? receiptSignature,}) async {
     Map<String, dynamic> properties = _baseProperties();
     properties['productIdentifier'] = productIdentifier;
     properties['quantity'] = quantity;
     properties['price'] = price;
+    if (revenueType != null) {
+      properties['revenueType'] = revenueType;
+    }
+    if (receipt != null) {
+      properties['receipt'] = receipt;
+    }
+    if (receiptSignature != null) {
+      properties['receiptSignature'] = receiptSignature;
+    }
 
     return await _channel.invokeMethod('logRevenue', jsonEncode(properties));
   }

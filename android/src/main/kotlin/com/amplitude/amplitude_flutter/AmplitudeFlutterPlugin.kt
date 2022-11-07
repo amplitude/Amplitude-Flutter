@@ -161,6 +161,14 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
                 val revenue = Revenue().setProductId(json.getString("productIdentifier"))
                     .setPrice(json.getDouble("price"))
                     .setQuantity(json.getInt("quantity"))
+                json.optString("revenueType", null)?.let { it ->
+                    revenue.setRevenueType(it)
+                }
+                val receipt = json.optString("receipt", null)
+                val receiptSignature = json.optString("receiptSignature", null)
+                if (receipt != null && receiptSignature != null) {
+                    revenue.setReceipt(receipt, receiptSignature)
+                }
                 client.logRevenueV2(revenue)
 
                 result.success("logRevenue called..")
