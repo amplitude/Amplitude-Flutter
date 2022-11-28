@@ -1,3 +1,7 @@
+## 3.12.0
+* Bump Amplitude Android SDK version (2.38.3)
+* Bump Amplitude iOS SDK version (8.14.0)
+
 ## 3.11.0
 * Bump up the kotlin version to support latest gradle on Android.
 
