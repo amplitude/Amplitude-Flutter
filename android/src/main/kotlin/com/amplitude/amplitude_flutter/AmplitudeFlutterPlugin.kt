@@ -131,6 +131,12 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
 
                 result.success("setUserId called..")
             }
+            "setDeviceId" -> {
+                val client = Amplitude.getInstance(instanceName)
+                client.setDeviceId(json.optString("deviceId", null))
+
+                result.success("setDeviceId called..")
+            }
             "setServerUrl" -> {
                 val client = Amplitude.getInstance(instanceName)
                 client.setServerUrl(json.optString("serverUrl", null))

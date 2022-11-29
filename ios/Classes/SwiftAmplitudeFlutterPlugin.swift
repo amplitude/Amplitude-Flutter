@@ -95,6 +95,14 @@ import Amplitude
 
                     Amplitude.instance(withName: instanceName).setUserId(userId, startNewSession: startNewSession)
                     result(true)
+                case "setDeviceId":
+                    if !(args["deviceId"] is NSNull) {
+                        if let deviceId = args["deviceId"] as! String? {
+                            Amplitude.instance(withName: instanceName).setDeviceId(deviceId)
+                        }
+                    }
+
+                    result(true)
                 case "setServerUrl":
                     if !(args["serverUrl"] is NSNull) {
                         if let serverUrl = args["serverUrl"] as! String? {

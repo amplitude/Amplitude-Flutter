@@ -9,6 +9,7 @@ class Amplitude {
   external void init(String api, String? userId);
   external void setOptOut(bool optOut);
   external void setUserId(String? userId, bool startNewSession);
+  external void setDeviceId(String deviceId);
   external void setServerUrl(String serverUrl);
   external void setEventUploadThreshold(int);
   external void regenerateDeviceId();

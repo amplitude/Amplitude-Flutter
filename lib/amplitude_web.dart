@@ -54,6 +54,11 @@ class AmplitudeFlutterPlugin {
           bool startNewSession = args['startNewSession'] ?? false;
           return amplitude.setUserId(userId, startNewSession);
         }
+      case "setDeviceId":
+        {
+          String deviceId = args['deviceId'];
+          return amplitude.setDeviceId(deviceId);
+        }
       case "setServerUrl":
         {
           String serverUrl = args['serverUrl'];
