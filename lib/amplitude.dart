@@ -116,6 +116,13 @@ class Amplitude extends _Amplitude {
         'regenerateDeviceId', jsonEncode(_baseProperties()));
   }
 
+  Future<void> setDeviceId(String deviceId) async {
+    Map<String, dynamic> properties = _baseProperties();
+    properties['deviceId'] = deviceId;
+
+    await _channel.invokeMethod('setDeviceId', jsonEncode(properties));
+  }
+
   /// Dynamically adjust server URL
   Future<void> setUseDynamicConfig(bool useDynamicConfig) async {
     Map<String, dynamic> properties = _baseProperties();
