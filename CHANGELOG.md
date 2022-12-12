@@ -1,3 +1,6 @@
+## 3.13.0
+* Implement setDeviceId
+
 ## 3.12.0
 * Bump Amplitude Android SDK version (2.38.3)
 * Bump Amplitude iOS SDK version (8.14.0)
