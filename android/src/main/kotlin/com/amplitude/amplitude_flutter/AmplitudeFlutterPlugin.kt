@@ -244,6 +244,13 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
                 result.success("setServerZone called..")
             }
 
+            "setOffline" -> {
+                val client = Amplitude.getInstance(instanceName)
+                client.setOffline(json.getBoolean("offline"))
+
+                result.success("setOffline called..")
+            }
+
             else -> {
                 result.notImplemented()
             }
