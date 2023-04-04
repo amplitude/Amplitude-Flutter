@@ -8,7 +8,7 @@ import Amplitude
         let instance = SwiftAmplitudeFlutterPlugin()
         registrar.addMethodCallDelegate(instance, channel: channel)
     }
-    
+
     public func getPropertiesFromArguments(_ callArguments: Any?) throws -> [String:Any]? {
         if let arguments = callArguments, let data = (arguments as! String).data(using: .utf8) {
 
@@ -39,8 +39,8 @@ import Amplitude
                     }
                     else {
                         Amplitude.instance(withName: instanceName).initializeApiKey(apiKey)
-                    }   
-                    
+                    }
+
                     result(true)
 
                 // Get userId
@@ -77,6 +77,10 @@ import Amplitude
                 case "setEventUploadThreshold":
                     let eventUploadThreshold = args["eventUploadThreshold"] as! Int32
                     Amplitude.instance(withName: instanceName).eventUploadThreshold = eventUploadThreshold
+                    result(true)
+                case "setEventUploadPeriodMillis":
+                    let eventUploadPeriodMillis = args["eventUploadPeriodMillis"] as! Int32
+                    Amplitude.instance(withName: instanceName).eventUploadPeriodSeconds = eventUploadPeriodMillis / 1000
                     result(true)
                 case "trackingSessionEvents":
                     let trackingSessionEvents = args["trackingSessionEvents"] as! Bool
@@ -206,10 +210,10 @@ import Amplitude
                                      message: "Exception happened in handle.", details: nil))
         }
     }
-    
+
     private func createIdentify(_ userProperties: [String: [String : NSObject]]) -> AMPIdentify {
         let identify = AMPIdentify()
-        
+
         for (operation, properties) in userProperties {
             for (key, value) in properties {
                 switch operation {
