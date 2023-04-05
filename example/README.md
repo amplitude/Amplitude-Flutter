@@ -17,8 +17,15 @@ samples, guidance on mobile development, and a full API reference.
 
 
 ## Run the example
-Assuming you have Flutter setup on your machine.
+Assuming you have Flutter setup on your machine. 
 
+### Android & iOS
+Open the emulator you want to test on (Android, iOS)
 ```shell
 flutter run
+```
+
+### Browser
+```shell
+flutter run -d chrome
 ```
