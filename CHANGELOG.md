@@ -1,3 +1,6 @@
+## 3.14.0
+* Implement setEventUploadPeriodMillis
+
 ## 3.13.0
 * Implement setDeviceId
 
