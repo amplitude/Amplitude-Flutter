@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:amplitude_flutter/amplitude.dart';
+import 'package:amplitude_flutter_example/flush_thresholds_form.dart';
 import 'package:flutter/material.dart';
 
 import 'app_state.dart';
@@ -40,6 +41,7 @@ class _MyAppState extends State<MyApp> {
     analytics.trackingSessionEvents(true);
     analytics.setMinTimeBetweenSessionsMillis(5000);
     analytics.setEventUploadThreshold(5);
+    analytics.setEventUploadPeriodMillis(30000);
     analytics.setServerZone("US");
     analytics.logEvent('MyApp startup',
         eventProperties: {'event_prop_1': 10, 'event_prop_2': true});
@@ -103,6 +105,8 @@ class _MyAppState extends State<MyApp> {
                 GroupIdentifyForm(),
                 divider,
                 RevenueForm(),
+                divider,
+                FlushThresholdForm(),
                 divider,
                 ElevatedButton(
                   child: const Text('Flush Events'),
