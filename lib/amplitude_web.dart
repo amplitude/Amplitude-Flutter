@@ -70,6 +70,11 @@ class AmplitudeFlutterPlugin {
           int eventUploadThreshold = args['eventUploadThreshold'];
           return amplitude.setEventUploadThreshold(eventUploadThreshold);
         }
+      case "setEventUploadPeriodMillis":
+        {
+          int eventUploadPeriodMillis = args['eventUploadPeriodMillis'];
+          return amplitude.options.eventUploadPeriodMillis = eventUploadPeriodMillis;
+        }
       case "regenerateDeviceId":
         {
           return amplitude.regenerateDeviceId();

@@ -107,6 +107,14 @@ class Amplitude extends _Amplitude {
         'setEventUploadThreshold', jsonEncode(properties));
   }
 
+  Future<void> setEventUploadPeriodMillis(int value) async {
+    Map<String, dynamic> properties = _baseProperties();
+    properties['eventUploadPeriodMillis'] = value;
+
+    await _channel.invokeMethod(
+        'setEventUploadPeriodMillis', jsonEncode(properties));
+  }
+
   /// Regenerates a new random deviceId for current user.
   /// Note: this is not recommended unless you know what you are doing.
   /// This can be used in conjunction with setUserId(null) to anonymize users after they log out.

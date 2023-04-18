@@ -2,6 +2,11 @@
 
 import 'package:js/js.dart';
 
+@JS('amplitude.options')
+class Options {
+  external set eventUploadPeriodMillis(int value);
+}
+
 @JS('amplitude')
 class Amplitude {
   external Amplitude(String instanceName);
@@ -37,6 +42,7 @@ class Amplitude {
       Function? opt_error_callback,
       bool? outOfSession);
   external bool setOffline(bool enabled);
+  external Options options;
 }
 
 @JS('amplitude.Identify')
