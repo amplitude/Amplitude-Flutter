@@ -322,4 +322,13 @@ class Amplitude extends _Amplitude {
 
     return await _channel.invokeMethod('setServerZone', jsonEncode(properties));
   }
+
+  /// Sets offline. If offline is true, then the SDK will not upload events to Amplitude servers;
+  /// however, it will still log events.
+  Future<void> setOffline(bool enabled) async {
+    Map<String, dynamic> properties = _baseProperties();
+    properties['offline'] = enabled;
+
+    return await _channel.invokeMethod('setOffline', jsonEncode(properties));
+  }
 }

@@ -36,6 +36,7 @@ class Amplitude {
       Function? opt_callback,
       Function? opt_error_callback,
       bool? outOfSession);
+  external bool setOffline(bool enabled);
 }
 
 @JS('amplitude.Identify')

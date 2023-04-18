@@ -197,6 +197,11 @@ import Amplitude
                     Amplitude.instance(withName: instanceName).setServerZone(ampServerZone, updateServerUrl: updateServerUrl)
                     result(true)
 
+                case "setOffline":
+                    let offline = args["offline"] as! Bool
+                    Amplitude.instance(withName: instanceName).setOffline(offline)
+                    result(true)
+
                 default:
                     result(FlutterMethodNotImplemented)
                 }
