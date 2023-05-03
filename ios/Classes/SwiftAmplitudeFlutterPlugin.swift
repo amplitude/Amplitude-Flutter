@@ -201,6 +201,78 @@ import Amplitude
                     Amplitude.instance(withName: instanceName).setServerZone(ampServerZone, updateServerUrl: updateServerUrl)
                     result(true)
 
+                
+                // TrackingOptions
+                case "setTrackingOptions":
+                    let options = AMPTrackingOptions()
+
+                    if !(args["Carrier"] as! Bool) {
+                        options.disableCarrier()
+                    }
+
+                    if !(args["City"] as! Bool) {
+                        options.disableCity()
+                    }
+
+                    if !(args["Country"] as! Bool) {
+                        options.disableCountry()
+                    }
+
+                    if !(args["DeviceManufacturer"] as! Bool) {
+                        options.disableDeviceManufacturer()
+                    }
+
+                    if !(args["DeviceModel"] as! Bool) {
+                        options.disableDeviceModel()
+                    }
+
+                    if !(args["DMA"] as! Bool) {
+                        options.disableDMA()
+                    }
+
+                    if !(args["IDFA"] as! Bool) {
+                        options.disableIDFA()
+                    }
+
+                    if !(args["IDFV"] as! Bool) {
+                        options.disableIDFV()
+                    }
+
+                    if !(args["IpAddress"] as! Bool) {
+                        options.disableIPAddress()
+                    }
+
+                    if !(args["Language"] as! Bool) {
+                        options.disableLanguage()
+                    }
+
+                    if !(args["LatLng"] as! Bool) {
+                        options.disableLatLng()
+                    }
+
+                    if !(args["OsName"] as! Bool) {
+                        options.disableOSName()
+                    }
+
+                    if !(args["OsVersion"] as! Bool) {
+                        options.disableOSVersion()
+                    }
+
+                    if !(args["Platform"] as! Bool) {
+                        options.disablePlatform()
+                    }
+
+                    if !(args["Region"] as! Bool) {
+                        options.disableRegion()
+                    }
+
+                    if !(args["VersionName"] as! Bool) {
+                        options.disableVersionName()
+                    }
+
+                    Amplitude.instance(withName: instanceName).setTrackingOptions(options)
+                    result(true)
+
                 default:
                     result(FlutterMethodNotImplemented)
                 }

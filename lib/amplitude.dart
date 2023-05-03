@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:amplitude_flutter/constants.dart';
 import 'package:amplitude_flutter/identify.dart';
+import 'package:amplitude_flutter/trackingOptions.dart';
 import 'package:flutter/services.dart';
 
 abstract class _Amplitude {
@@ -329,5 +330,12 @@ class Amplitude extends _Amplitude {
     properties['updateServerUrl'] = updateServerUrl;
 
     return await _channel.invokeMethod('setServerZone', jsonEncode(properties));
+  }
+
+  /// Set Amplitude Tracking Options, to enabla or disable some default properties.
+  Future<void> setTrackingOptions(TrackingOptions options) async {
+    Map<String, dynamic> properties = _baseProperties();
+    properties.addAll(options.getProperties());
+    return await _channel.invokeMethod('setTrackingOptions', jsonEncode(properties));
   }
 }
