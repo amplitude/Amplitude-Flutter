@@ -1,3 +1,7 @@
+## 3.15.0
+* Bump Amplitude Android SDK version (2.39.4)
+* Bump Amplitude iOS SDK version (8.16.1)
+
 ## 3.14.0
 * Implement setEventUploadPeriodMillis
 
