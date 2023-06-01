@@ -1,7 +1,7 @@
 PODS:
-  - Amplitude (8.14.0)
+  - Amplitude (8.16.1)
   - amplitude_flutter (0.0.1):
-    - Amplitude (= 8.14.0)
+    - Amplitude (= 8.16.1)
     - Flutter
   - Flutter (1.0.0)
 
