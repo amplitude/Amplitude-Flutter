@@ -179,7 +179,9 @@ class AmplitudeFlutterPlugin {
           return amplitude.setServerZone(serverZone, updateServerUrl);
         }
       case "setOffline":
-        return false;
+        {
+          return false;
+        }
       default:
         throw PlatformException(
           code: 'Unimplemented',
