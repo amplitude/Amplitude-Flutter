@@ -190,7 +190,7 @@ class AmplitudeFlutterPlugin {
     var object = js.newObject();
     map.forEach((k, v) {
       var key = k;
-      var value = v;
+      var value = (v is Map) ? mapToJSObj(v) : v;
       js.setProperty(object, key, value);
     });
     return object;
