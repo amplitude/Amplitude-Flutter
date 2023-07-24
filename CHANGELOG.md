@@ -1,3 +1,8 @@
+## 3.16.0
+* Bump Amplitude Android SDK version (2.39.8) with session race condition fix.
+* Add `setOffline` method. Thanks @nishiths23!
+* Fix nested event properties in Web. Thanks @jtothebell!
+
 ## 3.15.0
 * Bump Amplitude Android SDK version (2.39.4)
 * Bump Amplitude iOS SDK version (8.16.1)
