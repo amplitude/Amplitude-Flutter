@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import com.amplitude.api.Amplitude
 import com.amplitude.api.AmplitudeServerZone
+import com.amplitude.api.TrackingOptions
 import com.amplitude.api.Identify
 import com.amplitude.api.Revenue
 import io.flutter.embedding.engine.plugins.FlutterPlugin
@@ -14,6 +15,7 @@ import io.flutter.plugin.common.MethodChannel.Result
 import io.flutter.plugin.common.PluginRegistry.Registrar
 import org.json.JSONArray
 import org.json.JSONObject
+import android.util.Log
 
 class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
     companion object {
@@ -42,7 +44,7 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
     override fun onMethodCall(call: MethodCall, result: Result) {
         val json = JSONObject(call.arguments.toString())
         val instanceName = json["instanceName"].toString()
-
+    
         when (call.method) {
             "init" -> {
                 val client = Amplitude.getInstance(instanceName)
@@ -248,6 +250,68 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
                 client.setServerZone(amplitudeServerZone, json.getBoolean("updateServerUrl"))
 
                 result.success("setServerZone called..")
+            }
+         
+            "setTrackingOptions" -> {
+                val client = Amplitude.getInstance(instanceName)
+                val options = TrackingOptions()
+
+                if(!json.getBoolean("Adid"))
+                    options.disableAdid()
+
+                if(!json.getBoolean("ApiLevel"))
+                    options.disableApiLevel()
+
+                if(!json.getBoolean("AppSetId"))
+                    options.disableAppSetId()
+
+                if(!json.getBoolean("Carrier"))
+                    options.disableCarrier()
+                    
+                if(!json.getBoolean("City"))
+                    options.disableCity()
+                
+                if(!json.getBoolean("Country"))
+                    options.disableCountry()
+
+                if(!json.getBoolean("DeviceBrand"))
+                    options.disableDeviceBrand()
+
+                if(!json.getBoolean("DeviceManufacturer"))
+                    options.disableDeviceManufacturer()
+
+                if(!json.getBoolean("DeviceModel"))
+                    options.disableDeviceModel()
+
+                if(!json.getBoolean("DMA"))
+                    options.disableDma()
+
+                if(!json.getBoolean("IpAddress"))
+                    options.disableIpAddress()
+
+                if(!json.getBoolean("Language"))
+                    options.disableLanguage()
+
+                if(!json.getBoolean("LatLng"))
+                    options.disableLatLng()
+
+                if(!json.getBoolean("OsName"))
+                    options.disableOsName()
+
+                if(!json.getBoolean("OsVersion"))
+                    options.disableOsVersion()
+
+                if(!json.getBoolean("Platform"))
+                    options.disablePlatform()
+
+                if(!json.getBoolean("Region"))
+                    options.disableRegion()
+
+                if(!json.getBoolean("VersionName"))
+                    options.disableVersionName()
+
+                client.setTrackingOptions(options)
+                result.success("setTrackingOptions called..")
             }
 
             else -> {
