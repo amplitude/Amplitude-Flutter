@@ -1,10 +1,11 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:js/js_util.dart' as js;
+
 import 'web/amplitude_js.dart';
-import 'dart:async';
 
 class AmplitudeFlutterPlugin {
   static void registerWith(Registrar registrar) {
@@ -176,6 +177,10 @@ class AmplitudeFlutterPlugin {
           String serverZone = args['serverZone'];
           bool updateServerUrl = args['updateServerUrl'];
           return amplitude.setServerZone(serverZone, updateServerUrl);
+        }
+      case "setOffline":
+        {
+          return false;
         }
       default:
         throw PlatformException(
