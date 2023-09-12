@@ -136,6 +136,12 @@ import Amplitude
                     revenue.setProductIdentifier((args["productIdentifier"] as! String))
                     revenue.setQuantity(args["quantity"] as! Int)
                     revenue.setPrice(NSNumber(value: args["price"] as! Double))
+                    if let revenueType = args["revenueType"] as? String {
+                        revenue.setRevenueType(revenueType)
+                    }
+                    if let receipt = args["receipt"] as? String {
+                        revenue.setReceipt(Data(base64Encoded: receipt, options: .ignoreUnknownCharacters))
+                    }
 
                     Amplitude.instance(withName: instanceName).logRevenueV2(revenue)
 
