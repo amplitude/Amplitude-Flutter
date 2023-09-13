@@ -1,0 +1,38 @@
+name: Publish to pub.dev
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+
+jobs:
+  publish:
+    name: Publish
+
+    permissions:
+      id-token: write # Required for authentication using OIDC
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # This step sets the GitHub-signed OIDC token for pub.dev
+      # Workaround for https://github.com/dart-lang/setup-dart/issues/68
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Check Flutter version
+        run: flutter --version
+
+      - name: Publish to pub.dev
+        run: flutter pub publish --force
