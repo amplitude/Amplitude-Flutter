@@ -11,9 +11,11 @@ Pod::Spec.new do |s|
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
   s.public_header_files = 'Classes/**/*.h'
-  s.dependency 'Flutter'
+  s.ios.dependency 'Flutter'
+  s.osx.dependency 'FlutterMacOS'
   s.dependency 'Amplitude', '8.16.1'
 
   s.ios.deployment_target = '10.0'
+  s.osx.deployment_target = '10.14'
 end
 
