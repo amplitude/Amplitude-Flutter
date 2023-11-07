@@ -26,6 +26,10 @@ apply plugin: 'kotlin-android'
 
 android {
     compileSdkVersion 28
+    // Condition for namespace compatibility in AGP 8
+    if (project.android.hasProperty("namespace")) {
+        namespace 'com.amplitude.amplitude_flutter'
+    }
 
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
