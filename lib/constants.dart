@@ -1,4 +1,4 @@
 class Constants {
   static const packageName = 'amplitude-flutter';
-  static const packageVersion = '3.16.0';
+  static const packageVersion = '3.16.1';
 }

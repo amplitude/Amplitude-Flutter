@@ -1,3 +1,10 @@
+## [3.16.1](https://github.com/amplitude/Amplitude-Flutter/compare/v3.16.0...v3.16.1) (2023-11-08)
+
+
+### Bug Fixes
+
+* add release/publish workflows ([#155](https://github.com/amplitude/Amplitude-Flutter/issues/155)) ([42d09c4](https://github.com/amplitude/Amplitude-Flutter/commit/42d09c4369c93e688dabe00d0ec66dc1d7ef1ecd))
+
 ## 3.16.0
 * Bump Amplitude Android SDK version (2.39.8) with session race condition fix.
 * Add `setOffline` method. Thanks @nishiths23!
