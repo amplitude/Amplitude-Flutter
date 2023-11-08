@@ -1,10 +1,20 @@
+import Amplitude
+
+#if os(iOS)
 import Flutter
 import UIKit
-import Amplitude
+#elseif os(macOS)
+import FlutterMacOS
+#endif
 
 @objc public class SwiftAmplitudeFlutterPlugin: NSObject, FlutterPlugin {
     public static func register(with registrar: FlutterPluginRegistrar) {
-        let channel = FlutterMethodChannel(name: "amplitude_flutter", binaryMessenger: registrar.messenger())
+        #if os(iOS)
+            let messenger = registrar.messenger()
+        #else
+            let messenger = registrar.messenger
+        #endif
+        let channel = FlutterMethodChannel(name: "amplitude_flutter", binaryMessenger: messenger)
         let instance = SwiftAmplitudeFlutterPlugin()
         registrar.addMethodCallDelegate(instance, channel: channel)
     }
