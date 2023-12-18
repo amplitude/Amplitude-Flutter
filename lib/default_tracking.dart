@@ -8,28 +8,16 @@
 /// * [Web](https://www.docs.developers.amplitude.com/data/sdks/browser-2/#tracking-default-events)
 
 class DefaultTrackingOptions {
-  // Available on all platforms: iOS, Android, and Web
   final bool sessions;
-  // Available on iOS and Android
-  final bool appLifecycles;
-  final bool screenViews;
-  // Available on Android
-  final bool deepLinks;
-  // Available on Web
-  final bool attribution;
-  final bool pageViews;
-  final bool formInteractions;
-  final bool fileDownloads;
+  final MobileDefaultTrackingOptions mobileDefaultTrackingOptions;
+  final AndroidDefaultTrackingOptions androidDefaultTrackingOptions;
+  final WebDefaultTrackingOptions webDefaultTrackingOptions;
 
   const DefaultTrackingOptions({
     this.sessions = true, 
-    this.appLifecycles = false, 
-    this.screenViews = false,
-    this.deepLins = false,
-    this.attribution = true,
-    this.pageViews = true,
-    this.formInteractions = true,
-    this.fileDownloads = true,
+    this.mobileDefaultTrackingOptions = const MobileDefaultTrackingOptions(),
+    this.androidDefaultTrackingOptions = const AndroidDefaultTrackingOptions(),
+    this.webDefaultTrackingOptions = const WebDefaultTrackingOptions(),
   });
 
   /// Enable all default tracking options.
@@ -38,13 +26,19 @@ class DefaultTrackingOptions {
   factory DefaultTrackingOptions.all() {
     return const DefaultTrackingOptions(
       sessions: true, 
-      appLifecycles: true, 
-      screenViews: true,
-      deepLins: true,
-      attribution: true,
-      pageViews: true,
-      formInteractions: true,
-      fileDownloads: true,
+      mobileDefaultTrackingOptions: MobileDefaultTrackingOptions(
+        appLifecycles: true, 
+        screenViews: true,
+      ),
+      androidDefaultTrackingOptions: AndroidDefaultTrackingOptions(
+        deepLinks: true,
+      ),
+      webDefaultTrackingOptions: WebDefaultTrackingOptions(
+        attribution: true,
+        pageViews: true,
+        formInteractions: true,
+        fileDownloads: true,
+      ),
     );
   }
 
@@ -52,22 +46,78 @@ class DefaultTrackingOptions {
   factory DefaultTrackingOptions.none() {
     return const DefaultTrackingOptions(
       sessions: false, 
-      appLifecycles: false, 
-      screenViews: false,
-      deepLins: false,
-      attribution: false,
-      pageViews: false,
-      formInteractions: false,
-      fileDownloads: false,
+      mobileDefaultTrackingOptions: MobileDefaultTrackingOptions(
+        appLifecycles: false, 
+        screenViews: false,
+      ),
+      androidDefaultTrackingOptions: AndroidDefaultTrackingOptions(
+        deepLinks: false,
+      ),
+      webDefaultTrackingOptions: WebDefaultTrackingOptions(
+        attribution: false,
+        pageViews: false,
+        formInteractions: false,
+        fileDownloads: false,
+      ),
     );
   }
 
   Map<String, bool> toMap() {
     return {
       'sessions': sessions,
+      ...mobileDefaultTrackingOptions.toMap(),
+      ...androidDefaultTrackingOptions.toMap(),
+      ...webDefaultTrackingOptions.toMap(),
+    };
+  }
+}
+
+class MobileDefaultTrackingOptions{
+  final bool appLifecycles;
+  final bool screenViews;
+
+  const MobileDefaultTrackingOptions({
+    this.appLifecycles = false, 
+    this.screenViews = false,
+  });
+
+  Map<String, bool> toMap() {
+    return {
       'appLifecycles': appLifecycles,
       'screenViews': screenViews,
-      'deepLins': deepLins,
+    };
+  }
+}
+
+class AndroidDefaultTrackingOptions{
+  final bool deepLinks;
+
+  const AndroidDefaultTrackingOptions({
+    this.deepLinks = false,
+  });
+
+  Map<String, bool> toMap() {
+    return {
+      'deepLinks': deepLinks,
+    };
+  }
+}
+
+class WebDefaultTrackingOptions{
+  final bool attribution;
+  final bool pageViews;
+  final bool formInteractions;
+  final bool fileDownloads;
+
+  const WebDefaultTrackingOptions({
+    this.attribution = true,
+    this.pageViews = true,
+    this.formInteractions = true,
+    this.fileDownloads = true,
+  });
+
+  Map<String, bool> toMap() {
+    return {
       'attribution': attribution,
       'pageViews': pageViews,
       'formInteractions': formInteractions,

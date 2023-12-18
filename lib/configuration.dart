@@ -68,9 +68,9 @@ class Configuration {
       'minTimeBetweenSessionsMillis': minTimeBetweenSessionsMillis,
       'defaultTracking': defaultTracking.toMap(),
       'trackingOptions': trackingOptions.toMap(),
-      'mobileConfiguration': mobileConfiguration.toMap(),
-      'androidConfiguration': androidConfiguration.toMap(),
-      'webConfiguration': webConfiguration.toMap(),
+      ...mobileConfiguration.toMap(),
+      ...androidConfiguration.toMap(),
+      ...webConfiguration.toMap(),
     };
   }
 }
