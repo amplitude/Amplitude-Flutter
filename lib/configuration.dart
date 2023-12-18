@@ -7,7 +7,7 @@ import 'default_tracking.dart';
 /// Before initialzing Amplitude instance, create a Configuration instance
 /// with your desired configuration and pass it to the Amplitude instance.
 /// Note the Configuration is immutable (cannot be changed) after being passed to Amplitude.init()
-/// `optOut` and be changed later by calling `setOptOut()`.
+/// `optOut` can be changed later by calling `setOptOut()`.
 class Configuration {
   String apiKey;
   int flushQueueSize;

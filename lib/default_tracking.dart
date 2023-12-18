@@ -14,7 +14,7 @@ class DefaultTrackingOptions {
   final bool appLifecycles;
   final bool screenViews;
   // Available on Android
-  final bool deepLins;
+  final bool deepLinks;
   // Available on Web
   final bool attribution;
   final bool pageViews;
