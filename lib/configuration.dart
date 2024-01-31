@@ -4,7 +4,7 @@ import 'default_tracking.dart';
 
 /// Configuration for Amplitude instance.
 /// 
-/// Before initialzing Amplitude instance, create a Configuration instance
+/// Before initializing Amplitude instance, create a Configuration instance
 /// with your desired configuration and pass it to the Amplitude instance.
 /// Note the Configuration is immutable (cannot be changed) after being passed to Amplitude.init()
 /// `optOut` can be changed later by calling `setOptOut()`.
@@ -75,6 +75,7 @@ class Configuration {
   }
 }
 
+/// Configuration specific for iOS and Android devices.
 class MobileConfiguration {
   final bool enableCoppaControl;
   final bool flushEventsOnClose;
@@ -98,6 +99,7 @@ class MobileConfiguration {
   }
 }
 
+/// Configuration specific for Android devices.
 class AndroidConfiguration {
   final bool locationListening;
   final bool useAdvertisingIdForDeviceId;
@@ -118,8 +120,9 @@ class AndroidConfiguration {
   }
 }
 
+/// Configuration specific for web.
 class WebConfiguration {
-  final int? appVersion;
+  final String? appVersion;
 
   const WebConfiguration({
     this.appVersion,
