@@ -48,7 +48,7 @@ class Configuration {
     this.androidConfiguration = const AndroidConfiguration(),
     this.webConfiguration = const WebConfiguration(),
   }): trackingOptions = trackingOptions ?? TrackingOptions() {
-    instanceName = instanceName.isEmpty ? Constants.defaultInstanceName : instanceName;
+    this.instanceName = instanceName.isEmpty ? Constants.defaultInstanceName : instanceName;
   }
 
   Map<String, dynamic> toMap() {

@@ -1,114 +1,104 @@
 import 'constants.dart';
 
-/// Disable tracking of user properties.
-///
-/// Before initialzing Amplitude instance, create a TrackingOptions instance
-/// with your desired tracking options and pass it to the Amplitude instance.
 class TrackingOptions {
-  Set<String> _disabledFields = {};
+  final bool disableIpAddress;
+  final bool disableLanguage;
+  final bool disablePlatform;
+  final MobileTrackingOptions mobileTrackingOptions;
+  final AndroidTrackingOptions androidTrackingOptions;
+  final IOSTrackingOptions iosTrackingOptions;
 
-  // Available on iOS, Android, and Web
-  TrackingOptions disableIpAddress() {
-    _disabledFields.add(Constants.ampTrackingOptionIpAddress);
-    return this;
-  }
-
-  TrackingOptions disableLanguage() {
-    _disabledFields.add(Constants.ampTrackingOptionLanguage);
-    return this;
-  }
-
-  TrackingOptions disablePlatform() {
-    _disabledFields.add(Constants.ampTrackingOptionPlatform);
-    return this;
-  }
-
-  // Only avaliable on iOS and Android
-  TrackingOptions disableVersionName() {
-    _disabledFields.add(Constants.ampTrackingOptionVersionName);
-    return this;
-  }
-
-  TrackingOptions disableOsName() {
-    _disabledFields.add(Constants.ampTrackingOptionOsName);
-    return this;
-  }
-
-  TrackingOptions disableOsVersion() {
-    _disabledFields.add(Constants.ampTrackingOptionOsVersion);
-    return this;
-  }
-
-  TrackingOptions disableDeviceManufacturer() {
-    _disabledFields.add(Constants.ampTrackingOptionDeviceManufacturer);
-    return this;
-  }
-
-  TrackingOptions disableDeviceModel() {
-    _disabledFields.add(Constants.ampTrackingOptionDeviceModel);
-    return this;
-  }
-
-  TrackingOptions disableCarrier() {
-    _disabledFields.add(Constants.ampTrackingOptionCarrier);
-    return this;
-  }
-
-  TrackingOptions disableCity() {
-    _disabledFields.add(Constants.ampTrackingOptionCity);
-    return this;
-  }
-
-  TrackingOptions disableCountry() {
-    _disabledFields.add(Constants.ampTrackingOptionCountry);
-    return this;
-  }
-
-  TrackingOptions disableDma() {
-    _disabledFields.add(Constants.ampTrackingOptionDma);
-    return this;
-  }
-
-  TrackingOptions disableRegion() {
-    _disabledFields.add(Constants.ampTrackingOptionRegion);
-    return this;
-  }
-
-  // Only avaliable on Android
-  TrackingOptions disableADID() {
-    _disabledFields.add(Constants.ampTrackingOptionAdid);
-    return this;
-  }
-
-  TrackingOptions disableAppSetId() {
-    _disabledFields.add(Constants.ampTrackingOptionAppSetId);
-    return this;
-  }
-
-  TrackingOptions disableDeviceBrand() {
-    _disabledFields.add(Constants.ampTrackingOptionDeviceBrand);
-    return this;
-  }
-
-  TrackingOptions disableLatLag() {
-    _disabledFields.add(Constants.ampTrackingOptionLatLag);
-    return this;
-  }
-
-  TrackingOptions disableApiLevel() {
-    _disabledFields.add(Constants.ampTrackingOptionApiLevel);
-    return this;
-  }
-
-  // Only available on Swift
-  TrackingOptions disableIDFV() {
-    _disabledFields.add(Constants.ampTrackingOptionIdfv);
-    return this;
-  }
+  TrackingOptions({
+    this.disableIpAddress = false,
+    this.disableLanguage = false,
+    this.disablePlatform = false,
+    this.mobileTrackingOptions = const MobileTrackingOptions(),
+    this.androidTrackingOptions = const AndroidTrackingOptions(),
+    this.iosTrackingOptions = const IOSTrackingOptions(),
+  });
 
   Map<String, Set<String>> toMap() {
+    Set<String> disableFields = {};
+
+    // General tracking options
+    if (disableIpAddress) disableFields.add(Constants.ampTrackingOptionIpAddress);
+    if (disableLanguage) disableFields.add(Constants.ampTrackingOptionLanguage);
+    if (disablePlatform) disableFields.add(Constants.ampTrackingOptionPlatform);
+
+    // Mobile tracking options
+    if (mobileTrackingOptions.disableRegion) disableFields.add(Constants.ampTrackingOptionRegion);
+    if (mobileTrackingOptions.disableDma) disableFields.add(Constants.ampTrackingOptionDma);
+    if (mobileTrackingOptions.disableCountry) disableFields.add(Constants.ampTrackingOptionCountry);
+    if (mobileTrackingOptions.disableCity) disableFields.add(Constants.ampTrackingOptionCity);
+    if (mobileTrackingOptions.disableCarrier) disableFields.add(Constants.ampTrackingOptionCarrier);
+    if (mobileTrackingOptions.disableDeviceModel) disableFields.add(Constants.ampTrackingOptionDeviceModel);
+    if (mobileTrackingOptions.disableDeviceManufacturer) disableFields.add(Constants.ampTrackingOptionDeviceManufacturer);
+    if (mobileTrackingOptions.disableOsVersion) disableFields.add(Constants.ampTrackingOptionOsVersion);
+    if (mobileTrackingOptions.disableOsName) disableFields.add(Constants.ampTrackingOptionOsName);
+    if (mobileTrackingOptions.disableVersionName) disableFields.add(Constants.ampTrackingOptionVersionName);
+
+    // Android-specific tracking options
+    if (androidTrackingOptions.disableADID) disableFields.add(Constants.ampTrackingOptionAdid);
+    if (androidTrackingOptions.disableAppSetId) disableFields.add(Constants.ampTrackingOptionAppSetId);
+    if (androidTrackingOptions.disableDeviceBrand) disableFields.add(Constants.ampTrackingOptionDeviceBrand);
+    if (androidTrackingOptions.disableLatLag) disableFields.add(Constants.ampTrackingOptionLatLag);
+    if (androidTrackingOptions.disableApiLevel) disableFields.add(Constants.ampTrackingOptionApiLevel);
+
+    // iOS-specific tracking options
+    if (iosTrackingOptions.disableIDFV) disableFields.add(Constants.ampTrackingOptionIdfv);
+
     return {
-      'disabledFields': _disabledFields,
+      'disabledFields': disableFields,
     };
   }
+}
+
+class MobileTrackingOptions {
+  final bool disableRegion;
+  final bool disableDma;
+  final bool disableCountry;
+  final bool disableCity;
+  final bool disableCarrier;
+  final bool disableDeviceModel;
+  final bool disableDeviceManufacturer;
+  final bool disableOsVersion;
+  final bool disableOsName;
+  final bool disableVersionName;
+
+  const MobileTrackingOptions({
+    this.disableRegion = false,
+    this.disableDma = false,
+    this.disableCountry = false,
+    this.disableCity = false,
+    this.disableCarrier = false,
+    this.disableDeviceModel = false,
+    this.disableDeviceManufacturer = false,
+    this.disableOsVersion = false,
+    this.disableOsName = false,
+    this.disableVersionName = false,
+  });
+}
+
+class AndroidTrackingOptions {
+  final bool disableADID;
+  final bool disableAppSetId;
+  final bool disableDeviceBrand;
+  final bool disableLatLag;
+  final bool disableApiLevel;
+
+  const AndroidTrackingOptions({
+    this.disableADID = false,
+    this.disableAppSetId = false,
+    this.disableDeviceBrand = false,
+    this.disableLatLag = false,
+    this.disableApiLevel = false,
+  });
+}
+
+class IOSTrackingOptions {
+  final bool disableIDFV;
+
+  const IOSTrackingOptions({
+    this.disableIDFV = false
+  });
 }
