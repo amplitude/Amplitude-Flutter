@@ -7,26 +7,26 @@ void main(){
       var defaultTrackingOptions = DefaultTrackingOptions.all();
 
       expect(defaultTrackingOptions.sessions, true);
-      expect(defaultTrackingOptions.mobileDefaultTrackingOptions.appLifecycles, true);
-      expect(defaultTrackingOptions.mobileDefaultTrackingOptions.screenViews, true);
-      expect(defaultTrackingOptions.androidDefaultTrackingOptions.deepLinks, true);
-      expect(defaultTrackingOptions.webDefaultTrackingOptions.attribution, true);
-      expect(defaultTrackingOptions.webDefaultTrackingOptions.pageViews, true);
-      expect(defaultTrackingOptions.webDefaultTrackingOptions.formInteractions, true);
-      expect(defaultTrackingOptions.webDefaultTrackingOptions.fileDownloads, true);
+      expect(defaultTrackingOptions.appLifecycles, true);
+      expect(defaultTrackingOptions.screenViews, true);
+      expect(defaultTrackingOptions.deepLinks, true);
+      expect(defaultTrackingOptions.attribution, true);
+      expect(defaultTrackingOptions.pageViews, true);
+      expect(defaultTrackingOptions.formInteractions, true);
+      expect(defaultTrackingOptions.fileDownloads, true);
     });
 
     test('should disable all default tracking options', () {
       var defaultTrackingOptions = DefaultTrackingOptions.none();
 
       expect(defaultTrackingOptions.sessions, false);
-      expect(defaultTrackingOptions.mobileDefaultTrackingOptions.appLifecycles, false);
-      expect(defaultTrackingOptions.mobileDefaultTrackingOptions.screenViews, false);
-      expect(defaultTrackingOptions.androidDefaultTrackingOptions.deepLinks, false);
-      expect(defaultTrackingOptions.webDefaultTrackingOptions.attribution, false);
-      expect(defaultTrackingOptions.webDefaultTrackingOptions.pageViews, false);
-      expect(defaultTrackingOptions.webDefaultTrackingOptions.formInteractions, false);
-      expect(defaultTrackingOptions.webDefaultTrackingOptions.fileDownloads, false);
+      expect(defaultTrackingOptions.appLifecycles, false);
+      expect(defaultTrackingOptions.screenViews, false);
+      expect(defaultTrackingOptions.deepLinks, false);
+      expect(defaultTrackingOptions.attribution, false);
+      expect(defaultTrackingOptions.pageViews, false);
+      expect(defaultTrackingOptions.formInteractions, false);
+      expect(defaultTrackingOptions.fileDownloads, false);
     });
   });
 }

@@ -24,9 +24,6 @@ void main() {
       expect(config.minTimeBetweenSessionsMillis, Constants.minTimeBetweenSessionsMillis);
       expect(config.defaultTracking, isA<DefaultTrackingOptions>());
       expect(config.trackingOptions, isA<TrackingOptions>());
-      expect(config.mobileConfiguration, isA<MobileConfiguration>());
-      expect(config.androidConfiguration, isA<AndroidConfiguration>());
-      expect(config.webConfiguration, isA<WebConfiguration>());
 
       var map = config.toMap();
       expect(map['apiKey'], 'test_api_key');

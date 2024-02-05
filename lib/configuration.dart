@@ -24,10 +24,17 @@ class Configuration {
   int minTimeBetweenSessionsMillis;
   DefaultTrackingOptions defaultTracking;
   TrackingOptions trackingOptions;
-  MobileConfiguration mobileConfiguration;
-  AndroidConfiguration androidConfiguration;
-  WebConfiguration webConfiguration;
-  
+  // Mobile (iOS and Android) specific
+  bool enableCoppaControl;
+  bool flushEventsOnClose;
+  int identifyBatchIntervalMillis;
+  bool migrateLegacyData;
+  // Android specific
+  bool locationListening;
+  bool useAdvertisingIdForDeviceId;
+  bool useAppSetIdForDeviceId;
+  // Web specific
+  String? appVersion;
   Configuration({
     required this.apiKey,
     this.flushQueueSize = Constants.flushQueueSize,
@@ -44,9 +51,13 @@ class Configuration {
     this.minTimeBetweenSessionsMillis = Constants.minTimeBetweenSessionsMillis,
     this.defaultTracking = const DefaultTrackingOptions(),
     TrackingOptions? trackingOptions,
-    this.mobileConfiguration = const MobileConfiguration(),
-    this.androidConfiguration = const AndroidConfiguration(),
-    this.webConfiguration = const WebConfiguration(),
+    this.enableCoppaControl = false,
+    this.flushEventsOnClose = true,
+    this.identifyBatchIntervalMillis = Constants.identifyBatchIntervalMillis,
+    this.migrateLegacyData = true,
+    this.locationListening = true,
+    this.useAdvertisingIdForDeviceId = false,
+    this.useAppSetIdForDeviceId = false,
   }): trackingOptions = trackingOptions ?? TrackingOptions() {
     this.instanceName = instanceName.isEmpty ? Constants.defaultInstanceName : instanceName;
   }
@@ -68,68 +79,13 @@ class Configuration {
       'minTimeBetweenSessionsMillis': minTimeBetweenSessionsMillis,
       'defaultTracking': defaultTracking.toMap(),
       'trackingOptions': trackingOptions.toMap(),
-      ...mobileConfiguration.toMap(),
-      ...androidConfiguration.toMap(),
-      ...webConfiguration.toMap(),
-    };
-  }
-}
-
-/// Configuration specific for iOS and Android devices.
-class MobileConfiguration {
-  final bool enableCoppaControl;
-  final bool flushEventsOnClose;
-  final int identifyBatchIntervalMillis;
-  final bool migrateLegacyData;
-
-  const MobileConfiguration({
-    this.enableCoppaControl = false,
-    this.flushEventsOnClose = true,
-    this.identifyBatchIntervalMillis = Constants.identifyBatchIntervalMillis,
-    this.migrateLegacyData = true,
-  });
-
-  Map<String, dynamic> toMap() {
-    return {
       'enableCoppaControl': enableCoppaControl,
       'flushEventsOnClose': flushEventsOnClose,
       'identifyBatchIntervalMillis': identifyBatchIntervalMillis,
       'migrateLegacyData': migrateLegacyData,
-    };
-  }
-}
-
-/// Configuration specific for Android devices.
-class AndroidConfiguration {
-  final bool locationListening;
-  final bool useAdvertisingIdForDeviceId;
-  final bool useAppSetIdForDeviceId;
-
-  const AndroidConfiguration({
-    this.locationListening = true,
-    this.useAdvertisingIdForDeviceId = false,
-    this.useAppSetIdForDeviceId = false,
-  });
-
-  Map<String, dynamic> toMap() {
-    return {
       'locationListening': locationListening,
       'useAdvertisingIdForDeviceId': useAdvertisingIdForDeviceId,
       'useAppSetIdForDeviceId': useAppSetIdForDeviceId,
-    };
-  }
-}
-
-/// Configuration specific for web.
-class WebConfiguration {
-  final String? appVersion;
-
-  const WebConfiguration({
-    this.appVersion,
-  });
-
-  Map<String, dynamic> toMap() {
-    return {
       'appVersion': appVersion,
     };
   }
