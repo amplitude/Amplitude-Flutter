@@ -9,80 +9,93 @@ import 'constants.dart';
 /// * [Android](https://www.docs.developers.amplitude.com/data/sdks/android-kotlin/#disable-tracking)
 /// * [Web](https://www.docs.developers.amplitude.com/data/sdks/browser-2/#optional-tracking)
 class TrackingOptions {
-  final bool disableIpAddress;
-  final bool disableLanguage;
-  final bool disablePlatform;
-  // Mobile (iOS and Android) specific
-  final bool disableRegion;
-  final bool disableDma;
-  final bool disableCountry;
-  final bool disableCity;
-  final bool disableCarrier;
-  final bool disableDeviceModel;
-  final bool disableDeviceManufacturer;
-  final bool disableOsVersion;
-  final bool disableOsName;
-  final bool disableVersionName;
-  // Android specific
-  final bool disableADID;
-  final bool disableAppSetId;
-  final bool disableDeviceBrand;
-  final bool disableLatLag;
-  final bool disableApiLevel;
-  // iOS specific
-  final bool disableIDFV;
+  final bool ipAddress;
+  final bool language;
+  final bool platform;
+  /// Mobile (iOS and Android) specific
+  final bool region;
+  /// Mobile (iOS and Android) specific
+  final bool dma;
+  /// Mobile (iOS and Android) specific
+  final bool country;
+  /// Mobile (iOS and Android) specific
+  final bool city;
+  /// Mobile (iOS and Android) specific
+  final bool carrier;
+  /// Mobile (iOS and Android) specific
+  final bool deviceModel;
+  /// Mobile (iOS and Android) specific
+  final bool deviceManufacturer;
+  /// Mobile (iOS and Android) specific
+  final bool osVersion;
+  /// Mobile (iOS and Android) specific
+  final bool osName;
+  /// Mobile (iOS and Android) specific
+  final bool versionName;
+  /// Android specific
+  final bool adid;
+  /// Android specific
+  final bool appSetId;
+  /// Android specific
+  final bool deviceBrand;
+  /// Android specific
+  final bool latLag;
+  /// Android specific
+  final bool apiLevel;
+  /// iOS specific
+  final bool idfv;
 
   TrackingOptions({
-    this.disableIpAddress = false,
-    this.disableLanguage = false,
-    this.disablePlatform = false,
-    this.disableRegion = false,
-    this.disableDma = false,
-    this.disableCountry = false,
-    this.disableCity = false,
-    this.disableCarrier = false,
-    this.disableDeviceModel = false,
-    this.disableDeviceManufacturer = false,
-    this.disableOsVersion = false,
-    this.disableOsName = false,
-    this.disableVersionName = false,
-    this.disableADID = false,
-    this.disableAppSetId = false,
-    this.disableDeviceBrand = false,
-    this.disableLatLag = false,
-    this.disableApiLevel = false,
-    this.disableIDFV = false
+    this.ipAddress = true,
+    this.language = true,
+    this.platform = true,
+    this.region = true,
+    this.dma = true,
+    this.country = true,
+    this.city = true,
+    this.carrier = true,
+    this.deviceModel = true,
+    this.deviceManufacturer = true,
+    this.osVersion = true,
+    this.osName = true,
+    this.versionName = true,
+    this.adid = true,
+    this.appSetId = true,
+    this.deviceBrand = true,
+    this.latLag = true,
+    this.apiLevel = true,
+    this.idfv = true
   });
 
   Map<String, Set<String>> toMap() {
     Set<String> disableFields = {};
 
     // General tracking options
-    if (disableIpAddress) disableFields.add(Constants.ampTrackingOptionIpAddress);
-    if (disableLanguage) disableFields.add(Constants.ampTrackingOptionLanguage);
-    if (disablePlatform) disableFields.add(Constants.ampTrackingOptionPlatform);
+    if (!ipAddress) disableFields.add(Constants.ampTrackingOptionIpAddress);
+    if (!language) disableFields.add(Constants.ampTrackingOptionLanguage);
+    if (!platform) disableFields.add(Constants.ampTrackingOptionPlatform);
 
     // Mobile tracking options
-    if (disableRegion) disableFields.add(Constants.ampTrackingOptionRegion);
-    if (disableDma) disableFields.add(Constants.ampTrackingOptionDma);
-    if (disableCountry) disableFields.add(Constants.ampTrackingOptionCountry);
-    if (disableCity) disableFields.add(Constants.ampTrackingOptionCity);
-    if (disableCarrier) disableFields.add(Constants.ampTrackingOptionCarrier);
-    if (disableDeviceModel) disableFields.add(Constants.ampTrackingOptionDeviceModel);
-    if (disableDeviceManufacturer) disableFields.add(Constants.ampTrackingOptionDeviceManufacturer);
-    if (disableOsVersion) disableFields.add(Constants.ampTrackingOptionOsVersion);
-    if (disableOsName) disableFields.add(Constants.ampTrackingOptionOsName);
-    if (disableVersionName) disableFields.add(Constants.ampTrackingOptionVersionName);
+    if (!region) disableFields.add(Constants.ampTrackingOptionRegion);
+    if (!dma) disableFields.add(Constants.ampTrackingOptionDma);
+    if (!country) disableFields.add(Constants.ampTrackingOptionCountry);
+    if (!city) disableFields.add(Constants.ampTrackingOptionCity);
+    if (!carrier) disableFields.add(Constants.ampTrackingOptionCarrier);
+    if (!deviceModel) disableFields.add(Constants.ampTrackingOptionDeviceModel);
+    if (!deviceManufacturer) disableFields.add(Constants.ampTrackingOptionDeviceManufacturer);
+    if (!osVersion) disableFields.add(Constants.ampTrackingOptionOsVersion);
+    if (!osName) disableFields.add(Constants.ampTrackingOptionOsName);
+    if (!versionName) disableFields.add(Constants.ampTrackingOptionVersionName);
 
     // Android-specific tracking options
-    if (disableADID) disableFields.add(Constants.ampTrackingOptionAdid);
-    if (disableAppSetId) disableFields.add(Constants.ampTrackingOptionAppSetId);
-    if (disableDeviceBrand) disableFields.add(Constants.ampTrackingOptionDeviceBrand);
-    if (disableLatLag) disableFields.add(Constants.ampTrackingOptionLatLag);
-    if (disableApiLevel) disableFields.add(Constants.ampTrackingOptionApiLevel);
+    if (!adid) disableFields.add(Constants.ampTrackingOptionAdid);
+    if (!appSetId) disableFields.add(Constants.ampTrackingOptionAppSetId);
+    if (!deviceBrand) disableFields.add(Constants.ampTrackingOptionDeviceBrand);
+    if (!latLag) disableFields.add(Constants.ampTrackingOptionLatLag);
+    if (!apiLevel) disableFields.add(Constants.ampTrackingOptionApiLevel);
 
     // iOS-specific tracking options
-    if (disableIDFV) disableFields.add(Constants.ampTrackingOptionIdfv);
+    if (!idfv) disableFields.add(Constants.ampTrackingOptionIdfv);
 
     return {
       'disabledFields': disableFields,

@@ -8,15 +8,19 @@
 /// * [Web](https://www.docs.developers.amplitude.com/data/sdks/browser-2/#tracking-default-events)
 class DefaultTrackingOptions {
   final bool sessions;
-  // Mobile (iOS and Android) specific
+  /// Mobile (iOS and Android) specific
   final bool appLifecycles;
+  /// Mobile (iOS and Android) specific
   final bool screenViews;
-  // Android specific
+  /// Android specific
   final bool deepLinks;
-  // Web specific
+  /// Web specific
   final bool attribution;
+  /// Web specific
   final bool pageViews;
+  /// Web specific
   final bool formInteractions;
+  /// Web specific
   final bool fileDownloads;
 
   const DefaultTrackingOptions({

@@ -24,16 +24,21 @@ class Configuration {
   int minTimeBetweenSessionsMillis;
   DefaultTrackingOptions defaultTracking;
   TrackingOptions trackingOptions;
-  // Mobile (iOS and Android) specific
+  /// Mobile (iOS and Android) specific
   bool enableCoppaControl;
+  /// Mobile (iOS and Android) specific
   bool flushEventsOnClose;
+  /// Mobile (iOS and Android) specific
   int identifyBatchIntervalMillis;
+  /// Mobile (iOS and Android) specific
   bool migrateLegacyData;
-  // Android specific
+  /// Android specific
   bool locationListening;
+  /// Android specific
   bool useAdvertisingIdForDeviceId;
+  /// Android specific
   bool useAppSetIdForDeviceId;
-  // Web specific
+  /// Web specific
   String? appVersion;
   Configuration({
     required this.apiKey,
@@ -46,7 +51,7 @@ class Configuration {
     this.partnerId,
     this.flushMaxRetries = Constants.flushMaxRetries,
     this.useBatch = false,
-    this.serverZone = ServerZone.US,
+    this.serverZone = ServerZone.us,
     this.serverUrl,
     this.minTimeBetweenSessionsMillis = Constants.minTimeBetweenSessionsMillis,
     this.defaultTracking = const DefaultTrackingOptions(),
@@ -58,6 +63,7 @@ class Configuration {
     this.locationListening = true,
     this.useAdvertisingIdForDeviceId = false,
     this.useAppSetIdForDeviceId = false,
+    this.appVersion,
   }): trackingOptions = trackingOptions ?? TrackingOptions() {
     this.instanceName = instanceName.isEmpty ? Constants.defaultInstanceName : instanceName;
   }

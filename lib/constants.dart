@@ -2,7 +2,6 @@ class Constants {
   static const packageName = 'amplitude-flutter';
   static const packageVersion = '3.16.1';
 
-  // Configuration options
   static const flushQueueSize = 30;
   static const flushIntervalMillis = 30 * 1000; // 30 seconds
   static const identifyBatchIntervalMillis = 30 * 1000; // 30 seconds
@@ -45,6 +44,6 @@ enum LogLevel {
 }
 
 enum ServerZone {
-  US,
-  EU,
+  us,
+  eu,
 }

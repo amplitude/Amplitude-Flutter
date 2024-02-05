@@ -12,42 +12,42 @@ void main() {
     });
 
     test('should disable IP Address tracking when specified', () {
-      final trackingOptions = TrackingOptions(disableIpAddress: true);
+      final trackingOptions = TrackingOptions(ipAddress: false);
       final map = trackingOptions.toMap();
 
       expect(map['disabledFields'], contains(Constants.ampTrackingOptionIpAddress));
     });
 
     test('should disable Language tracking when specified', () {
-      final trackingOptions = TrackingOptions(disableLanguage: true);
+      final trackingOptions = TrackingOptions(language: false);
       final map = trackingOptions.toMap();
 
       expect(map['disabledFields'], contains(Constants.ampTrackingOptionLanguage));
     });
 
     test('should disable Platform tracking when specified', () {
-      final trackingOptions = TrackingOptions(disablePlatform: true);
+      final trackingOptions = TrackingOptions(platform: false);
       final map = trackingOptions.toMap();
 
       expect(map['disabledFields'], contains(Constants.ampTrackingOptionPlatform));
     });
 
     test('should disable Region tracking when specified', () {
-      final trackingOptions = TrackingOptions(disableRegion: true);
+      final trackingOptions = TrackingOptions(region: false);
       final map = trackingOptions.toMap();
 
       expect(map['disabledFields'], contains(Constants.ampTrackingOptionRegion));
     });
 
     test('should disable ADID tracking when specified', () {
-      final trackingOptions = TrackingOptions(disableADID: true);
+      final trackingOptions = TrackingOptions(adid: false);
       final map = trackingOptions.toMap();
 
       expect(map['disabledFields'], contains(Constants.ampTrackingOptionAdid));
     });
 
     test('should disable IDFV tracking when specified', () {
-      final trackingOptions = TrackingOptions(disableIDFV: true);
+      final trackingOptions = TrackingOptions(idfv: false);
       final map = trackingOptions.toMap();
 
       expect(map['disabledFields'], contains(Constants.ampTrackingOptionIdfv));

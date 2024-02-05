@@ -19,7 +19,7 @@ void main() {
       expect(config.partnerId, isNull);
       expect(config.flushMaxRetries, Constants.flushMaxRetries);
       expect(config.useBatch, false);
-      expect(config.serverZone, ServerZone.US);
+      expect(config.serverZone, ServerZone.us);
       expect(config.serverUrl, isNull);
       expect(config.minTimeBetweenSessionsMillis, Constants.minTimeBetweenSessionsMillis);
       expect(config.defaultTracking, isA<DefaultTrackingOptions>());
@@ -36,7 +36,7 @@ void main() {
       expect(map['partnerId'], isNull);
       expect(map['flushMaxRetries'], Constants.flushMaxRetries);
       expect(map['useBatch'], false);
-      expect(map['serverZone'], ServerZone.US.toString());
+      expect(map['serverZone'], ServerZone.us.toString());
       expect(map['serverUrl'], isNull);
       expect(map['minTimeBetweenSessionsMillis'], Constants.minTimeBetweenSessionsMillis);
       expect(map.containsKey('defaultTracking'), true);
@@ -55,7 +55,7 @@ void main() {
         partnerId: 'partner_123',
         flushMaxRetries: 5,
         useBatch: true,
-        serverZone: ServerZone.EU,
+        serverZone: ServerZone.eu,
         serverUrl: 'https://custom.server.url',
         minTimeBetweenSessionsMillis: 2000,
       );
@@ -69,7 +69,7 @@ void main() {
       expect(customConfig.partnerId, 'partner_123');
       expect(customConfig.flushMaxRetries, 5);
       expect(customConfig.useBatch, true);
-      expect(customConfig.serverZone, ServerZone.EU);
+      expect(customConfig.serverZone, ServerZone.eu);
       expect(customConfig.serverUrl, 'https://custom.server.url');
       expect(customConfig.minTimeBetweenSessionsMillis, 2000);
     });
