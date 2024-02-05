@@ -33,25 +33,24 @@ void main() {
     });
 
     test('should disable Region tracking when specified', () {
-      final trackingOptions = TrackingOptions(mobileTrackingOptions: MobileTrackingOptions(disableRegion: true));
+      final trackingOptions = TrackingOptions(mobileTrackingOptions: const MobileTrackingOptions(disableRegion: true));
       final map = trackingOptions.toMap();
 
       expect(map['disabledFields'], contains(Constants.ampTrackingOptionRegion));
     });
 
     test('should disable ADID tracking when specified', () {
-      final trackingOptions = TrackingOptions(androidTrackingOptions: AndroidTrackingOptions(disableADID: true));
+      final trackingOptions = TrackingOptions(androidTrackingOptions: const AndroidTrackingOptions(disableADID: true));
       final map = trackingOptions.toMap();
 
       expect(map['disabledFields'], contains(Constants.ampTrackingOptionAdid));
     });
 
     test('should disable IDFV tracking when specified', () {
-      final trackingOptions = TrackingOptions(iosTrackingOptions: IOSTrackingOptions(disableIDFV: true));
+      final trackingOptions = TrackingOptions(iosTrackingOptions: const IOSTrackingOptions(disableIDFV: true));
       final map = trackingOptions.toMap();
 
       expect(map['disabledFields'], contains(Constants.ampTrackingOptionIdfv));
     });
   });
 }
-
