@@ -112,7 +112,7 @@ class _MyAppState extends State<MyApp> {
                   child: const Text('Flush Events'),
                   onPressed: _flushEvents,
                 ),
-                Text(_message, style: Theme.of(context).textTheme.bodyText1)
+                Text(_message, style: Theme.of(context).textTheme.bodyLarge)
               ],
             ),
           ),
