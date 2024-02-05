@@ -1,5 +1,13 @@
 import 'constants.dart';
 
+/// Options to control the values tracked in SDK
+///
+/// Different platforms have different default events.
+/// Refer to platform specific docs for more details.
+///
+/// * [iOS](https://www.docs.developers.amplitude.com/data/sdks/ios-swift/#disable-tracking)
+/// * [Android](https://www.docs.developers.amplitude.com/data/sdks/android-kotlin/#disable-tracking)
+/// * [Web](https://www.docs.developers.amplitude.com/data/sdks/browser-2/#optional-tracking)
 class TrackingOptions {
   final bool disableIpAddress;
   final bool disableLanguage;

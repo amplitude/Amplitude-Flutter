@@ -6,7 +6,6 @@
 /// * [iOS](https://www.docs.developers.amplitude.com/data/sdks/ios-swift/#tracking-default-events)
 /// * [Android](https://www.docs.developers.amplitude.com/data/sdks/android-kotlin/#tracking-default-events)
 /// * [Web](https://www.docs.developers.amplitude.com/data/sdks/browser-2/#tracking-default-events)
-
 class DefaultTrackingOptions {
   final bool sessions;
   // Mobile (iOS and Android) specific
