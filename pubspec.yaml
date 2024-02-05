@@ -16,8 +16,10 @@ dependencies:
   js: ^0.6.3
 
 dev_dependencies:
+  flutter_lints: ^2.0.3
   flutter_test:
     sdk: flutter
+  test: ^1.22.0
 
 flutter:
   plugin:
