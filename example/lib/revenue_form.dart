@@ -38,7 +38,7 @@ class _RevenueFormState extends State<RevenueForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text('Revenue', style: Theme.of(context).textTheme.headline5),
+        Text('Revenue', style: Theme.of(context).textTheme.headlineSmall),
         const SizedBox(height: 10),
         TextField(
             decoration: dec.copyWith(labelText: 'Product Id'),

@@ -38,7 +38,9 @@ class Amplitude {
       String groupType,
       String groupName,
       Identify groupIdentify,
+      // ignore: non_constant_identifier_names
       Function? opt_callback,
+      // ignore: non_constant_identifier_names
       Function? opt_error_callback,
       bool? outOfSession);
   external bool setOffline(bool enabled);
