@@ -1,3 +1,10 @@
+## [3.16.2](https://github.com/amplitude/Amplitude-Flutter/compare/v3.16.1...v3.16.2) (2024-02-08)
+
+
+### Bug Fixes
+
+* bump iOS SDK version ([#167](https://github.com/amplitude/Amplitude-Flutter/issues/167)) ([78bf642](https://github.com/amplitude/Amplitude-Flutter/commit/78bf642d7795480a1e1440765046c7da6ebf558e))
+
 ## [3.16.1](https://github.com/amplitude/Amplitude-Flutter/compare/v3.16.0...v3.16.1) (2023-11-08)
 
 
