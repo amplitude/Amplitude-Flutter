@@ -159,8 +159,7 @@ class BaseEvent extends EventOptions {
     if (options.osName != null) osName = options.osName!;
     if (options.osVersion != null) osVersion = options.osVersion!;
     if (options.deviceBrand != null) deviceBrand = options.deviceBrand!;
-    if (options.deviceManufacturer != null)
-      deviceManufacturer = options.deviceManufacturer!;
+    if (options.deviceManufacturer != null) deviceManufacturer = options.deviceManufacturer!;
     if (options.deviceModel != null) deviceModel = options.deviceModel!;
     if (options.carrier != null) carrier = options.carrier!;
     if (options.country != null) country = options.country!;
@@ -176,8 +175,7 @@ class BaseEvent extends EventOptions {
     if (options.library != null) library = options.library!;
     if (options.ip != null) ip = options.ip!;
     if (options.plan != null) plan = options.plan!;
-    if (options.ingestionMetadata != null)
-      ingestionMetadata = options.ingestionMetadata!;
+    if (options.ingestionMetadata != null) ingestionMetadata = options.ingestionMetadata!;
     if (options.revenue != null) revenue = options.revenue!;
     if (options.price != null) price = options.price!;
     if (options.quantity != null) quantity = options.quantity!;
