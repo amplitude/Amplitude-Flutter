@@ -92,7 +92,6 @@ class BaseEvent extends EventOptions {
           revenueType: revenueType,
           extra: extra,
           partnerId: partnerId,
-          attempts: attempts,
         );
 
   Map<String, dynamic> toMap() {

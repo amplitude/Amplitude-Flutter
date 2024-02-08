@@ -96,7 +96,7 @@ void main() {
       final testRevenueType = 'purchase';
       final testExtra = {'key': 'value'};
       final testPartnerId = 'partner123';
-      final testAttempts = 3;
+      final testAttempts = 0;
 
       final eventOptions = EventOptions(
         userId: testUserId,
@@ -137,7 +137,6 @@ void main() {
         revenueType: testRevenueType,
         extra: testExtra,
         partnerId: testPartnerId,
-        attempts: testAttempts,
       );
 
       // Assertions to validate initialization

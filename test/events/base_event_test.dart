@@ -84,7 +84,7 @@ void main() {
       final revenueType = "purchase";
       final extra = {"extra_key": "extra_value"};
       final partnerId = "partner_id";
-      final attempts = 3;
+      final attempts = 0;
 
       final event = BaseEvent(
         userId: userId,
@@ -125,7 +125,6 @@ void main() {
         revenueType: revenueType,
         extra: extra,
         partnerId: partnerId,
-        attempts: attempts,
         eventType: eventType,
       );
 

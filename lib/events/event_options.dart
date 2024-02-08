@@ -89,6 +89,5 @@ class EventOptions {
     this.revenueType,
     this.extra,
     this.partnerId,
-    this.attempts = 0,
   });
 }
