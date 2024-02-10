@@ -3,54 +3,77 @@ import 'package:amplitude_flutter/tracking_options.dart';
 import 'package:amplitude_flutter/constants.dart';
 
 void main() {
-  group('TrackingOptions', () {
-    test('should have all tracking enabled by default', () {
+  group("TrackingOptions", () {
+    test("Should have all tracking enabled by default", () {
       final trackingOptions = TrackingOptions();
-      final map = trackingOptions.toMap();
-
-      expect(map['disabledFields'], isEmpty);
+      expect(trackingOptions.ipAddress, true);
+      expect(trackingOptions.language, true);
+      expect(trackingOptions.platform, true);
+      expect(trackingOptions.region, true);
+      expect(trackingOptions.dma, true);
+      expect(trackingOptions.country, true);
+      expect(trackingOptions.city, true);
+      expect(trackingOptions.carrier, true);
+      expect(trackingOptions.deviceModel, true);
+      expect(trackingOptions.deviceManufacturer, true);
+      expect(trackingOptions.osVersion, true);
+      expect(trackingOptions.osName, true);
+      expect(trackingOptions.versionName, true);
+      expect(trackingOptions.adid, true);
+      expect(trackingOptions.appSetId, true);
+      expect(trackingOptions.deviceBrand, true);
+      expect(trackingOptions.latLag, true);
+      expect(trackingOptions.apiLevel, true);
+      expect(trackingOptions.idfv, true);
     });
 
-    test('should disable IP Address tracking when specified', () {
-      final trackingOptions = TrackingOptions(ipAddress: false);
-      final map = trackingOptions.toMap();
-
-      expect(map['disabledFields'], contains(Constants.ampTrackingOptionIpAddress));
+    test("Should init with custom options", () {
+      final trackingOptions =
+          TrackingOptions(ipAddress: false, country: false, city: true);
+      expect(trackingOptions.ipAddress, false);
+      expect(trackingOptions.language, true);
+      expect(trackingOptions.platform, true);
+      expect(trackingOptions.region, true);
+      expect(trackingOptions.dma, true);
+      expect(trackingOptions.country, false);
+      expect(trackingOptions.city, true);
+      expect(trackingOptions.carrier, true);
+      expect(trackingOptions.deviceModel, true);
+      expect(trackingOptions.deviceManufacturer, true);
+      expect(trackingOptions.osVersion, true);
+      expect(trackingOptions.osName, true);
+      expect(trackingOptions.versionName, true);
+      expect(trackingOptions.adid, true);
+      expect(trackingOptions.appSetId, true);
+      expect(trackingOptions.deviceBrand, true);
+      expect(trackingOptions.latLag, true);
+      expect(trackingOptions.apiLevel, true);
+      expect(trackingOptions.idfv, true);
     });
 
-    test('should disable Language tracking when specified', () {
-      final trackingOptions = TrackingOptions(language: false);
-      final map = trackingOptions.toMap();
-
-      expect(map['disabledFields'], contains(Constants.ampTrackingOptionLanguage));
-    });
-
-    test('should disable Platform tracking when specified', () {
-      final trackingOptions = TrackingOptions(platform: false);
-      final map = trackingOptions.toMap();
-
-      expect(map['disabledFields'], contains(Constants.ampTrackingOptionPlatform));
-    });
-
-    test('should disable Region tracking when specified', () {
-      final trackingOptions = TrackingOptions(region: false);
-      final map = trackingOptions.toMap();
-
-      expect(map['disabledFields'], contains(Constants.ampTrackingOptionRegion));
-    });
-
-    test('should disable ADID tracking when specified', () {
-      final trackingOptions = TrackingOptions(adid: false);
-      final map = trackingOptions.toMap();
-
-      expect(map['disabledFields'], contains(Constants.ampTrackingOptionAdid));
-    });
-
-    test('should disable IDFV tracking when specified', () {
-      final trackingOptions = TrackingOptions(idfv: false);
-      final map = trackingOptions.toMap();
-
-      expect(map['disabledFields'], contains(Constants.ampTrackingOptionIdfv));
+    test("Should toMap correctly", () {
+      final trackingOptions = TrackingOptions();
+      expect(trackingOptions.toMap(), {
+        "ipAddress": true,
+        "language": true,
+        "platform": true,
+        "region": true,
+        "dma": true,
+        "country": true,
+        "city": true,
+        "carrier": true,
+        "deviceModel": true,
+        "deviceManufacturer": true,
+        "osVersion": true,
+        "osName": true,
+        "versionName": true,
+        "adid": true,
+        "appSetId": true,
+        "deviceBrand": true,
+        "latLag": true,
+        "apiLevel": true,
+        "idfv": true,
+      });
     });
   });
 }
