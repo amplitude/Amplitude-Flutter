@@ -203,4 +203,9 @@ class Amplitude extends _Amplitude {
   Future<void> reset() async {
     await await _channel.invokeMethod("reset");
   }
+
+  /// Flush events in storage.
+  Future<void> flush() async {
+    await await _channel.invokeMethod("flush");
+  }
 }

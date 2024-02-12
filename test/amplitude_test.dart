@@ -382,12 +382,21 @@ void main() {
   });
 
   test('Should reset calls MethodChannel', () async {
-    when(mockChannel.invokeMethod('setDeviceId', any))
+    when(mockChannel.invokeMethod('reset', any))
         .thenAnswer((_) async => null);
 
     amplitude.reset();
 
     verify(mockChannel.invokeMethod('reset')).called(1);
+  });
+
+  test('Should flush calls MethodChannel', () async {
+    when(mockChannel.invokeMethod('flush', any))
+        .thenAnswer((_) async => null);
+
+    amplitude.flush();
+
+    verify(mockChannel.invokeMethod('flush')).called(1);
   });
 
   // Reset the mock method call handler after each test
