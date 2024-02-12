@@ -1,6 +1,7 @@
 class Constants {
   static const packageName = 'amplitude-flutter';
   static const packageVersion = '3.16.1';
+  static const identify_event = "\$identify";
 
   static const flushQueueSize = 30;
   static const flushIntervalMillis = 30 * 1000; // 30 seconds
