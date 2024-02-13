@@ -32,35 +32,35 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
 
-    analytics = Amplitude.getInstance(instanceName: "project");
-    analytics.setUseDynamicConfig(true);
-    analytics.setServerUrl("https://api2.amplitude.com");
-    analytics.init(widget.apiKey);
-    analytics.enableCoppaControl();
-    analytics.setUserId("test_user", startNewSession: true);
-    analytics.trackingSessionEvents(true);
-    analytics.setMinTimeBetweenSessionsMillis(5000);
-    analytics.setEventUploadThreshold(5);
-    analytics.setEventUploadPeriodMillis(30000);
-    analytics.setServerZone("US");
-    analytics.logEvent('MyApp startup',
-        eventProperties: {'event_prop_1': 10, 'event_prop_2': true});
-    analytics.logEvent('Out of Session Event', outOfSession: true);
-    analytics.setOptOut(true);
-    analytics.logEvent('Opt Out Event');
-    analytics.setOptOut(false);
+    // analytics = Amplitude.getInstance(instanceName: "project");
+    // analytics.setUseDynamicConfig(true);
+    // analytics.setServerUrl("https://api2.amplitude.com");
+    // analytics.init(widget.apiKey);
+    // analytics.enableCoppaControl();
+    // analytics.setUserId("test_user", startNewSession: true);
+    // analytics.trackingSessionEvents(true);
+    // analytics.setMinTimeBetweenSessionsMillis(5000);
+    // analytics.setEventUploadThreshold(5);
+    // analytics.setEventUploadPeriodMillis(30000);
+    // analytics.setServerZone("US");
+    // analytics.logEvent('MyApp startup',
+    //     eventProperties: {'event_prop_1': 10, 'event_prop_2': true});
+    // analytics.logEvent('Out of Session Event', outOfSession: true);
+    // analytics.setOptOut(true);
+    // analytics.logEvent('Opt Out Event');
+    // analytics.setOptOut(false);
 
-    Map<String, dynamic> userProps = {
-      'date': '01.06.2020',
-      'name': 'Name',
-      'buildNumber': '1.1.1',
-    };
-    analytics.logRevenueAmount(21.9);
-    analytics.setUserProperties(userProps);
+    // Map<String, dynamic> userProps = {
+    //   'date': '01.06.2020',
+    //   'name': 'Name',
+    //   'buildNumber': '1.1.1',
+    // };
+    // analytics.logRevenueAmount(21.9);
+    // analytics.setUserProperties(userProps);
   }
 
   Future<void> _flushEvents() async {
-    await analytics.uploadEvents();
+    // await analytics.uploadEvents();
 
     setMessage('Events flushed.');
   }

@@ -96,7 +96,6 @@ void main() {
       final testRevenueType = 'purchase';
       final testExtra = {'key': 'value'};
       final testPartnerId = 'partner123';
-      final testAttempts = 0;
 
       final eventOptions = EventOptions(
         userId: testUserId,
@@ -178,7 +177,6 @@ void main() {
       expect(eventOptions.revenueType, equals(testRevenueType));
       expect(eventOptions.extra, equals(testExtra));
       expect(eventOptions.partnerId, equals(testPartnerId));
-      expect(eventOptions.attempts, equals(testAttempts));
     });
   });
 }

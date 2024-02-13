@@ -1,5 +1,3 @@
-import 'constants.dart';
-
 /// Options to control the values tracked in SDK
 ///
 /// Different platforms have different default events.
@@ -67,38 +65,27 @@ class TrackingOptions {
     this.idfv = true
   });
 
-  Map<String, Set<String>> toMap() {
-    Set<String> disableFields = {};
-
-    // General tracking options
-    if (!ipAddress) disableFields.add(Constants.ampTrackingOptionIpAddress);
-    if (!language) disableFields.add(Constants.ampTrackingOptionLanguage);
-    if (!platform) disableFields.add(Constants.ampTrackingOptionPlatform);
-
-    // Mobile tracking options
-    if (!region) disableFields.add(Constants.ampTrackingOptionRegion);
-    if (!dma) disableFields.add(Constants.ampTrackingOptionDma);
-    if (!country) disableFields.add(Constants.ampTrackingOptionCountry);
-    if (!city) disableFields.add(Constants.ampTrackingOptionCity);
-    if (!carrier) disableFields.add(Constants.ampTrackingOptionCarrier);
-    if (!deviceModel) disableFields.add(Constants.ampTrackingOptionDeviceModel);
-    if (!deviceManufacturer) disableFields.add(Constants.ampTrackingOptionDeviceManufacturer);
-    if (!osVersion) disableFields.add(Constants.ampTrackingOptionOsVersion);
-    if (!osName) disableFields.add(Constants.ampTrackingOptionOsName);
-    if (!versionName) disableFields.add(Constants.ampTrackingOptionVersionName);
-
-    // Android-specific tracking options
-    if (!adid) disableFields.add(Constants.ampTrackingOptionAdid);
-    if (!appSetId) disableFields.add(Constants.ampTrackingOptionAppSetId);
-    if (!deviceBrand) disableFields.add(Constants.ampTrackingOptionDeviceBrand);
-    if (!latLag) disableFields.add(Constants.ampTrackingOptionLatLag);
-    if (!apiLevel) disableFields.add(Constants.ampTrackingOptionApiLevel);
-
-    // iOS-specific tracking options
-    if (!idfv) disableFields.add(Constants.ampTrackingOptionIdfv);
-
+  Map<String, bool> toMap() {
     return {
-      'disabledFields': disableFields,
+      "ipAddress": ipAddress,
+      "language": language,
+      "platform": platform,
+      "region": region,
+      "dma": dma,
+      "country": country,
+      "city": city,
+      "carrier": carrier,
+      "deviceModel": deviceModel,
+      "deviceManufacturer": deviceManufacturer,
+      "osVersion": osVersion,
+      "osName": osName,
+      "versionName": versionName,
+      "adid": adid,
+      "appSetId": appSetId,
+      "deviceBrand": deviceBrand,
+      "latLag": latLag,
+      "apiLevel": apiLevel,
+      "idfv": idfv,
     };
   }
 }

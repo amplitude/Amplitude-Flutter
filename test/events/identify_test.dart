@@ -106,5 +106,28 @@ void main() {
       identify.set(property: testProperty, value: testValue);
       expect(identify.properties.containsKey("\$set"), isFalse);
     });
+
+    test('Should not proceed when property is empty', () {
+      final identify = Identify();
+      identify.set(property: "", value: testValue);
+
+      expect(identify.properties.length, 0);
+    });
+
+    test('Should not proceed when value is null', () {
+      final identify = Identify();
+      identify.set(property: testProperty, value: null);
+
+      expect(identify.properties.length, 0);
+    });
+
+    test('Should ignore operation when property exists in previous operation', () {
+      final identify = Identify();
+      identify.set(property: testProperty, value: testValue);
+      identify.set(property: testProperty, value: "new Value");
+      expect(identify.properties.length, 1);
+      expect(identify.propertySet.length, 1);
+      expect(identify.properties[IdentifyOperation.set.operationType], {testProperty: testValue});
+    });
   });
 }

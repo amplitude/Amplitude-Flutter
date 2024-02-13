@@ -10,7 +10,7 @@ class RegenerateDeviceBtn extends StatefulWidget {
 class _DeviceState extends State<RegenerateDeviceBtn> {
   void onPress() {
     AppState.of(context)
-      ..analytics.regenerateDeviceId()
+      // ..analytics.regenerateDeviceId()
       ..setMessage('Regenerate DeviceId.');
   }
 
