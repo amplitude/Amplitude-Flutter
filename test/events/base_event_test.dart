@@ -171,6 +171,7 @@ void main() {
         'revenue_type': revenueType,
         'extra': extra,
         'partner_id': partnerId,
+        'attempts': 0,
       };
 
       expect(event.toMap(), equals(expectedMap));
