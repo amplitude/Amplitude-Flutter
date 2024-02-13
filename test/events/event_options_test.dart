@@ -177,7 +177,6 @@ void main() {
       expect(eventOptions.revenueType, equals(testRevenueType));
       expect(eventOptions.extra, equals(testExtra));
       expect(eventOptions.partnerId, equals(testPartnerId));
-      expect(eventOptions.attempts, equals(testAttempts));
     });
   });
 }

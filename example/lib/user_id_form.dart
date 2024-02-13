@@ -21,7 +21,7 @@ class _UserIdFormState extends State<UserIdForm> {
       children: <Widget>[
         Text('Current User Id', style: Theme.of(context).textTheme.headlineSmall),
         FutureBuilder(
-          future: AppState.of(context).analytics.getUserId(),
+          // future: AppState.of(context).analytics.getUserId(),
           builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
             return Text(snapshot.data.toString());
           },

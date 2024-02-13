@@ -11,7 +11,7 @@ class _GroupFormState extends State<GroupForm> {
   void onPress() {
     if (groupType.text.isNotEmpty && groupValue.text.isNotEmpty) {
       AppState.of(context)
-        ..analytics.setGroup(groupType.text, groupValue.text)
+        // ..analytics.setGroup(groupType.text, groupValue.text)
         ..setMessage('Group set.');
     }
   }

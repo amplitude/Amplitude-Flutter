@@ -18,7 +18,7 @@ class _GroupIdentifyFormState extends State<GroupIdentifyForm> {
         ..set(groupPropertyKey.text, groupPropertyValue.text);
 
       AppState.of(context)
-        ..analytics.groupIdentify(groupType.text, groupValue.text, identify)
+        // ..analytics.groupIdentify(groupType.text, groupValue.text, identify)
         ..setMessage('Group Identify sent.');
     }
   }

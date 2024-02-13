@@ -20,7 +20,7 @@ class _IdentifyFormState extends State<IdentifyForm> {
     }
 
     AppState.of(context)
-      ..analytics.identify(identify)
+      // ..analytics.identify(identify)
       ..setMessage('Identify sent.');
   }
 

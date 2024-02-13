@@ -19,7 +19,7 @@ class _FlushThresholdFormState extends State<FlushThresholdForm> {
 
     if (eventUploadThresholdInput.text.isNotEmpty && value != null) {
       AppState.of(context)
-        ..analytics.setEventUploadThreshold(value)
+        // ..analytics.setEventUploadThreshold(value)
         ..setMessage('Event upload threshold set.');
     }
   }
@@ -29,7 +29,7 @@ class _FlushThresholdFormState extends State<FlushThresholdForm> {
 
     if (eventUploadPeriodMillisInput.text.isNotEmpty && value != null) {
       AppState.of(context)
-        ..analytics.setEventUploadPeriodMillis(value)
+        // ..analytics.setEventUploadPeriodMillis(value)
         ..setMessage('Event upload period millis set.');
     }
   }

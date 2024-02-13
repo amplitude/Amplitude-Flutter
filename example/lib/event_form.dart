@@ -13,7 +13,7 @@ class _EventFormState extends State<EventForm> {
 
   void onPress() {
     AppState.of(context)
-      ..analytics.logEvent(_controller.text)
+      // ..analytics.logEvent(_controller.text)
       ..setMessage('Event sent.');
   }
 

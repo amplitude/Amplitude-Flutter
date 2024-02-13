@@ -18,13 +18,13 @@ class _RevenueFormState extends State<RevenueForm> {
     if (productId.text.isNotEmpty &&
         double.tryParse(price.text) != null &&
         int.tryParse(quantity.text) != null) {
-      AppState.of(context)
-        ..analytics.logRevenue(
-          productId.text,
-          int.tryParse(quantity.text)!,
-          double.tryParse(price.text)!,
-        )
-        ..setMessage('Revenue Sent.');
+      // AppState.of(context)
+      //   // ..analytics.logRevenue(
+      //     productId.text,
+      //     int.tryParse(quantity.text)!,
+      //     double.tryParse(price.text)!,
+      //   )
+      //   ..setMessage('Revenue Sent.');
     }
   }
 

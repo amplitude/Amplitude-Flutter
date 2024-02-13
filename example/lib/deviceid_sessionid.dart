@@ -19,7 +19,7 @@ class _DeviceIdSessionIdState extends State<DeviceIdSessionId> {
         Row(
           children: [
             FutureBuilder(
-              future: AppState.of(context).analytics.getDeviceId(),
+              // future: AppState.of(context).analytics.getDeviceId(),
               builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
                 return Text(snapshot.data.toString());
               },
@@ -33,7 +33,7 @@ class _DeviceIdSessionIdState extends State<DeviceIdSessionId> {
         ),
         Row(children: [
           FutureBuilder(
-            future: AppState.of(context).analytics.getSessionId(),
+            // future: AppState.of(context).analytics.getSessionId(),
             builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
               return Text(snapshot.data.toString());
             },
