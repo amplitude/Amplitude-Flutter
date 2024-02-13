@@ -1,4 +1,4 @@
-import 'package:amplitude_flutter/identify.dart';
+// import 'package:amplitude_flutter/identify.dart';
 import 'package:flutter/material.dart';
 
 import 'app_state.dart';
