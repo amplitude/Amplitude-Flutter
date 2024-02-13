@@ -20,12 +20,12 @@ class _UserIdFormState extends State<UserIdForm> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Text('Current User Id', style: Theme.of(context).textTheme.headlineSmall),
-        FutureBuilder(
-          // future: AppState.of(context).analytics.getUserId(),
-          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-            return Text(snapshot.data.toString());
-          },
-        ),
+        // FutureBuilder(
+        //   // future: AppState.of(context).analytics.getUserId(),
+        //   builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+        //     return Text(snapshot.data.toString());
+        //   },
+        // ),
         const SizedBox(height: 10),
         Text('User Id', style: Theme.of(context).textTheme.headlineSmall),
         const SizedBox(height: 10),

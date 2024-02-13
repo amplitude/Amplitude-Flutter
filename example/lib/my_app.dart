@@ -50,11 +50,11 @@ class _MyAppState extends State<MyApp> {
     // analytics.logEvent('Opt Out Event');
     // analytics.setOptOut(false);
 
-    Map<String, dynamic> userProps = {
-      'date': '01.06.2020',
-      'name': 'Name',
-      'buildNumber': '1.1.1',
-    };
+    // Map<String, dynamic> userProps = {
+    //   'date': '01.06.2020',
+    //   'name': 'Name',
+    //   'buildNumber': '1.1.1',
+    // };
     // analytics.logRevenueAmount(21.9);
     // analytics.setUserProperties(userProps);
   }

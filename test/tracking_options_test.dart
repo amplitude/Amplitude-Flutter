@@ -1,6 +1,5 @@
 import 'package:test/test.dart';
 import 'package:amplitude_flutter/tracking_options.dart';
-import 'package:amplitude_flutter/constants.dart';
 
 void main() {
   group("TrackingOptions", () {

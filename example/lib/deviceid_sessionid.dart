@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'app_state.dart';
+// import 'app_state.dart';
 
 class DeviceIdSessionId extends StatefulWidget {
   @override
@@ -16,29 +16,29 @@ class _DeviceIdSessionIdState extends State<DeviceIdSessionId> {
             Text('Device Id', style: Theme.of(context).textTheme.headlineSmall),
           ],
         ),
-        Row(
-          children: [
-            FutureBuilder(
-              // future: AppState.of(context).analytics.getDeviceId(),
-              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                return Text(snapshot.data.toString());
-              },
-            ),
-          ],
-        ),
+        // Row(
+        //   children: [
+        //     FutureBuilder(
+        //       // future: AppState.of(context).analytics.getDeviceId(),
+        //       builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+        //         return Text(snapshot.data.toString());
+        //       },
+        //     ),
+        //   ],
+        // ),
         Row(
           children: [
             Text('Session Id', style: Theme.of(context).textTheme.headlineSmall),
           ],
         ),
-        Row(children: [
-          FutureBuilder(
-            // future: AppState.of(context).analytics.getSessionId(),
-            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-              return Text(snapshot.data.toString());
-            },
-          ),
-        ])
+        // Row(children: [
+        //   FutureBuilder(
+        //     // future: AppState.of(context).analytics.getSessionId(),
+        //     builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+        //       return Text(snapshot.data.toString());
+        //     },
+        //   ),
+        // ])
       ],
     );
   }

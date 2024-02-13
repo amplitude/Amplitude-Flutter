@@ -14,8 +14,8 @@ class _GroupIdentifyFormState extends State<GroupIdentifyForm> {
         groupValue.text.isNotEmpty &&
         groupPropertyKey.text.isNotEmpty &&
         groupPropertyValue.text.isNotEmpty) {
-      final Identify identify = Identify()
-        ..set(groupPropertyKey.text, groupPropertyValue.text);
+      // final Identify identify = Identify()
+      //   ..set(groupPropertyKey.text, groupPropertyValue.text);
 
       AppState.of(context)
         // ..analytics.groupIdentify(groupType.text, groupValue.text, identify)
