@@ -1,21 +1,25 @@
 package com.amplitude.amplitude_flutter
 
-import android.app.Application
 import android.content.Context
-import com.amplitude.api.Amplitude
-import com.amplitude.api.AmplitudeServerZone
-import com.amplitude.api.Identify
-import com.amplitude.api.Revenue
+import com.amplitude.android.Amplitude
+import com.amplitude.android.Configuration
+import com.amplitude.android.DefaultTrackingOptions
+import com.amplitude.android.TrackingOptions
+import com.amplitude.android.events.IngestionMetadata
+import com.amplitude.android.events.Plan
+import com.amplitude.common.Logger
+import com.amplitude.core.events.BaseEvent
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import io.flutter.plugin.common.PluginRegistry.Registrar
-import org.json.JSONArray
 import org.json.JSONObject
 
 class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
+    lateinit var amplitude: Amplitude
+
     companion object {
 
         private const val methodChannelName = "amplitude_flutter"
@@ -41,220 +45,92 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
 
     override fun onMethodCall(call: MethodCall, result: Result) {
         val json = JSONObject(call.arguments.toString())
-        val instanceName = json["instanceName"].toString()
 
         when (call.method) {
             "init" -> {
-                val client = Amplitude.getInstance(instanceName)
-                client.initialize(
-                    ctxt, json.getString("apiKey"),
-                    json.optString("userId", null)
+                val trackingOptions = json.getJSONObject("trackingOptions")
+                val defaultTracking = json.getJSONObject("defaultTracking")
+                amplitude = Amplitude(
+                    Configuration(
+                        apiKey = json.getString("apiKey"),
+                        context = ctxt!!,
+                        flushQueueSize = json.getInt("flushQueueSize"),
+                        flushIntervalMillis = json.getInt("flushIntervalMillis"),
+                        instanceName = json.getString("instanceName"),
+                        optOut = json.getBoolean("optOut"),
+                        minIdLength = json.getInt("minIdLength"),
+                        partnerId = json.getString("partnerId"),
+                        flushMaxRetries = json.getInt("flushMaxRetries"),
+                        useBatch = json.getBoolean("useBatch"),
+                        serverZone = com.amplitude.core.ServerZone.valueOf(
+                            json.getString("serverZone").uppercase()
+                        ),
+                        serverUrl = json.getString("serverUrl"),
+                        minTimeBetweenSessionsMillis = json.getLong("minTimeBetweenSessionsMillis"),
+                        defaultTracking = DefaultTrackingOptions(
+                            sessions = defaultTracking.getBoolean("sessions"),
+                            appLifecycles = defaultTracking.getBoolean("appLifecycles"),
+                            deepLinks = defaultTracking.getBoolean("deepLinks"),
+                            screenViews = defaultTracking.getBoolean("screenViews"),
+                        ),
+                        trackingOptions = getTrackingOptions(trackingOptions),
+                        enableCoppaControl = json.getBoolean("enableCoppaControl"),
+                        flushEventsOnClose = json.getBoolean("flushEventsOnClose"),
+                        identifyBatchIntervalMillis = json.getLong("identifyBatchIntervalMillis"),
+                        migrateLegacyData = json.getBoolean("migrateLegacyData"),
+                        locationListening = json.getBoolean("locationListening"),
+                        useAdvertisingIdForDeviceId = json.getBoolean("useAdvertisingIdForDeviceId"),
+                        useAppSetIdForDeviceId = json.getBoolean("useAppSetIdForDeviceId"),
+                    )
                 )
-                val application = ctxt?.applicationContext
-                if (application is Application) {
-                    client.enableForegroundTracking(application)
-                }
+                 amplitude.logger.logMode = Logger.LogMode.valueOf(
+                     json.getString("logLevel").uppercase()
+                 )
 
-                result.success("Init success..")
+                result.success("init called..")
             }
-            // Get userId
-            "getUserId" -> {
-                val client = Amplitude.getInstance(instanceName)
-                result.success(client.userId)
-            }
-            // Get deviceId
-            "getDeviceId" -> {
-                val client = Amplitude.getInstance(instanceName)
-                val deviceId = client.getDeviceId()
 
-                result.success(deviceId)
+            "track" -> {
+                amplitude.track(getEvent(json))
+                result.success("track called..")
             }
-            // Get sessionId
-            "getSessionId" -> {
-                val client = Amplitude.getInstance(instanceName)
-                val sessionId = client.getSessionId()
 
-                result.success(sessionId)
+            "identify" -> {
+                amplitude.track(getEvent(json))
+                result.success("identify called..")
             }
-            // Settings
-            "enableCoppaControl" -> {
-                val client = Amplitude.getInstance(instanceName)
-                client.enableCoppaControl()
 
-                result.success("enableCoppaControl called..")
+            "groupIdentify" -> {
+                amplitude.track(getEvent(json))
+                result.success("groupIdentify called..")
             }
-            "disableCoppaControl" -> {
-                val client = Amplitude.getInstance(instanceName)
-                client.disableCoppaControl()
 
-                result.success("disableCoppaControl called..")
+            "setGroup" -> {
+                amplitude.track(getEvent(json))
+                result.success("setGroup called..")
             }
-            "setOptOut" -> {
-                val client = Amplitude.getInstance(instanceName)
-                client.setOptOut(json.getBoolean("optOut"))
 
-                result.success("setOptOut called..")
+            "revenue" -> {
+                amplitude.track(getEvent(json))
+                result.success("revenue called..")
             }
-            "setLibraryName" -> {
-                val client = Amplitude.getInstance(instanceName)
-                client.setLibraryName(json.getString("libraryName"))
 
-                result.success("setLibraryName called..")
-            }
-            "setLibraryVersion" -> {
-                val client = Amplitude.getInstance(instanceName)
-                client.setLibraryVersion(json.getString("libraryVersion"))
-
-                result.success("setLibraryVersion called..")
-            }
-            "setEventUploadThreshold" -> {
-                val client = Amplitude.getInstance(instanceName)
-                client.setEventUploadThreshold(json.getInt("eventUploadThreshold"))
-
-                result.success("setEventUploadThreshold called..")
-            }
-            "setEventUploadPeriodMillis" -> {
-                val client = Amplitude.getInstance(instanceName)
-                client.setEventUploadPeriodMillis(json.getInt("eventUploadPeriodMillis"))
-
-                result.success("setEventUploadPeriodMillis called..")
-            }
-            "trackingSessionEvents" -> {
-                val client = Amplitude.getInstance(instanceName)
-                client.trackSessionEvents(json.getBoolean("trackingSessionEvents"))
-
-                result.success("trackingSessionEvents called..")
-            }
-            "setUseDynamicConfig" -> {
-                val client = Amplitude.getInstance(instanceName)
-                client.setUseDynamicConfig(json.getBoolean("useDynamicConfig"))
-
-                result.success("setUseDynamicConfig called..")
-            }
             "setUserId" -> {
-                val client = Amplitude.getInstance(instanceName)
-                client.setUserId(json.optString("userId", null), json.optBoolean("startNewSession", false))
-
+                amplitude.setUserId(json.getString("setUserId"))
                 result.success("setUserId called..")
             }
-            "setDeviceId" -> {
-                val client = Amplitude.getInstance(instanceName)
-                client.setDeviceId(json.optString("deviceId", null))
 
+            "setDeviceId" -> {
+                amplitude.setDeviceId(json.getString("setDeviceId"))
                 result.success("setDeviceId called..")
             }
-            "setServerUrl" -> {
-                val client = Amplitude.getInstance(instanceName)
-                client.setServerUrl(json.optString("serverUrl", null))
 
-                result.success("setServerUrl called..")
+            "reset" -> {
+                amplitude.reset()
             }
 
-            // Regenerate new deviceId
-            "regenerateDeviceId" -> {
-                val client = Amplitude.getInstance(instanceName)
-                client.regenerateDeviceId()
-                result.success("regenerateDeviceId called..")
-            }
-
-            // Event logging
-            "logEvent" -> {
-                val client = Amplitude.getInstance(instanceName)
-                client.logEvent(
-                    json.getString("eventType"),
-                    json.optJSONObject("eventProperties"),
-                    json.optBoolean("outOfSession", false)
-                )
-
-                result.success("logEvent called..")
-            }
-            "logRevenue" -> {
-                val client = Amplitude.getInstance(instanceName)
-                val revenue = Revenue().setProductId(json.getString("productIdentifier"))
-                    .setPrice(json.getDouble("price"))
-                    .setQuantity(json.getInt("quantity"))
-                client.logRevenueV2(revenue)
-
-                result.success("logRevenue called..")
-            }
-            "logRevenueAmount" -> {
-                val client = Amplitude.getInstance(instanceName)
-                val revenue = Revenue().setPrice(json.getDouble("amount"))
-                client.logRevenueV2(revenue)
-
-                result.success("logRevenueAmount called..")
-            }
-            "identify" -> {
-                val client = Amplitude.getInstance(instanceName)
-                val identify = createIdentify(json.getJSONObject("userProperties"))
-                client.identify(identify)
-
-                result.success("identify called..")
-            }
-            "setGroup" -> {
-                val client = Amplitude.getInstance(instanceName)
-                client.setGroup(json.getString("groupType"), json.get("groupName"))
-
-                result.success("identify called..")
-            }
-            "groupIdentify" -> {
-                val client = Amplitude.getInstance(instanceName)
-                val identify = createIdentify(json.getJSONObject("userProperties"))
-                client.groupIdentify(
-                    json.getString("groupType"),
-                    json.getString("groupName"),
-                    identify,
-                    json.optBoolean("outOfSession", false)
-                )
-
-                result.success("identify called..")
-            }
-            "setUserProperties" -> {
-                val client = Amplitude.getInstance(instanceName)
-                client.setUserProperties(json.getJSONObject("userProperties"))
-
-                result.success("setUserProperties called..")
-            }
-            "clearUserProperties" -> {
-                val client = Amplitude.getInstance(instanceName)
-                client.clearUserProperties()
-
-                result.success("clearUserProperties called..")
-            }
-            "uploadEvents" -> {
-                val client = Amplitude.getInstance(instanceName)
-                client.uploadEvents()
-
-                result.success("uploadEvents called..")
-            }
-
-            "useAppSetIdForDeviceId" -> {
-                val client = Amplitude.getInstance(instanceName)
-                client.useAppSetIdForDeviceId()
-
-                result.success("useAppSetIdForDeviceId called..")
-            }
-
-            "setMinTimeBetweenSessionsMillis" -> {
-                val client = Amplitude.getInstance(instanceName)
-                client.setMinTimeBetweenSessionsMillis(json.getLong("timeInMillis"))
-                result.success("setMinTimeBetweenSessionsMillis called..")
-            }
-
-            "setServerZone" -> {
-                val client = Amplitude.getInstance(instanceName)
-                val serverZone = json.getString("serverZone")
-                val amplitudeServerZone = if (serverZone == "EU") AmplitudeServerZone.EU else AmplitudeServerZone.US
-                client.setServerZone(amplitudeServerZone, json.getBoolean("updateServerUrl"))
-
-                result.success("setServerZone called..")
-            }
-
-            "setOffline" -> {
-                val client = Amplitude.getInstance(instanceName)
-                client.setOffline(json.getBoolean("offline"))
-
-                result.success("setOffline called..")
+            "flush" -> {
+                amplitude.flush()
             }
 
             else -> {
@@ -263,236 +139,147 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
         }
     }
 
-    private fun createIdentify(userProperties: JSONObject): Identify {
-        var identify = Identify()
-
-        for (operation in userProperties.keys()) {
-            val properties = userProperties.getJSONObject(operation)
-            for (key in properties.keys()) {
-                when (operation) {
-                    // ADD
-                    "\$add" -> {
-                        when (properties.get(key)) {
-                            is Int -> {
-                                identify.add(key, properties.getInt(key))
-                            }
-                            is Long -> {
-                                identify.add(key, properties.getLong(key))
-                            }
-                            is Double -> {
-                                identify.add(key, properties.getDouble(key))
-                            }
-                            is String -> {
-                                identify.add(key, properties.getString(key))
-                            }
-                            is JSONObject -> {
-                                identify.add(key, properties.getJSONObject(key))
-                            }
-                        }
-                    }
-
-                    // APPEND
-                    "\$append" -> {
-                        when (properties.get(key)) {
-                            is Int -> {
-                                identify.append(key, properties.getInt(key))
-                            }
-                            is Long -> {
-                                identify.append(key, properties.getLong(key))
-                            }
-                            is Double -> {
-                                identify.append(key, properties.getDouble(key))
-                            }
-                            is String -> {
-                                identify.append(key, properties.getString(key))
-                            }
-                            is Boolean -> {
-                                identify.append(key, properties.getBoolean(key))
-                            }
-                            is JSONObject -> {
-                                identify.append(key, properties.getJSONObject(key))
-                            }
-                            is JSONArray -> {
-                                identify.prepend(key, properties.getJSONArray(key))
-                            }
-                        }
-                    }
-
-                    // REMOVE
-                    "\$remove" -> {
-                        when (properties.get(key)) {
-                            is Int -> {
-                                identify.remove(key, properties.getInt(key))
-                            }
-                            is Long -> {
-                                identify.remove(key, properties.getLong(key))
-                            }
-                            is Double -> {
-                                identify.remove(key, properties.getDouble(key))
-                            }
-                            is String -> {
-                                identify.remove(key, properties.getString(key))
-                            }
-                            is Boolean -> {
-                                identify.remove(key, properties.getBoolean(key))
-                            }
-                            is JSONObject -> {
-                                identify.remove(key, properties.getJSONObject(key))
-                            }
-                            is JSONArray -> {
-                                identify.remove(key, properties.getJSONArray(key))
-                            }
-                        }
-                    }
-
-                    // PREPEND
-                    "\$prepend" -> {
-                        when (properties.get(key)) {
-                            is Int -> {
-                                identify.prepend(key, properties.getInt(key))
-                            }
-                            is Long -> {
-                                identify.prepend(key, properties.getLong(key))
-                            }
-                            is Double -> {
-                                identify.prepend(key, properties.getDouble(key))
-                            }
-                            is String -> {
-                                identify.prepend(key, properties.getString(key))
-                            }
-                            is Boolean -> {
-                                identify.prepend(key, properties.getBoolean(key))
-                            }
-                            is JSONObject -> {
-                                identify.prepend(key, properties.getJSONObject(key))
-                            }
-                            is JSONArray -> {
-                                identify.prepend(key, properties.getJSONArray(key))
-                            }
-                        }
-                    }
-
-                    // SET
-                    "\$set" -> {
-                        when (properties.get(key)) {
-                            is Int -> {
-                                identify.set(key, properties.getInt(key))
-                            }
-                            is Long -> {
-                                identify.set(key, properties.getLong(key))
-                            }
-                            is Double -> {
-                                identify.set(key, properties.getDouble(key))
-                            }
-                            is String -> {
-                                identify.set(key, properties.getString(key))
-                            }
-                            is Boolean -> {
-                                identify.set(key, properties.getBoolean(key))
-                            }
-                            is JSONObject -> {
-                                identify.set(key, properties.getJSONObject(key))
-                            }
-                            is JSONArray -> {
-                                identify.set(key, properties.getJSONArray(key))
-                            }
-                        }
-                    }
-
-                    // SETONCE
-                    "\$setOnce" -> {
-                        when (properties.get(key)) {
-                            is Int -> {
-                                identify.setOnce(key, properties.getInt(key))
-                            }
-                            is Long -> {
-                                identify.setOnce(key, properties.getLong(key))
-                            }
-                            is Double -> {
-                                identify.setOnce(key, properties.getDouble(key))
-                            }
-                            is String -> {
-                                identify.setOnce(key, properties.getString(key))
-                            }
-                            is Boolean -> {
-                                identify.setOnce(key, properties.getBoolean(key))
-                            }
-                            is JSONObject -> {
-                                identify.setOnce(key, properties.getJSONObject(key))
-                            }
-                            is JSONArray -> {
-                                identify.setOnce(key, properties.getJSONArray(key))
-                            }
-                        }
-                    }
-
-                    // PREINSERT
-                    "\$preInsert" -> {
-                        when (properties.get(key)) {
-                            is Int -> {
-                                identify.preInsert(key, properties.getInt(key))
-                            }
-                            is Long -> {
-                                identify.preInsert(key, properties.getLong(key))
-                            }
-                            is Double -> {
-                                identify.preInsert(key, properties.getDouble(key))
-                            }
-                            is String -> {
-                                identify.preInsert(key, properties.getString(key))
-                            }
-                            is Boolean -> {
-                                identify.preInsert(key, properties.getBoolean(key))
-                            }
-                            is JSONObject -> {
-                                identify.preInsert(key, properties.getJSONObject(key))
-                            }
-                            is JSONArray -> {
-                                identify.preInsert(key, properties.getJSONArray(key))
-                            }
-                        }
-                    }
-
-                    // POSTINSERT
-                    "\$postInsert" -> {
-                        when (properties.get(key)) {
-                            is Int -> {
-                                identify.postInsert(key, properties.getInt(key))
-                            }
-                            is Long -> {
-                                identify.postInsert(key, properties.getLong(key))
-                            }
-                            is Double -> {
-                                identify.postInsert(key, properties.getDouble(key))
-                            }
-                            is String -> {
-                                identify.postInsert(key, properties.getString(key))
-                            }
-                            is Boolean -> {
-                                identify.postInsert(key, properties.getBoolean(key))
-                            }
-                            is JSONObject -> {
-                                identify.postInsert(key, properties.getJSONObject(key))
-                            }
-                            is JSONArray -> {
-                                identify.postInsert(key, properties.getJSONArray(key))
-                            }
-                        }
-                    }
-
-                    // UNSET
-                    "\$unset" -> {
-                        identify.unset(key)
-                    }
-
-                    // CLEARALL
-                    "\$clearAll" -> {
-                        identify.clearAll()
-                    }
-                }
-            }
+    private fun getTrackingOptions(jsonObject: JSONObject): TrackingOptions {
+        val trackingOptions = TrackingOptions()
+        if (!jsonObject.getBoolean("ipAddress")) {
+            trackingOptions.disableIpAddress()
+        }
+        if (!jsonObject.getBoolean("language")) {
+            trackingOptions.disableLanguage()
+        }
+        if (!jsonObject.getBoolean("platform")) {
+            trackingOptions.disablePlatform()
+        }
+        if (!jsonObject.getBoolean("region")) {
+            trackingOptions.disableRegion()
+        }
+        if (!jsonObject.getBoolean("dma")) {
+            trackingOptions.disableDma()
+        }
+        if (!jsonObject.getBoolean("country")) {
+            trackingOptions.disableCountry()
+        }
+        if (!jsonObject.getBoolean("city")) {
+            trackingOptions.disableCity()
+        }
+        if (!jsonObject.getBoolean("carrier")) {
+            trackingOptions.disableCarrier()
+        }
+        if (!jsonObject.getBoolean("deviceModel")) {
+            trackingOptions.disableDeviceModel()
+        }
+        if (!jsonObject.getBoolean("deviceManufacturer")) {
+            trackingOptions.disableDeviceManufacturer()
+        }
+        if (!jsonObject.getBoolean("osVersion")) {
+            trackingOptions.disableOsVersion()
+        }
+        if (!jsonObject.getBoolean("osName")) {
+            trackingOptions.disableOsName()
+        }
+        if (!jsonObject.getBoolean("adid")) {
+            trackingOptions.disableAdid()
+        }
+        if (!jsonObject.getBoolean("appSetId")) {
+            trackingOptions.disableAppSetId()
+        }
+        if (!jsonObject.getBoolean("deviceBrand")) {
+            trackingOptions.disableDeviceBrand()
+        }
+        if (!jsonObject.getBoolean("latLag")) {
+            trackingOptions.disableLatLng()
+        }
+        if (!jsonObject.getBoolean("apiLevel")) {
+            trackingOptions.disableApiLevel()
         }
 
-        return identify
+        return trackingOptions
+    }
+
+    private fun getEvent(json: JSONObject): BaseEvent {
+        val plan = json.getJSONObject("plan")
+        val ingestionMetadata = json.getJSONObject("ingestion_metadata")
+        val event = BaseEvent()
+        event.eventType = json.getString("event_type")
+        event.eventProperties = json.getJSONObject("event_properties").toMutableMap()
+        event.userProperties = json.getJSONObject("user_properties").toMutableMap()
+        event.groups = json.getJSONObject("groups").toMutableMap()
+        event.groupProperties = json.getJSONObject("group_properties").toMutableMap()
+        event.userId = json.getString("user_id")
+        event.deviceId = json.getString("device_id")
+        event.timestamp = json.getLong("timestamp")
+        event.eventId = json.getLong("event_id")
+        event.sessionId = json.getLong("session_id")
+        event.insertId = json.getString("insert_id")
+        event.locationLat = json.getDouble("location_lat")
+        event.locationLng = json.getDouble("location_lng")
+        event.appVersion = json.getString("app_version")
+        event.versionName = json.getString("version_name")
+        event.platform = json.getString("platform")
+        event.osName = json.getString("osName")
+        event.osVersion = json.getString("os_version")
+        event.deviceBrand = json.getString("device_brand")
+        event.deviceManufacturer = json.getString("device_manufacturer")
+        event.deviceModel = json.getString("device_model")
+        event.carrier = json.getString("carrier")
+        event.country = json.getString("country")
+        event.region = json.getString("region")
+        event.city = json.getString("city")
+        event.dma = json.getString("dma")
+        event.idfa = json.getString("idfa")
+        event.idfv = json.getString("idfv")
+        event.adid = json.getString("adid")
+        event.appSetId = json.getString("app_set_id")
+        event.androidId = json.getString("android_id")
+        event.language = json.getString("language")
+        event.library = json.getString("library")
+        event.ip = json.getString("ip")
+        event.plan = Plan(
+            plan.getString("branch"),
+            plan.getString("source"),
+            plan.getString("version"),
+            plan.getString("versionId")
+        )
+        event.ingestionMetadata = IngestionMetadata(
+            ingestionMetadata.getString("sourceName"),
+            ingestionMetadata.getString("sourceVersion")
+        )
+        event.revenue = json.getDouble("revenue")
+        event.price = json.getDouble("price")
+        event.quantity = json.getInt("quantity")
+        event.productId = json.getString("product_id")
+        event.revenueType = json.getString("revenue_type")
+        event.extra = json.optJSONObject("extra").toMap()
+        event.partnerId = json.getString("partner_id")
+
+        return event
+    }
+
+    private fun JSONObject.toMutableMap(): MutableMap<String, Any?> {
+        val map = mutableMapOf<String, Any?>()
+        val keys = keys()
+        while (keys.hasNext()) {
+            val key = keys.next()
+            var value = get(key)
+            if (value is JSONObject) {
+                value = value.toMap()
+            }
+            map[key] = value
+        }
+        return map
+    }
+
+    private fun JSONObject.toMap(): Map<String, Any> {
+        val map = mutableMapOf<String, Any>()
+        val keys = keys()
+        while (keys.hasNext()) {
+            val key = keys.next()
+            var value = get(key)
+            if (value is JSONObject) {
+                value = value.toMap()
+            }
+            map[key] = value
+        }
+        return map
     }
 }
