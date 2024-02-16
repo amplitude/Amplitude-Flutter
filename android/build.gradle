@@ -2,14 +2,14 @@ group 'com.amplitude.amplitude_flutter'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '1.7.10'
+    ext.kotlin_version = '1.9.22'
     repositories {
         google()
         mavenCentral()
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.6.4'
+        classpath 'com.android.tools.build:gradle:8.2.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
@@ -25,17 +25,20 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 28
-    // Condition for namespace compatibility in AGP 8
-    if (project.android.hasProperty("namespace")) {
-        namespace 'com.amplitude.amplitude_flutter'
+    compileSdk 34
+
+    kotlin {
+        jvmToolchain(17)
     }
+
+    namespace 'com.amplitude.amplitude_flutter'
+
 
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
     }
     defaultConfig {
-        minSdkVersion 16
+        minSdkVersion 24
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     lintOptions {
@@ -43,7 +46,7 @@ android {
     }
 }
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     implementation "com.amplitude:android-sdk:2.39.8"
     implementation "com.squareup.okhttp3:okhttp:4.2.2"
 }
