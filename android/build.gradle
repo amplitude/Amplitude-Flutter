@@ -2,7 +2,7 @@ group 'com.amplitude.amplitude_flutter'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '1.5.10'
+    ext.kotlin_version = '1.5.20'
     repositories {
         google()
         mavenCentral()
@@ -25,7 +25,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 31
     // Condition for namespace compatibility in AGP 8
     if (project.android.hasProperty("namespace")) {
         namespace 'com.amplitude.amplitude_flutter'
@@ -44,5 +44,12 @@ android {
 }
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-reflect:1.6.10"
+
     implementation 'com.amplitude:analytics-android:1.+'
+    testImplementation 'org.mockito:mockito-core:4.0.0'
+    testImplementation "io.mockk:mockk:1.12.4"
+    testImplementation "io.mockk:mockk-agent-jvm:1.11.0"
+    testImplementation('junit:junit:4.13')
+    testImplementation 'org.robolectric:robolectric:4.8.2'
 }

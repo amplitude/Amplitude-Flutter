@@ -1,5 +1,3 @@
-import 'package:logging/logging.dart';
-
 class IdentifyOperation {
   final String operationType;
 
@@ -20,7 +18,6 @@ class IdentifyOperation {
 class Identify {
   Set<String> propertySet = {};
   Map<String, dynamic> properties = {};
-  final log = Logger('Amplitude-Identify');
 
   Identify set({required String property, required dynamic value}) {
     // TODO(xinyi): data type check
@@ -77,19 +74,23 @@ class Identify {
 
   void _setUserProperty(IdentifyOperation operation, String property, dynamic value) {
     if (property.isEmpty) {
-      log.warning("Attempting to perform operation ${operation.operationType} with a null or empty string property, ignoring");
+      // TODO(xinyi): add logs
+      // log.warning("Attempting to perform operation ${operation.operationType} with a null or empty string property, ignoring");
       return;
     }
     if (value == null) {
-      log.warning("Attempting to perform operation ${operation.operationType} with null value for property $property, ignoring");
+      // TODO(xinyi): add logs
+      // log.warning("Attempting to perform operation ${operation.operationType} with null value for property $property, ignoring");
       return;
     }
     if (properties.containsKey(IdentifyOperation.clearAll.operationType)) {
-      log.warning("This Identify already contains a \$clearAll operation, ignoring operation ${operation.operationType}");
+      // TODO(xinyi): add logs
+      // log.warning("This Identify already contains a \$clearAll operation, ignoring operation ${operation.operationType}");
       return;
     }
     if (propertySet.contains(property)) {
-      log.warning("Already used property $property in previous operation, ignoring operation ${operation.operationType}");
+      // TODO(xinyi): add logs
+      // log.warning("Already used property $property in previous operation, ignoring operation ${operation.operationType}");
       return;
     }
     if (!properties.containsKey(operation.operationType)) {

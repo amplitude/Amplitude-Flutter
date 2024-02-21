@@ -14,37 +14,33 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
-import io.flutter.plugin.common.PluginRegistry.Registrar
 import org.json.JSONObject
 
 class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
     lateinit var amplitude: Amplitude
 
+    lateinit var ctxt: Context
+
+    private lateinit var channel: MethodChannel
+
+
     companion object {
-
         private const val methodChannelName = "amplitude_flutter"
-
-        var ctxt: Context? = null
-
-        @JvmStatic
-        fun registerWith(registrar: Registrar) {
-            ctxt = registrar.context()
-            val channel = MethodChannel(registrar.messenger(), methodChannelName)
-            channel.setMethodCallHandler(AmplitudeFlutterPlugin())
-        }
+        private const val defaultMinIdLength = 5
     }
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         ctxt = binding.applicationContext
-        val channel = MethodChannel(binding.binaryMessenger, methodChannelName)
-        channel.setMethodCallHandler(AmplitudeFlutterPlugin())
+        channel = MethodChannel(binding.binaryMessenger, methodChannelName)
+        channel.setMethodCallHandler(this)
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
+        channel.setMethodCallHandler(null)
     }
 
     override fun onMethodCall(call: MethodCall, result: Result) {
-        val json = JSONObject(call.arguments.toString())
+        val json = JSONObject(call.arguments?.toString() ?: "{}")
 
         when (call.method) {
             "init" -> {
@@ -58,7 +54,9 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
                         flushIntervalMillis = json.getInt("flushIntervalMillis"),
                         instanceName = json.getString("instanceName"),
                         optOut = json.getBoolean("optOut"),
-                        minIdLength = json.getInt("minIdLength"),
+                        minIdLength = if (json.optInt("minIdLength") == 0) defaultMinIdLength else json.optInt(
+                            "minIdLength"
+                        ),
                         partnerId = json.getString("partnerId"),
                         flushMaxRetries = json.getInt("flushMaxRetries"),
                         useBatch = json.getBoolean("useBatch"),
@@ -83,9 +81,9 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
                         useAppSetIdForDeviceId = json.getBoolean("useAppSetIdForDeviceId"),
                     )
                 )
-                 amplitude.logger.logMode = Logger.LogMode.valueOf(
-                     json.getString("logLevel").uppercase()
-                 )
+                amplitude.logger.logMode = Logger.LogMode.valueOf(
+                    json.getString("logLevel").uppercase()
+                )
 
                 result.success("init called..")
             }
@@ -127,10 +125,12 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
 
             "reset" -> {
                 amplitude.reset()
+                result.success("reset called..")
             }
 
             "flush" -> {
                 amplitude.flush()
+                result.success("flush called..")
             }
 
             else -> {
@@ -139,7 +139,7 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
         }
     }
 
-    private fun getTrackingOptions(jsonObject: JSONObject): TrackingOptions {
+    internal fun getTrackingOptions(jsonObject: JSONObject): TrackingOptions {
         val trackingOptions = TrackingOptions()
         if (!jsonObject.getBoolean("ipAddress")) {
             trackingOptions.disableIpAddress()
@@ -196,27 +196,35 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
         return trackingOptions
     }
 
-    private fun getEvent(json: JSONObject): BaseEvent {
+    internal fun getEvent(json: JSONObject): BaseEvent {
         val plan = json.getJSONObject("plan")
         val ingestionMetadata = json.getJSONObject("ingestion_metadata")
         val event = BaseEvent()
         event.eventType = json.getString("event_type")
-        event.eventProperties = json.getJSONObject("event_properties").toMutableMap()
-        event.userProperties = json.getJSONObject("user_properties").toMutableMap()
-        event.groups = json.getJSONObject("groups").toMutableMap()
-        event.groupProperties = json.getJSONObject("group_properties").toMutableMap()
+        event.eventProperties = json.optJSONObject("event_properties")?.let {
+            it.toMutableMap()
+        } ?: null
+        event.userProperties = json.optJSONObject("user_properties")?.let {
+            it.toMutableMap()
+        } ?: null
+        event.groups = json.optJSONObject("groups")?.let {
+            it.toMutableMap()
+        } ?: null
+        event.groupProperties = json.optJSONObject("group_properties")?.let {
+            it.toMutableMap()
+        } ?: null
         event.userId = json.getString("user_id")
         event.deviceId = json.getString("device_id")
-        event.timestamp = json.getLong("timestamp")
-        event.eventId = json.getLong("event_id")
-        event.sessionId = json.getLong("session_id")
-        event.insertId = json.getString("insert_id")
-        event.locationLat = json.getDouble("location_lat")
-        event.locationLng = json.getDouble("location_lng")
+        event.timestamp = json.optLong("timestamp")
+        event.eventId = json.optLong("event_id")
+        event.sessionId = json.optLong("session_id")
+        event.insertId = json.optString("insert_id")
+        event.locationLat = json.optDouble("location_lat")
+        event.locationLng = json.optDouble("location_lng")
         event.appVersion = json.getString("app_version")
         event.versionName = json.getString("version_name")
         event.platform = json.getString("platform")
-        event.osName = json.getString("osName")
+        event.osName = json.getString("os_name")
         event.osVersion = json.getString("os_version")
         event.deviceBrand = json.getString("device_brand")
         event.deviceManufacturer = json.getString("device_manufacturer")
@@ -244,18 +252,20 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
             ingestionMetadata.getString("sourceName"),
             ingestionMetadata.getString("sourceVersion")
         )
-        event.revenue = json.getDouble("revenue")
-        event.price = json.getDouble("price")
-        event.quantity = json.getInt("quantity")
+        event.revenue = json.optDouble("revenue")
+        event.price = json.optDouble("price")
+        event.quantity = json.optInt("quantity")
         event.productId = json.getString("product_id")
         event.revenueType = json.getString("revenue_type")
-        event.extra = json.optJSONObject("extra").toMap()
+        event.extra = json.optJSONObject("extra")?.let {
+            it.toMap()
+        } ?: null
         event.partnerId = json.getString("partner_id")
 
         return event
     }
 
-    private fun JSONObject.toMutableMap(): MutableMap<String, Any?> {
+    internal fun JSONObject.toMutableMap(): MutableMap<String, Any?> {
         val map = mutableMapOf<String, Any?>()
         val keys = keys()
         while (keys.hasNext()) {
@@ -269,7 +279,7 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
         return map
     }
 
-    private fun JSONObject.toMap(): Map<String, Any> {
+    internal fun JSONObject.toMap(): Map<String, Any> {
         val map = mutableMapOf<String, Any>()
         val keys = keys()
         while (keys.hasNext()) {
