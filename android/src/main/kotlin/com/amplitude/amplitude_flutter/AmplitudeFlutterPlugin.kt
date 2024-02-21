@@ -54,7 +54,9 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
                         flushIntervalMillis = json.getInt("flushIntervalMillis"),
                         instanceName = json.getString("instanceName"),
                         optOut = json.getBoolean("optOut"),
-                        minIdLength = json.getInt("minIdLength"),
+                        minIdLength = if (json.optInt("minIdLength") == 0) defaultMinIdLength else json.optInt(
+                            "minIdLength"
+                        ),
                         partnerId = json.getString("partnerId"),
                         flushMaxRetries = json.getInt("flushMaxRetries"),
                         useBatch = json.getBoolean("useBatch"),
@@ -137,7 +139,7 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
         }
     }
 
-    private fun getTrackingOptions(jsonObject: JSONObject): TrackingOptions {
+    internal fun getTrackingOptions(jsonObject: JSONObject): TrackingOptions {
         val trackingOptions = TrackingOptions()
         if (!jsonObject.getBoolean("ipAddress")) {
             trackingOptions.disableIpAddress()
@@ -194,7 +196,7 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
         return trackingOptions
     }
 
-    private fun getEvent(json: JSONObject): BaseEvent {
+    internal fun getEvent(json: JSONObject): BaseEvent {
         val plan = json.getJSONObject("plan")
         val ingestionMetadata = json.getJSONObject("ingestion_metadata")
         val event = BaseEvent()
@@ -250,18 +252,20 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
             ingestionMetadata.getString("sourceName"),
             ingestionMetadata.getString("sourceVersion")
         )
-        event.revenue = json.getDouble("revenue")
-        event.price = json.getDouble("price")
-        event.quantity = json.getInt("quantity")
+        event.revenue = json.optDouble("revenue")
+        event.price = json.optDouble("price")
+        event.quantity = json.optInt("quantity")
         event.productId = json.getString("product_id")
         event.revenueType = json.getString("revenue_type")
-        event.extra = json.optJSONObject("extra").toMap()
+        event.extra = json.optJSONObject("extra")?.let {
+            it.toMap()
+        } ?: null
         event.partnerId = json.getString("partner_id")
 
         return event
     }
 
-    private fun JSONObject.toMutableMap(): MutableMap<String, Any?> {
+    internal fun JSONObject.toMutableMap(): MutableMap<String, Any?> {
         val map = mutableMapOf<String, Any?>()
         val keys = keys()
         while (keys.hasNext()) {
@@ -275,7 +279,7 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
         return map
     }
 
-    private fun JSONObject.toMap(): Map<String, Any> {
+    internal fun JSONObject.toMap(): Map<String, Any> {
         val map = mutableMapOf<String, Any>()
         val keys = keys()
         while (keys.hasNext()) {
