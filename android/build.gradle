@@ -51,5 +51,13 @@ dependencies {
     testImplementation "io.mockk:mockk:1.12.4"
     testImplementation "io.mockk:mockk-agent-jvm:1.11.0"
     testImplementation('junit:junit:4.13')
+    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.7.2")
     testImplementation 'org.robolectric:robolectric:4.8.2'
+}
+
+tasks.withType(Test) {
+    useJUnitPlatform()
+    testLogging {
+        showStandardStreams = true
+    }
 }

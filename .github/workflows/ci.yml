@@ -1,4 +1,4 @@
-name: Test and Lint
+name: Flutter Test and Lint
 
 on: [pull_request]
 
