@@ -2,4 +2,4 @@ import 'package:flutter/material.dart';
 
 import 'my_app.dart';
 
-void main() => runApp(const MyApp('a79cefed0b7076cf3998ef7578a18bf0'));
+void main() => runApp(const MyApp('5b9a9510e261f9ead90865bbc5a7ad1d'));

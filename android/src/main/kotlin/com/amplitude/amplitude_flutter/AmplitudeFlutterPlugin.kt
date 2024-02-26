@@ -14,7 +14,6 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
-import org.json.JSONObject
 
 class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
     lateinit var amplitude: Amplitude
@@ -26,7 +25,6 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
 
     companion object {
         private const val methodChannelName = "amplitude_flutter"
-        private const val defaultMinIdLength = 5
     }
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
@@ -40,256 +38,239 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
     }
 
     override fun onMethodCall(call: MethodCall, result: Result) {
-        val json = JSONObject(call.arguments?.toString() ?: "{}")
-
         when (call.method) {
             "init" -> {
-                val trackingOptions = json.getJSONObject("trackingOptions")
-                val defaultTracking = json.getJSONObject("defaultTracking")
-                amplitude = Amplitude(
-                    Configuration(
-                        apiKey = json.getString("apiKey"),
-                        context = ctxt!!,
-                        flushQueueSize = json.getInt("flushQueueSize"),
-                        flushIntervalMillis = json.getInt("flushIntervalMillis"),
-                        instanceName = json.getString("instanceName"),
-                        optOut = json.getBoolean("optOut"),
-                        minIdLength = if (json.optInt("minIdLength") == 0) defaultMinIdLength else json.optInt(
-                            "minIdLength"
-                        ),
-                        partnerId = json.getString("partnerId"),
-                        flushMaxRetries = json.getInt("flushMaxRetries"),
-                        useBatch = json.getBoolean("useBatch"),
-                        serverZone = com.amplitude.core.ServerZone.valueOf(
-                            json.getString("serverZone").uppercase()
-                        ),
-                        serverUrl = json.getString("serverUrl"),
-                        minTimeBetweenSessionsMillis = json.getLong("minTimeBetweenSessionsMillis"),
-                        defaultTracking = DefaultTrackingOptions(
-                            sessions = defaultTracking.getBoolean("sessions"),
-                            appLifecycles = defaultTracking.getBoolean("appLifecycles"),
-                            deepLinks = defaultTracking.getBoolean("deepLinks"),
-                            screenViews = defaultTracking.getBoolean("screenViews"),
-                        ),
-                        trackingOptions = getTrackingOptions(trackingOptions),
-                        enableCoppaControl = json.getBoolean("enableCoppaControl"),
-                        flushEventsOnClose = json.getBoolean("flushEventsOnClose"),
-                        identifyBatchIntervalMillis = json.getLong("identifyBatchIntervalMillis"),
-                        migrateLegacyData = json.getBoolean("migrateLegacyData"),
-                        locationListening = json.getBoolean("locationListening"),
-                        useAdvertisingIdForDeviceId = json.getBoolean("useAdvertisingIdForDeviceId"),
-                        useAppSetIdForDeviceId = json.getBoolean("useAppSetIdForDeviceId"),
-                    )
-                )
-                amplitude.logger.logMode = Logger.LogMode.valueOf(
-                    json.getString("logLevel").uppercase()
-                )
+                amplitude = Amplitude(getConfiguration(call))
+                call.argument<String>("logLevel")?.let {
+                    amplitude.logger.logMode = Logger.LogMode.valueOf(it.uppercase())
+                }
+                amplitude.logger.debug("Amplitude has been successfully initialized.")
 
                 result.success("init called..")
             }
 
             "track" -> {
-                amplitude.track(getEvent(json))
+                val event = getEvent(call)
+                amplitude.track(event)
+                amplitude.logger.debug("Track event: ${call.arguments}")
+
                 result.success("track called..")
             }
 
             "identify" -> {
-                amplitude.track(getEvent(json))
+                val event = getEvent(call)
+                amplitude.track(event)
+                amplitude.logger.debug("Track identify event: ${call.arguments}")
+
                 result.success("identify called..")
             }
 
             "groupIdentify" -> {
-                amplitude.track(getEvent(json))
+                val event = getEvent(call)
+                amplitude.track(event)
+                amplitude.logger.debug("Track group identify event: ${call.arguments}")
+
                 result.success("groupIdentify called..")
             }
 
             "setGroup" -> {
-                amplitude.track(getEvent(json))
+                val event = getEvent(call)
+                amplitude.track(event)
+                amplitude.logger.debug("Track set group event: ${call.arguments}")
+
                 result.success("setGroup called..")
             }
 
             "revenue" -> {
-                amplitude.track(getEvent(json))
+                val event = getEvent(call)
+                amplitude.track(event)
+                amplitude.logger.debug("Track revenue event: ${call.arguments}")
+
                 result.success("revenue called..")
             }
 
             "setUserId" -> {
-                amplitude.setUserId(json.getString("setUserId"))
+                val userId = call.argument<String?>("setUserId")
+                amplitude.setUserId(userId)
+                amplitude.logger.debug("Set user Id to ${call.arguments}")
+
                 result.success("setUserId called..")
             }
 
             "setDeviceId" -> {
-                amplitude.setDeviceId(json.getString("setDeviceId"))
+                val deviceId = call.argument<String>("setDeviceId")
+                deviceId?.let { amplitude.setDeviceId(it) }
+                amplitude.logger.debug("Set device Id to ${call.arguments}")
+
                 result.success("setDeviceId called..")
             }
 
             "reset" -> {
                 amplitude.reset()
+                amplitude.logger.debug("Reset userId and deviceId.")
+
                 result.success("reset called..")
             }
 
             "flush" -> {
                 amplitude.flush()
+                amplitude.logger.debug("Flush events.")
+
                 result.success("flush called..")
             }
 
             else -> {
+                amplitude.logger.debug("Method ${call.method} is not recognized.")
+
                 result.notImplemented()
             }
         }
     }
 
-    internal fun getTrackingOptions(jsonObject: JSONObject): TrackingOptions {
+    private fun getConfiguration(call: MethodCall): Configuration {
+        val configuration = Configuration(call.argument<String>("apiKey")!!, context = ctxt)
+        call.argument<Int>("flushQueueSize")?.let { configuration.flushQueueSize = it }
+        call.argument<Int>("flushIntervalMillis")?.let { configuration.flushIntervalMillis = it }
+        call.argument<String>("instanceName")?.let { configuration.instanceName = it }
+        call.argument<Boolean>("optOut")?.let { configuration.optOut = it }
+        call.argument<Int>("minIdLength")?.let { configuration.minIdLength = it }
+        call.argument<String>("partnerId")?.let { configuration.partnerId = it }
+        call.argument<Int>("flushMaxRetries")?.let { configuration.flushMaxRetries = it }
+        call.argument<Boolean>("useBatch")?.let { configuration.useBatch = it }
+        call.argument<String>("serverZone")
+            ?.let { configuration.serverZone = com.amplitude.core.ServerZone.valueOf(it.uppercase()) }
+        call.argument<Int>("minTimeBetweenSessionsMillis")
+            ?.let { configuration.minTimeBetweenSessionsMillis = it.toLong() }
+        call.argument<Map<String, Any>>("defaultTracking")?.let { map ->
+            configuration.defaultTracking = DefaultTrackingOptions(
+                sessions = (map["sessions"] as? Boolean) ?: true,
+                appLifecycles = (map["appLifecycles"] as? Boolean) ?: false,
+                deepLinks = (map["deepLinks"] as? Boolean) ?: false,
+                screenViews = (map["screenViews"] as? Boolean) ?: false
+            )
+        }
+        call.argument<Map<String, Any>>("trackingOptions")?.let { map ->
+            configuration.trackingOptions = convertMapToTrackingOptions(map)
+        }
+        call.argument<Boolean>("enableCoppaControl")?.let { configuration.enableCoppaControl = it }
+        call.argument<Boolean>("flushEventsOnClose")?.let { configuration.flushEventsOnClose = it }
+        call.argument<Int>("identifyBatchIntervalMillis")
+            ?.let { configuration.identifyBatchIntervalMillis = it.toLong() }
+        call.argument<Boolean>("migrateLegacyData")?.let { configuration.migrateLegacyData = it }
+        call.argument<Boolean>("locationListening")?.let { configuration.locationListening = it }
+        call.argument<Boolean>("useAdvertisingIdForDeviceId")
+            ?.let { configuration.useAdvertisingIdForDeviceId = it }
+        call.argument<Boolean>("useAppSetIdForDeviceId")?.let { configuration.useAppSetIdForDeviceId = it }
+
+        return configuration
+    }
+
+    private fun convertMapToTrackingOptions(map: Map<String, Any>): TrackingOptions {
         val trackingOptions = TrackingOptions()
-        if (!jsonObject.getBoolean("ipAddress")) {
-            trackingOptions.disableIpAddress()
-        }
-        if (!jsonObject.getBoolean("language")) {
-            trackingOptions.disableLanguage()
-        }
-        if (!jsonObject.getBoolean("platform")) {
-            trackingOptions.disablePlatform()
-        }
-        if (!jsonObject.getBoolean("region")) {
-            trackingOptions.disableRegion()
-        }
-        if (!jsonObject.getBoolean("dma")) {
-            trackingOptions.disableDma()
-        }
-        if (!jsonObject.getBoolean("country")) {
-            trackingOptions.disableCountry()
-        }
-        if (!jsonObject.getBoolean("city")) {
-            trackingOptions.disableCity()
-        }
-        if (!jsonObject.getBoolean("carrier")) {
-            trackingOptions.disableCarrier()
-        }
-        if (!jsonObject.getBoolean("deviceModel")) {
-            trackingOptions.disableDeviceModel()
-        }
-        if (!jsonObject.getBoolean("deviceManufacturer")) {
-            trackingOptions.disableDeviceManufacturer()
-        }
-        if (!jsonObject.getBoolean("osVersion")) {
-            trackingOptions.disableOsVersion()
-        }
-        if (!jsonObject.getBoolean("osName")) {
-            trackingOptions.disableOsName()
-        }
-        if (!jsonObject.getBoolean("adid")) {
-            trackingOptions.disableAdid()
-        }
-        if (!jsonObject.getBoolean("appSetId")) {
-            trackingOptions.disableAppSetId()
-        }
-        if (!jsonObject.getBoolean("deviceBrand")) {
-            trackingOptions.disableDeviceBrand()
-        }
-        if (!jsonObject.getBoolean("latLag")) {
-            trackingOptions.disableLatLng()
-        }
-        if (!jsonObject.getBoolean("apiLevel")) {
-            trackingOptions.disableApiLevel()
-        }
+
+        (map["ipAddress"] as? Boolean)?.let { if (!it) trackingOptions.disableIpAddress() }
+        (map["language"] as? Boolean)?.let { if (!it) trackingOptions.disableLanguage() }
+        (map["platform"] as? Boolean)?.let { if (!it) trackingOptions.disablePlatform() }
+        (map["region"] as? Boolean)?.let { if (!it) trackingOptions.disableRegion() }
+        (map["dma"] as? Boolean)?.let { if (!it) trackingOptions.disableDma() }
+        (map["country"] as? Boolean)?.let { if (!it) trackingOptions.disableCountry() }
+        (map["city"] as? Boolean)?.let { if (!it) trackingOptions.disableCity() }
+        (map["carrier"] as? Boolean)?.let { if (!it) trackingOptions.disableCarrier() }
+        (map["deviceModel"] as? Boolean)?.let { if (!it) trackingOptions.disableDeviceModel() }
+        (map["deviceManufacturer"] as? Boolean)?.let { if (!it) trackingOptions.disableDeviceManufacturer() }
+        (map["osVersion"] as? Boolean)?.let { if (!it) trackingOptions.disableOsVersion() }
+        (map["osName"] as? Boolean)?.let { if (!it) trackingOptions.disableOsName() }
+        (map["adid"] as? Boolean)?.let { if (!it) trackingOptions.disableAdid() }
+        (map["appSetId"] as? Boolean)?.let { if (!it) trackingOptions.disableAppSetId() }
+        (map["deviceBrand"] as? Boolean)?.let { if (!it) trackingOptions.disableDeviceBrand() }
+        (map["latLng"] as? Boolean)?.let { if (!it) trackingOptions.disableLatLng() }
+        (map["apiLevel"] as? Boolean)?.let { if (!it) trackingOptions.disableApiLevel() }
 
         return trackingOptions
     }
 
-    internal fun getEvent(json: JSONObject): BaseEvent {
-        val plan = json.getJSONObject("plan")
-        val ingestionMetadata = json.getJSONObject("ingestion_metadata")
+    /**
+     * Converts a [MethodCall] to a [BaseEvent] assuming arguments is a Map.
+     *
+     * @param call The [MethodCall] containing the event's data as arguments.
+     * @return A [BaseEvent] populated with properties extracted from the [MethodCall].
+     * @throws IllegalArgumentException If mandatory field `event_type` is missing.
+     *
+     * Example usage:
+     * val event = getEventFromMap(methodCall)
+     *
+     * Note:
+     * - The function only sets the class property of the BaseEvent instance if it's explicitly set.
+     *   Otherwise, it will take the default value of BaseEvent constructor
+     */
+    private fun getEvent(call: MethodCall): BaseEvent {
         val event = BaseEvent()
-        event.eventType = json.getString("event_type")
-        event.eventProperties = json.optJSONObject("event_properties")?.let {
-            it.toMutableMap()
-        } ?: null
-        event.userProperties = json.optJSONObject("user_properties")?.let {
-            it.toMutableMap()
-        } ?: null
-        event.groups = json.optJSONObject("groups")?.let {
-            it.toMutableMap()
-        } ?: null
-        event.groupProperties = json.optJSONObject("group_properties")?.let {
-            it.toMutableMap()
-        } ?: null
-        event.userId = json.getString("user_id")
-        event.deviceId = json.getString("device_id")
-        event.timestamp = json.optLong("timestamp")
-        event.eventId = json.optLong("event_id")
-        event.sessionId = json.optLong("session_id")
-        event.insertId = json.optString("insert_id")
-        event.locationLat = json.optDouble("location_lat")
-        event.locationLng = json.optDouble("location_lng")
-        event.appVersion = json.getString("app_version")
-        event.versionName = json.getString("version_name")
-        event.platform = json.getString("platform")
-        event.osName = json.getString("os_name")
-        event.osVersion = json.getString("os_version")
-        event.deviceBrand = json.getString("device_brand")
-        event.deviceManufacturer = json.getString("device_manufacturer")
-        event.deviceModel = json.getString("device_model")
-        event.carrier = json.getString("carrier")
-        event.country = json.getString("country")
-        event.region = json.getString("region")
-        event.city = json.getString("city")
-        event.dma = json.getString("dma")
-        event.idfa = json.getString("idfa")
-        event.idfv = json.getString("idfv")
-        event.adid = json.getString("adid")
-        event.appSetId = json.getString("app_set_id")
-        event.androidId = json.getString("android_id")
-        event.language = json.getString("language")
-        event.library = json.getString("library")
-        event.ip = json.getString("ip")
-        event.plan = Plan(
-            plan.getString("branch"),
-            plan.getString("source"),
-            plan.getString("version"),
-            plan.getString("versionId")
-        )
-        event.ingestionMetadata = IngestionMetadata(
-            ingestionMetadata.getString("sourceName"),
-            ingestionMetadata.getString("sourceVersion")
-        )
-        event.revenue = json.optDouble("revenue")
-        event.price = json.optDouble("price")
-        event.quantity = json.optInt("quantity")
-        event.productId = json.getString("product_id")
-        event.revenueType = json.getString("revenue_type")
-        event.extra = json.optJSONObject("extra")?.let {
-            it.toMap()
-        } ?: null
-        event.partnerId = json.getString("partner_id")
+        event.eventType = call.argument<String>("event_type")!!
+        call.argument<Map<String, Any>>("event_properties")?.let {
+            event.eventProperties = it.toMutableMap()
+        }
+        call.argument<Map<String, Any>>("user_properties")?.let {
+            event.userProperties = it.toMutableMap()
+        }
+        call.argument<Map<String, Any>>("groups")?.let {
+            event.groups = it.toMutableMap()
+        }
+        call.argument<Map<String, Any>>("group_properties")?.let {
+            event.groupProperties = it.toMutableMap()
+        }
+        call.argument<String>("user_id")?.let { event.userId = it }
+        call.argument<String>("device_id")?.let { event.deviceId = it }
+        call.argument<Int>("timestamp")?.let { event.timestamp = it.toLong() }
+        call.argument<Int>("event_id")?.let { event.eventId = it.toLong() }
+        call.argument<Int>("session_id")?.let { event.sessionId = it.toLong() }
+        call.argument<String>("insert_id")?.let { event.insertId = it }
+        call.argument<Double>("location_lat")?.let { event.locationLat = it }
+        call.argument<Double>("location_lng")?.let { event.locationLng = it }
+        call.argument<String>("app_version")?.let { event.appVersion = it }
+        call.argument<String>("version_name")?.let { event.versionName = it }
+        call.argument<String>("platform")?.let { event.platform = it }
+        call.argument<String>("os_name")?.let { event.osName = it }
+        call.argument<String>("os_version")?.let { event.osVersion = it }
+        call.argument<String>("device_brand")?.let { event.deviceBrand = it }
+        call.argument<String>("device_manufacturer")?.let { event.deviceManufacturer = it }
+        call.argument<String>("device_model")?.let { event.deviceModel = it }
+        call.argument<String>("carrier")?.let { event.carrier = it }
+        call.argument<String>("country")?.let { event.country = it }
+        call.argument<String>("region")?.let { event.region = it }
+        call.argument<String>("city")?.let { event.city = it }
+        call.argument<String>("dma")?.let { event.dma = it }
+        call.argument<String>("idfa")?.let { event.idfa = it }
+        call.argument<String>("idfv")?.let { event.idfv = it }
+        call.argument<String>("adid")?.let { event.adid = it }
+        call.argument<String>("app_set_id")?.let { event.appSetId = it }
+        call.argument<String>("android_id")?.let { event.androidId = it }
+        call.argument<String>("language")?.let { event.language = it }
+        call.argument<String>("library")?.let { event.library = it }
+        call.argument<String>("ip")?.let { event.ip = it }
+        call.argument<Map<String, Any>>("plan")?.let {
+            event.plan = Plan(
+                it["branch"] as? String,
+                it["source"] as? String,
+                it["version"] as? String,
+                it["versionId"] as? String
+            )
+        }
+        call.argument<Map<String, Any>>("ingestion_metadata")?.let {
+            event.ingestionMetadata = IngestionMetadata(
+                it["sourceName"] as? String,
+                it["sourceVersion"] as? String
+            )
+        }
+        call.argument<Double>("revenue")?.let { event.revenue = it }
+        call.argument<Double>("price")?.let { event.price = it }
+        call.argument<Int>("quantity")?.let { event.quantity = it }
+        call.argument<String>("product_id")?.let { event.productId = it }
+        call.argument<String>("revenue_type")?.let { event.revenueType = it }
+        call.argument<Map<String, Any>>("extra")?.let {
+            event.extra = it
+        }
+        call.argument<String>("partner_id")?.let { event.partnerId = it }
 
         return event
-    }
-
-    internal fun JSONObject.toMutableMap(): MutableMap<String, Any?> {
-        val map = mutableMapOf<String, Any?>()
-        val keys = keys()
-        while (keys.hasNext()) {
-            val key = keys.next()
-            var value = get(key)
-            if (value is JSONObject) {
-                value = value.toMap()
-            }
-            map[key] = value
-        }
-        return map
-    }
-
-    internal fun JSONObject.toMap(): Map<String, Any> {
-        val map = mutableMapOf<String, Any>()
-        val keys = keys()
-        while (keys.hasNext()) {
-            val key = keys.next()
-            var value = get(key)
-            if (value is JSONObject) {
-                value = value.toMap()
-            }
-            map[key] = value
-        }
-        return map
     }
 }

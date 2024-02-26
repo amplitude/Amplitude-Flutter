@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:amplitude_flutter/events/revenue.dart';
 
-// import 'app_state.dart';
+import 'app_state.dart';
 
 class RevenueForm extends StatefulWidget {
   @override
@@ -18,13 +19,13 @@ class _RevenueFormState extends State<RevenueForm> {
     if (productId.text.isNotEmpty &&
         double.tryParse(price.text) != null &&
         int.tryParse(quantity.text) != null) {
-      // AppState.of(context)
-      //   // ..analytics.logRevenue(
-      //     productId.text,
-      //     int.tryParse(quantity.text)!,
-      //     double.tryParse(price.text)!,
-      //   )
-      //   ..setMessage('Revenue Sent.');
+      final revenue = Revenue()
+        ..price = double.tryParse(price.text)!
+        ..quantity = int.tryParse(quantity.text)!
+        .. productId = productId.text;
+      AppState.of(context)
+        ..analytics.revenue(revenue: revenue)
+        ..setMessage('Revenue Sent.');
     }
   }
 

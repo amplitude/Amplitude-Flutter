@@ -36,7 +36,7 @@ void main() {
       expect(map['partnerId'], isNull);
       expect(map['flushMaxRetries'], Constants.flushMaxRetries);
       expect(map['useBatch'], false);
-      expect(map['serverZone'], ServerZone.us.toString());
+      expect(map['serverZone'], 'us');
       expect(map['serverUrl'], isNull);
       expect(map['minTimeBetweenSessionsMillis'], Constants.minTimeBetweenSessionsMillis);
       expect(map.containsKey('defaultTracking'), true);

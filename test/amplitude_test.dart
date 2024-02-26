@@ -141,7 +141,8 @@ void main() {
     mockChannel = MockMethodChannel();
     when(mockChannel.invokeListMethod("init", any))
         .thenAnswer((_) async => null);
-    amplitude = await Amplitude.init(testConfiguration, mockChannel);
+    amplitude = Amplitude(testConfiguration);
+    await amplitude.init(mockChannel);
   });
 
   test("Should init calls MethodChannel", () async {

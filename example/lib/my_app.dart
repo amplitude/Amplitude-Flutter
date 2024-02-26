@@ -1,16 +1,17 @@
 import 'dart:async';
 
 import 'package:amplitude_flutter/amplitude.dart';
-import 'package:amplitude_flutter_example/flush_thresholds_form.dart';
+import 'package:amplitude_flutter/configuration.dart';
+import 'package:amplitude_flutter/constants.dart';
 import 'package:flutter/material.dart';
 
 import 'app_state.dart';
-import 'deviceid_sessionid.dart';
+import 'device_id_form.dart';
 import 'event_form.dart';
 import 'group_form.dart';
 import 'group_identify_form.dart';
 import 'identify_form.dart';
-import 'regenerate_device.dart';
+import 'reset.dart';
 import 'revenue_form.dart';
 import 'user_id_form.dart';
 
@@ -26,41 +27,24 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   String _message = '';
 
-  late final Amplitude analytics;
+  late Amplitude analytics;
+
+  initAnalytics() async {
+    await analytics.init();
+
+    setMessage('Amplitude initialized');
+  }
 
   @override
   void initState() {
     super.initState();
-
-    // analytics = Amplitude.getInstance(instanceName: "project");
-    // analytics.setUseDynamicConfig(true);
-    // analytics.setServerUrl("https://api2.amplitude.com");
-    // analytics.init(widget.apiKey);
-    // analytics.enableCoppaControl();
-    // analytics.setUserId("test_user", startNewSession: true);
-    // analytics.trackingSessionEvents(true);
-    // analytics.setMinTimeBetweenSessionsMillis(5000);
-    // analytics.setEventUploadThreshold(5);
-    // analytics.setEventUploadPeriodMillis(30000);
-    // analytics.setServerZone("US");
-    // analytics.logEvent('MyApp startup',
-    //     eventProperties: {'event_prop_1': 10, 'event_prop_2': true});
-    // analytics.logEvent('Out of Session Event', outOfSession: true);
-    // analytics.setOptOut(true);
-    // analytics.logEvent('Opt Out Event');
-    // analytics.setOptOut(false);
-
-    // Map<String, dynamic> userProps = {
-    //   'date': '01.06.2020',
-    //   'name': 'Name',
-    //   'buildNumber': '1.1.1',
-    // };
-    // analytics.logRevenueAmount(21.9);
-    // analytics.setUserProperties(userProps);
+    analytics = Amplitude(
+        Configuration(apiKey: widget.apiKey, logLevel: LogLevel.debug));
+    initAnalytics();
   }
 
   Future<void> _flushEvents() async {
-    // await analytics.uploadEvents();
+    analytics.flush();
 
     setMessage('Events flushed.');
   }
@@ -90,11 +74,11 @@ class _MyAppState extends State<MyApp> {
             padding: const EdgeInsets.all(10.0),
             child: ListView(
               children: <Widget>[
-                DeviceIdSessionId(),
+                DeviceIdForm(),
                 divider,
                 UserIdForm(),
                 divider,
-                RegenerateDeviceBtn(),
+                ResetForm(),
                 divider,
                 EventForm(),
                 divider,
@@ -106,8 +90,8 @@ class _MyAppState extends State<MyApp> {
                 divider,
                 RevenueForm(),
                 divider,
-                FlushThresholdForm(),
-                divider,
+                // FlushThresholdForm(),
+                // divider,
                 ElevatedButton(
                   child: const Text('Flush Events'),
                   onPressed: _flushEvents,
