@@ -2,14 +2,14 @@ group 'com.amplitude.amplitude_flutter'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '1.7.10'
+    ext.kotlin_version = '1.5.20'
     repositories {
         google()
         mavenCentral()
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.6.4'
+        classpath 'com.android.tools.build:gradle:8.2.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
@@ -25,7 +25,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 34
     // Condition for namespace compatibility in AGP 8
     if (project.android.hasProperty("namespace")) {
         namespace 'com.amplitude.amplitude_flutter'
@@ -44,6 +44,20 @@ android {
 }
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation "com.amplitude:android-sdk:2.39.8"
-    implementation "com.squareup.okhttp3:okhttp:4.2.2"
+    implementation "org.jetbrains.kotlin:kotlin-reflect:1.6.10"
+
+    implementation 'com.amplitude:analytics-android:[1.0,2.0)'
+    testImplementation 'org.mockito:mockito-core:4.0.0'
+    testImplementation "io.mockk:mockk:1.12.4"
+    testImplementation "io.mockk:mockk-agent-jvm:1.11.0"
+    testImplementation('junit:junit:4.13')
+    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.7.2")
+    testImplementation 'org.robolectric:robolectric:4.8.2'
+}
+
+tasks.withType(Test) {
+    useJUnitPlatform()
+    testLogging {
+        showStandardStreams = true
+    }
 }

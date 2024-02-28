@@ -289,7 +289,7 @@ void main() {
       "\$set": {testGroupType: testGroupName}
     };
 
-    verify(mockChannel.invokeMethod("track", jsonEncode(testIdentifyMap)))
+    verify(mockChannel.invokeMethod("setGroup", jsonEncode(testIdentifyMap)))
         .called(1);
   });
 
@@ -309,7 +309,7 @@ void main() {
     };
     testIdentifyMap["user_id"] = testUserId;
 
-    verify(mockChannel.invokeMethod("track", jsonEncode(testIdentifyMap)))
+    verify(mockChannel.invokeMethod("setGroup", jsonEncode(testIdentifyMap)))
         .called(1);
   });
 
