@@ -31,7 +31,7 @@ void main() {
       expect(map['flushIntervalMillis'], Constants.flushIntervalMillis);
       expect(map['instanceName'], Constants.defaultInstanceName);
       expect(map['optOut'], false);
-      expect(map['logLevel'], LogLevel.warn.toString());
+      expect(map['logLevel'], 'warn');
       expect(map['minIdLength'], isNull);
       expect(map['partnerId'], isNull);
       expect(map['flushMaxRetries'], Constants.flushMaxRetries);

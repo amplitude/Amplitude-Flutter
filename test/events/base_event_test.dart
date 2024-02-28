@@ -129,10 +129,6 @@ void main() {
 
       final expectedMap = {
         'event_type': eventType,
-        'event_properties': null,
-        'user_properties': null,
-        'groups': null,
-        'group_properties': null,
         'user_id': userId,
         'device_id': deviceId,
         'timestamp': timestamp,
