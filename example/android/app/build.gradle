@@ -27,6 +27,7 @@ apply plugin: 'kotlin-android'
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
 android {
+    namespace 'com.amplitude.amplitude_flutter'
     compileSdkVersion 34
 
     sourceSets {
