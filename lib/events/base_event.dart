@@ -139,7 +139,7 @@ class BaseEvent extends EventOptions {
       if (revenueType != null) 'revenue_type': revenueType,
       if (extra != null) 'extra': extra,
       if (partnerId != null) 'partner_id': partnerId,
-      if (attempts != null) 'attempts': attempts,
+      'attempts': attempts,
     };
   }
 

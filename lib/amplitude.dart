@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:amplitude_flutter/events/event_options.dart';
 import 'package:amplitude_flutter/events/identify_event.dart';
