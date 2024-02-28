@@ -54,7 +54,7 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
                         flushIntervalMillis = json.getInt("flushIntervalMillis"),
                         instanceName = json.getString("instanceName"),
                         optOut = json.getBoolean("optOut"),
-                        minIdLength = if (json.optInt("minIdLength") == 0) defaultMinIdLength else json.optInt(
+                        minIdLength = if (json.optInt("minIdLength") < 1) defaultMinIdLength else json.optInt(
                             "minIdLength"
                         ),
                         partnerId = json.getString("partnerId"),
