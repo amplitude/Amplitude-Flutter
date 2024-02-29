@@ -19,10 +19,11 @@ import android.content.pm.PackageManager
 import com.amplitude.android.utilities.DefaultEventUtils
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
+import java.lang.ref.WeakReference
 
 class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     lateinit var amplitude: Amplitude
-    private var activity: Activity? = null
+    private var activity: WeakReference<Activity?> = WeakReference(null)
     lateinit var ctxt: Context
 
     private lateinit var channel: MethodChannel
@@ -33,19 +34,19 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     }
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
-        activity = binding.activity
+        activity = WeakReference(binding.activity)
     }
 
     override fun onDetachedFromActivityForConfigChanges() {
-        activity = null
+        activity = WeakReference(null)
     }
 
     override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
-        activity = binding.activity
+        activity = WeakReference(binding.activity)
     }
 
     override fun onDetachedFromActivity() {
-        activity = null
+        activity = WeakReference(null)
     }
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
@@ -163,7 +164,7 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 
                 if (appLifecycles) {
                     val packageManager = ctxt.packageManager
-                    var packageInfo = try {
+                    val packageInfo = try {
                         packageManager.getPackageInfo(ctxt.packageName, 0)
                     } catch (ex: PackageManager.NameNotFoundException) {
                         println("Error occurred in getting package info. " + ex.message)
@@ -173,7 +174,7 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                 }
 
                 if (deepLinks) {
-                    activity?.let { utils.trackDeepLinkOpenedEvent(it) }
+                    activity.get()?.let { utils.trackDeepLinkOpenedEvent(it) }
                 }
             }
         }
