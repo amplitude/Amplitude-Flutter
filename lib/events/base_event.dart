@@ -1,3 +1,4 @@
+import 'package:amplitude_flutter/constants.dart';
 import 'package:amplitude_flutter/events/plan.dart';
 import 'event_options.dart';
 import 'ingestion_metadata.dart';
@@ -37,7 +38,7 @@ class BaseEvent extends EventOptions {
     String? appSetId,
     String? androidId,
     String? language,
-    String? library,
+    String library = "${Constants.packageName}/${Constants.packageVersion}",
     String? ip,
     Plan? plan,
     IngestionMetadata? ingestionMetadata,
