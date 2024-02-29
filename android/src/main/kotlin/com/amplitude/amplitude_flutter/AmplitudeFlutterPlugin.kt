@@ -1,5 +1,6 @@
 package com.amplitude.amplitude_flutter
 
+import android.app.Activity
 import android.content.Context
 import com.amplitude.android.Amplitude
 import com.amplitude.android.Configuration
@@ -14,10 +15,14 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
+import android.content.pm.PackageManager
+import com.amplitude.android.utilities.DefaultEventUtils
+import io.flutter.embedding.engine.plugins.activity.ActivityAware
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 
-class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
+class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     lateinit var amplitude: Amplitude
-
+    private var activity: Activity? = null
     lateinit var ctxt: Context
 
     private lateinit var channel: MethodChannel
@@ -25,6 +30,22 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
 
     companion object {
         private const val methodChannelName = "amplitude_flutter"
+    }
+
+    override fun onAttachedToActivity(binding: ActivityPluginBinding) {
+        activity = binding.activity
+    }
+
+    override fun onDetachedFromActivityForConfigChanges() {
+        activity = null
+    }
+
+    override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
+        activity = binding.activity
+    }
+
+    override fun onDetachedFromActivity() {
+        activity = null
     }
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
@@ -40,11 +61,17 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
     override fun onMethodCall(call: MethodCall, result: Result) {
         when (call.method) {
             "init" -> {
-                amplitude = Amplitude(getConfiguration(call))
+                val configuration = getConfiguration(call)
+                amplitude = Amplitude(configuration)
                 call.argument<String>("logLevel")?.let {
                     amplitude.logger.logMode = Logger.LogMode.valueOf(it.uppercase())
                 }
                 amplitude.logger.debug("Amplitude has been successfully initialized.")
+
+                trackAppLifecycleAndDeepLinkEvents(
+                    configuration.defaultTracking.appLifecycles,
+                    configuration.defaultTracking.deepLinks
+                )
 
                 result.success("init called..")
             }
@@ -123,6 +150,31 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
                 amplitude.logger.debug("Method ${call.method} is not recognized.")
 
                 result.notImplemented()
+            }
+        }
+    }
+
+    private fun trackAppLifecycleAndDeepLinkEvents(appLifecycles: Boolean, deepLinks: Boolean) {
+        amplitude.isBuilt.invokeOnCompletion { exception ->
+            if (exception != null) {
+                println("isBuilt computation failed with exception: $exception")
+            } else {
+                val utils = DefaultEventUtils(amplitude)
+
+                if (appLifecycles) {
+                    val packageManager = ctxt.packageManager
+                    var packageInfo = try {
+                        packageManager.getPackageInfo(ctxt.packageName, 0)
+                    } catch (ex: PackageManager.NameNotFoundException) {
+                        println("Error occurred in getting package info. " + ex.message)
+                        null
+                    }
+                    packageInfo?.let { utils.trackAppUpdatedInstalledEvent(it) }
+                }
+
+                if (deepLinks) {
+                    activity?.let { utils.trackDeepLinkOpenedEvent(it) }
+                }
             }
         }
     }
