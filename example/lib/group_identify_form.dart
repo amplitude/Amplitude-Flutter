@@ -1,4 +1,4 @@
-// import 'package:amplitude_flutter/identify.dart';
+import 'package:amplitude_flutter/events/identify.dart';
 import 'package:flutter/material.dart';
 
 import 'app_state.dart';
@@ -14,11 +14,11 @@ class _GroupIdentifyFormState extends State<GroupIdentifyForm> {
         groupValue.text.isNotEmpty &&
         groupPropertyKey.text.isNotEmpty &&
         groupPropertyValue.text.isNotEmpty) {
-      // final Identify identify = Identify()
-      //   ..set(groupPropertyKey.text, groupPropertyValue.text);
+      final Identify identify = Identify()
+        ..set(property: groupPropertyKey.text, value: groupPropertyValue.text);
 
       AppState.of(context)
-        // ..analytics.groupIdentify(groupType.text, groupValue.text, identify)
+        ..analytics.groupIdentify(groupType: groupType.text, groupName: groupValue.text, identify: identify)
         ..setMessage('Group Identify sent.');
     }
   }

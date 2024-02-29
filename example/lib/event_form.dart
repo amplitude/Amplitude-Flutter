@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:amplitude_flutter/events/base_event.dart';
 
 import 'app_state.dart';
 
@@ -13,7 +14,7 @@ class _EventFormState extends State<EventForm> {
 
   void onPress() {
     AppState.of(context)
-      // ..analytics.logEvent(_controller.text)
+      ..analytics.track(event: BaseEvent(eventType: _controller.text))
       ..setMessage('Event sent.');
   }
 
