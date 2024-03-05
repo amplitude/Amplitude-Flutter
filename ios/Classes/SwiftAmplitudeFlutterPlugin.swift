@@ -1,252 +1,302 @@
 import Flutter
 import UIKit
-import Amplitude
+import AmplitudeSwift
 
 @objc public class SwiftAmplitudeFlutterPlugin: NSObject, FlutterPlugin {
+    var amplitude: Amplitude?
+    static let methodChannelName = "amplitude_flutter"
+
     public static func register(with registrar: FlutterPluginRegistrar) {
-        let channel = FlutterMethodChannel(name: "amplitude_flutter", binaryMessenger: registrar.messenger())
+        let channel = FlutterMethodChannel(name: methodChannelName, binaryMessenger: registrar.messenger())
         let instance = SwiftAmplitudeFlutterPlugin()
         registrar.addMethodCallDelegate(instance, channel: channel)
     }
 
-    public func getPropertiesFromArguments(_ callArguments: Any?) throws -> [String:Any]? {
-        if let arguments = callArguments, let data = (arguments as! String).data(using: .utf8) {
-
-            let properties = try JSONSerialization.jsonObject(with: data, options: []) as! [String:Any]
-            return properties;
-        }
-        return nil;
-    }
-
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        do {
-            if let args = try getPropertiesFromArguments(call.arguments) {
-                let instanceName = args["instanceName"] as! String
+            switch call.method {
+            case "init":
 
-                switch (call.method) {
-                // Init
-                case "init":
-                    let apiKey = args["apiKey"] as! String
+                amplitude = Amplitude(configuration: getConfiguration(call: call))
 
-                    if (apiKey.isEmpty) {
-                        result(FlutterError.init(code: "EMPTY_APP_KEY",
-                                                 message: "Please initialize the Amplitude with a valid API Key.", details: nil))
-                        return
-                    }
+                // TODO(xinyi): add library plugin
+                amplitude?.logger?.debug(message: "Amplitude has been successfully initialized.")
 
-                    if let userId = args["userId"] as? String {
-                        Amplitude.instance(withName: instanceName).initializeApiKey(apiKey, userId: userId)
-                    }
-                    else {
-                        Amplitude.instance(withName: instanceName).initializeApiKey(apiKey)
-                    }
+                // TODO(xinyi): check app lifecycle events
 
-                    result(true)
+                result("init called..")
 
-                // Get userId
-                case "getUserId":
-                    result(Amplitude.instance(withName: instanceName).userId);
-                // Get deviceId
-                case "getDeviceId":
-                    let deviceId = Amplitude.instance(withName: instanceName).getDeviceId()
-                    result(deviceId)
-                // Get sessionId
-                case "getSessionId":
-                    let sessionId = Amplitude.instance(withName: instanceName).getSessionId()
-                    result(sessionId)
+            case "track":
+                let event = getEvent(call: call)
+                amplitude?.track(event: event)
+                amplitude?.logger?.debug(message: "Track event: \(String(describing: call.arguments))")
 
-                // Setters
-                case "enableCoppaControl":
-                    Amplitude.instance(withName: instanceName).enableCoppaControl();
-                    result(true)
-                case "disableCoppaControl":
-                    Amplitude.instance(withName: instanceName).disableCoppaControl();
-                    result(true)
-                case "setOptOut":
-                    let optOut = args["optOut"] as! Bool
-                    Amplitude.instance(withName: instanceName).optOut = optOut
-                    result(true)
-                case "setLibraryName":
-                    let libraryName = args["libraryName"] as! String
-                    Amplitude.instance(withName: instanceName).libraryName = libraryName
-                    result(true)
-                case "setLibraryVersion":
-                    let libraryVersion = args["libraryVersion"] as! String
-                    Amplitude.instance(withName: instanceName).libraryVersion = libraryVersion
-                    result(true)
-                case "setEventUploadThreshold":
-                    let eventUploadThreshold = args["eventUploadThreshold"] as! Int32
-                    Amplitude.instance(withName: instanceName).eventUploadThreshold = eventUploadThreshold
-                    result(true)
-                case "setEventUploadPeriodMillis":
-                    let eventUploadPeriodMillis = args["eventUploadPeriodMillis"] as! Int32
-                    Amplitude.instance(withName: instanceName).eventUploadPeriodSeconds = eventUploadPeriodMillis / 1000
-                    result(true)
-                case "trackingSessionEvents":
-                    let trackingSessionEvents = args["trackingSessionEvents"] as! Bool
-                    Amplitude.instance(withName: instanceName).trackingSessionEvents = trackingSessionEvents
-                    result(true)
-                case "setUseDynamicConfig":
-                    let useDynamicConfig = args["useDynamicConfig"] as! Bool
-                    Amplitude.instance(withName: instanceName).useDynamicConfig = useDynamicConfig
-                    result(true)
-                case "setUserId":
-                    var userId: String? = nil
-                    if !(args["userId"] is NSNull) {
-                        userId = args["userId"] as! String?
-                    }
-                    let startNewSession = args["startNewSession"] == nil ? false : (args["startNewSession"] as! Bool)
+                result("track called..")
 
-                    Amplitude.instance(withName: instanceName).setUserId(userId, startNewSession: startNewSession)
-                    result(true)
-                case "setDeviceId":
-                    if !(args["deviceId"] is NSNull) {
-                        if let deviceId = args["deviceId"] as! String? {
-                            Amplitude.instance(withName: instanceName).setDeviceId(deviceId)
-                        }
-                    }
+            case "identify":
+                let event = getEvent(call: call)
+                amplitude?.track(event: event)
+                amplitude?.logger?.debug(message: "Track identify event: \(String(describing: call.arguments))")
 
-                    result(true)
-                case "setServerUrl":
-                    if !(args["serverUrl"] is NSNull) {
-                        if let serverUrl = args["serverUrl"] as! String? {
-                            Amplitude.instance(withName: instanceName).setServerUrl(serverUrl)
-                        }
-                    }
+                result("identify called..")
 
-                    result(true)
+            case "groupIdentify":
+                let event = getEvent(call: call)
+                amplitude?.track(event: event)
+                amplitude?.logger?.debug(message: "Track group identify event: \(String(describing: call.arguments))")
 
-                // Regenerates a new random deviceId for current user
-                case "regenerateDeviceId":
-                    Amplitude.instance(withName: instanceName).regenerateDeviceId()
-                    result(true)
+                result("groupIdentify called..")
 
-                // Event logging
-                case "logEvent":
-                    let eventType = args["eventType"] as! String
-                    let eventProperties = args["eventProperties"] as! [String: Any]?
-                    let outOfSession = args["outOfSession"] == nil ? false : (args["outOfSession"] as! Bool)
+            case "setGroup":
+                let event = getEvent(call: call)
+                amplitude?.track(event: event)
+                amplitude?.logger?.debug(message: "Track set group event: \(String(describing: call.arguments))")
 
-                    Amplitude.instance(withName: instanceName).logEvent(eventType,
-                                                                         withEventProperties: eventProperties,
-                                                                         outOfSession: outOfSession)
-                    result(true)
-                case "logRevenue":
-                    let revenue = AMPRevenue()
-                    revenue.setProductIdentifier((args["productIdentifier"] as! String))
-                    revenue.setQuantity(args["quantity"] as! Int)
-                    revenue.setPrice(NSNumber(value: args["price"] as! Double))
+                result("setGroup called..")
 
-                    Amplitude.instance(withName: instanceName).logRevenueV2(revenue)
+            case "revenue":
+                let event = getEvent(call: call)
+                amplitude?.track(event: event)
+                amplitude?.logger?.debug(message: "Track revenue event: \(String(describing: call.arguments))")
 
-                    result(true)
+                result("revenue called..")
 
-                case "logRevenueAmount":
-                    let revenue = AMPRevenue()
-                    revenue.setPrice(NSNumber(value: args["amount"] as! Double))
-                    Amplitude.instance(withName: instanceName).logRevenueV2(revenue)
+            case "setUserId":
+                let args = call.arguments as! [String: String]
+                let userId = args["setUserId"]
+                amplitude?.setUserId(userId: userId)
+                amplitude?.logger?.debug(message: "Set user Id to \(String(describing: userId))")
 
-                    result(true)
+                result("serUserId called..")
 
-                case "identify":
-                    let userProperties = args["userProperties"] as! [String: [String : NSObject]]
-                    let identify: AMPIdentify = createIdentify(userProperties)
-                    Amplitude.instance(withName: instanceName).identify(identify)
-                    result(true)
+            case "setDeviceId":
+                let args = call.arguments as! [String: String]
+                let deviceId = args["setDeviceId"]
+                amplitude?.setDeviceId(deviceId: deviceId)
+                amplitude?.logger?.debug(message: "Set device Id to \(String(describing: deviceId))")
 
-                case "setGroup":
-                    let groupType = args["groupType"] as! String
-                    let groupName = args["groupName"] as! NSObject
-                    Amplitude.instance(withName: instanceName).setGroup(groupType, groupName: groupName)
+                result("setDeviceId called..")
 
-                    result(true)
-                case "groupIdentify":
-                    let groupType = args["groupType"] as! String
-                    let groupName = args["groupName"] as! NSObject
-                    let userProperties = args["userProperties"] as! [String: [String : NSObject]]
-                    let outOfSession = args["outOfSession"] == nil ? false : (args["outOfSession"] as! Bool)
-                    let identify: AMPIdentify = createIdentify(userProperties)
-                    Amplitude.instance(withName: instanceName).groupIdentify(withGroupType: groupType,
-                                                                              groupName: groupName,
-                                                                              groupIdentify: identify,
-                                                                              outOfSession: outOfSession)
-                    result(true)
+            case "reset":
+                amplitude?.reset()
+                amplitude?.logger?.debug(message: "Reset userId and deviceId.")
 
-                // User properties
-                case "setUserProperties":
-                    let userProperties = args["userProperties"] as! [String: Any]? ?? [:]
-                    Amplitude.instance(withName: instanceName).setUserProperties(userProperties)
-                    result(true)
-                case "clearUserProperties":
-                    Amplitude.instance(withName: instanceName).clearUserProperties()
-                    result(true)
+                result("reset called..")
 
-                case "uploadEvents":
-                    Amplitude.instance(withName: instanceName).uploadEvents()
-                    result(true)
+            case "flush":
+                amplitude?.flush()
+                amplitude?.logger?.debug(message: "Flush events.")
 
-                // this method is for android only
-                case "useAppSetIdForDeviceId":
-                    result(false)
+                result("flush called..")
 
-                case "setMinTimeBetweenSessionsMillis":
-                    let timeInMillis = args["timeInMillis"] as! Int
-                    Amplitude.instance(withName: instanceName).minTimeBetweenSessionsMillis = timeInMillis
-                    result(true)
-
-                case "setServerZone":
-                    let serverZone = args["serverZone"] as! String
-                    let updateServerUrl = args["updateServerUrl"] as! Bool
-                    let ampServerZone = serverZone == "EU" ? AMPServerZone.EU : AMPServerZone.US
-                    Amplitude.instance(withName: instanceName).setServerZone(ampServerZone, updateServerUrl: updateServerUrl)
-                    result(true)
-
-                case "setOffline":
-                    let offline = args["offline"] as! Bool
-                    Amplitude.instance(withName: instanceName).setOffline(offline)
-                    result(true)
-
-                default:
-                    result(FlutterMethodNotImplemented)
-                }
+            default:
+                amplitude?.logger?.debug(message: "Method \(call.method) is not recognized.")
+                result(FlutterMethodNotImplemented)
             }
-        } catch {
-            result(FlutterError.init(code: "EXCEPTION_IN_HANDLE",
-                                     message: "Exception happened in handle.", details: nil))
+        }
+
+    private func getConfiguration(call: FlutterMethodCall) -> Configuration {
+        let args = call.arguments as! [String: Any]
+        let apiKey = args["apiKey"] as! String
+
+        let instanceName = args["instanceName"] as! String
+        let migrateLegacyData = args["migrateLegacyData"] as! Bool
+
+        let configuration = Configuration(apiKey: apiKey, instanceName: instanceName, migrateLegacyData: migrateLegacyData)
+
+        if let flushQueueSize = args["flushQueueSize"] as? Int {
+            configuration.flushQueueSize = flushQueueSize
+        }
+        if let flushIntervalMillis = args["flushIntervalMillis"] as? Int {
+            configuration.flushIntervalMillis = flushIntervalMillis
+        }
+        if let optOut = args["optOut"] as? Bool {
+            configuration.optOut = optOut
+        }
+        if let logLevel = args["logLevel"] as? String {
+            configuration.logLevel = logLevelFromString(logLevel)
+        }
+        if let minIdLength = args["minIdLength"] as? Int {
+            configuration.minIdLength = minIdLength
+        }
+        if let partnerId = args["partnerId"] as? String {
+            configuration.partnerId = partnerId
+        }
+        if let flushMaxRetries = args["flushMaxRetries"] as? Int {
+            configuration.flushMaxRetries = flushMaxRetries
+        }
+        if let useBatch = args["useBatch"] as? Bool {
+            configuration.useBatch = useBatch
+        }
+        if let serverZone = args["serverZone"] as? String, let serverZoneValue = ServerZone(rawValue: serverZone.uppercased()) {
+            configuration.serverZone = serverZoneValue
+        }
+        if let serverUrl = args["serverUrl"] as? String {
+            configuration.serverUrl = serverUrl
+        }
+        if let trackingOptionsDict = args["trackingOptions"] as? [String: Any] {
+            configuration.trackingOptions = convertMapToTrackingOptions(map: trackingOptionsDict)
+        }
+        if let enableCoppaControl = args["enableCoppaControl"] as? Bool {
+            configuration.enableCoppaControl = enableCoppaControl
+        }
+        if let flushEventsOnClose = args["flushEventsOnClose"] as? Bool {
+            configuration.flushEventsOnClose = flushEventsOnClose
+        }
+        if let minTimeBetweenSessionsMillis = args["minTimeBetweenSessionsMillis"] as? Int {
+            configuration.minTimeBetweenSessionsMillis = minTimeBetweenSessionsMillis
+        }
+        if let identifyBatchIntervalMillis = args["identifyBatchIntervalMillis"] as? Int {
+            configuration.identifyBatchIntervalMillis = identifyBatchIntervalMillis
+        }
+        if let defaultTrackingDict = args["defaultTracking"] as? [String: Bool] {
+            let sessions = defaultTrackingDict["sessions"] ?? true
+            let appLifecycles = defaultTrackingDict["appLifecycles"] ?? false
+            let screenViews = defaultTrackingDict["screenViews"] ?? false
+            configuration.defaultTracking = DefaultTrackingOptions(sessions: sessions, appLifecycles: appLifecycles, screenViews: screenViews)
+        }
+
+        return configuration
+    }
+
+    private func logLevelFromString(_ logLevelString: String) -> LogLevelEnum {
+        switch logLevelString.lowercased() {
+        case "off":
+            return .OFF
+        case "error":
+            return .ERROR
+        case "warn":
+            return .WARN
+        case "log":
+            return .LOG
+        case "debug":
+            return .DEBUG
+        default:
+            return .WARN
         }
     }
 
-    private func createIdentify(_ userProperties: [String: [String : NSObject]]) -> AMPIdentify {
-        let identify = AMPIdentify()
 
-        for (operation, properties) in userProperties {
-            for (key, value) in properties {
-                switch operation {
-                case "$add":
-                    identify.add(key, value: value)
-                case "$append":
-                    identify.append(key, value: value)
-                case "$prepend":
-                    identify.prepend(key, value: value)
-                case "$set":
-                    identify.set(key, value: value)
-                case "$setOnce":
-                    identify.setOnce(key, value: value)
-                case "$unset":
-                    identify.unset(key) // value is default to `-`
-                case "$preInsert":
-                    identify.preInsert(key, value: value)
-                case "$postInsert":
-                    identify.postInsert(key, value: value)
-                case "$remove":
-                    identify.remove(key, value: value)
-                case "$clearAll":
-                    identify.clearAll()
-                default:
-                    break
-                }
-            }
+    private func convertMapToTrackingOptions(map: [String: Any]) -> TrackingOptions {
+        let trackingOptions = TrackingOptions()
+
+        if let ipAddress = map["ipAddress"] as? Bool, !ipAddress {
+            trackingOptions.disableTrackIpAddress()
         }
-        return identify
+        if let language = map["language"] as? Bool, !language {
+            trackingOptions.disableTrackLanguage()
+        }
+        if let platform = map["platform"] as? Bool, !platform {
+            trackingOptions.disableTrackPlatform()
+        }
+        if let region = map["region"] as? Bool, !region {
+            trackingOptions.disableTrackRegion()
+        }
+        if let dma = map["dma"] as? Bool, !dma {
+            trackingOptions.disableTrackDMA()
+        }
+        if let country = map["country"] as? Bool, !country {
+            trackingOptions.disableTrackCountry()
+        }
+        if let city = map["city"] as? Bool, !city {
+            trackingOptions.disableTrackCity()
+        }
+        if let carrier = map["carrier"] as? Bool, !carrier {
+            trackingOptions.disableTrackCarrier()
+        }
+        if let deviceModel = map["deviceModel"] as? Bool, !deviceModel {
+            trackingOptions.disableTrackDeviceModel()
+        }
+        if let deviceManufacturer = map["deviceManufacturer"] as? Bool, !deviceManufacturer {
+            trackingOptions.disableTrackDeviceManufacturer()
+        }
+        if let osVersion = map["osVersion"] as? Bool, !osVersion {
+            trackingOptions.disableTrackOsVersion()
+        }
+        if let osName = map["osName"] as? Bool, !osName {
+            trackingOptions.disableTrackOsName()
+        }
+        if let versionName = map["versionName"] as? Bool, !versionName {
+            trackingOptions.disableTrackVersionName()
+        }
+        if let idfv = map["idfv"] as? Bool, !idfv {
+            trackingOptions.disableTrackIDFV()
+        }
+
+        return trackingOptions
     }
+
+
+    private func getEvent(call: FlutterMethodCall) -> BaseEvent {
+        let args = call.arguments as! [String: Any]
+        let eventType = args["event_type"] as! String
+
+        let event = BaseEvent(eventType: eventType)
+
+        if let eventProperties = args["event_properties"] as? [String: Any] {
+            event.eventProperties = eventProperties
+        }
+        if let userProperties = args["user_properties"] as? [String: Any] {
+            event.userProperties = userProperties
+        }
+        if let groups = args["groups"] as? [String: Any] {
+            event.groups = groups
+        }
+        if let groupProperties = args["group_properties"] as? [String: Any] {
+            event.groupProperties = groupProperties
+        }
+        if let userId = args["user_id"] as? String {
+            event.userId = userId
+        }
+        if let deviceId = args["device_id"] as? String {
+            event.deviceId = deviceId
+        }
+        if let timestamp = args["timestamp"] as? Int {
+            event.timestamp = Int64(timestamp)
+        }
+        if let eventId = args["event_id"] as? Int {
+            event.eventId = Int64(eventId)
+        }
+        if let sessionId = args["session_id"] as? Int {
+            event.sessionId = Int64(sessionId)
+        }
+        if let insertId = args["insert_id"] as? String {
+            event.insertId = insertId
+        }
+        if let locationLat = args["location_lat"] as? Double {
+            event.locationLat = locationLat
+        }
+        if let locationLng = args["location_lng"] as? Double {
+            event.locationLng = locationLng
+        }
+        if let planMap = args["plan"] as? [String: Any] {
+            event.plan = Plan(branch: planMap["branch"] as? String, source: planMap["source"] as? String, version: planMap["version"] as? String, versionId: planMap["versionId"] as? String)
+        }
+        if let ingestionMetadataMap = args["ingestion_metadata"] as? [String: Any] {
+            event.ingestionMetadata = IngestionMetadata(sourceName: ingestionMetadataMap["sourceName"] as? String, sourceVersion: ingestionMetadataMap["sourceVersion"] as? String)
+        }
+        if let revenue = args["revenue"] as? Double {
+            event.revenue = revenue
+        }
+        if let price = args["price"] as? Double {
+            event.price = price
+        }
+        if let quantity = args["quantity"] as? Int {
+            event.quantity = quantity
+        }
+        if let productId = args["product_id"] as? String {
+            event.productId = productId
+        }
+        if let revenueType = args["revenue_type"] as? String {
+            event.revenueType = revenueType
+        }
+        if let extra = args["extra"] as? [String: Any] {
+            event.extra = extra
+        }
+        if let partnerId = args["partner_id"] as? String {
+            event.partnerId = partnerId
+        }
+
+        return event
+    }
+
 }

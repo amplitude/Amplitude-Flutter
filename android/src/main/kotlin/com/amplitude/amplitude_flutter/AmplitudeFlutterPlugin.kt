@@ -237,6 +237,7 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         (map["deviceManufacturer"] as? Boolean)?.let { if (!it) trackingOptions.disableDeviceManufacturer() }
         (map["osVersion"] as? Boolean)?.let { if (!it) trackingOptions.disableOsVersion() }
         (map["osName"] as? Boolean)?.let { if (!it) trackingOptions.disableOsName() }
+        (map["versionName"] as? Boolean)?.let { if (!it) trackingOptions.disableVersionName() }
         (map["adid"] as? Boolean)?.let { if (!it) trackingOptions.disableAdid() }
         (map["appSetId"] as? Boolean)?.let { if (!it) trackingOptions.disableAppSetId() }
         (map["deviceBrand"] as? Boolean)?.let { if (!it) trackingOptions.disableDeviceBrand() }
