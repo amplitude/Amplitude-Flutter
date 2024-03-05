@@ -87,7 +87,6 @@ void main() {
   final testEvent = BaseEvent(eventType: "testEvent");
   final testEventMap = {
     "event_type": "testEvent",
-    "library": "${Constants.packageName}/${Constants.packageVersion}",
     "attempts": 0,
   };
   final testPrice = 3.99;

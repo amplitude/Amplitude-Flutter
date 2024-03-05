@@ -63,6 +63,20 @@ module.exports = {
             ],
             "countMatches": true
           },
+          {
+            "files": ["android/build.gradle"],
+            "from": "PUBLISH_VERSION = \'.*\'",
+            "to": "PUBLISH_VERSION = \'${nextRelease.version}\'",
+            "results": [
+                {
+                  "file": "android/build.gradle",
+                  "hasChanged": true,
+                  "numMatches": 1,
+                  "numReplacements": 1
+                }
+            ],
+            "countMatches": true
+            },
         ]
       }
     ],

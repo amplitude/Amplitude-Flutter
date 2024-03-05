@@ -21,10 +21,16 @@ rootProject.allprojects {
     }
 }
 
+ext {
+    PUBLISH_VERSION = '4.0.0-beta.0'
+}
+
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
+    buildFeatures.buildConfig true
+
     compileSdkVersion 34
     // Condition for namespace compatibility in AGP 8
     if (project.android.hasProperty("namespace")) {
@@ -36,6 +42,9 @@ android {
     }
     defaultConfig {
         minSdkVersion 16
+
+        buildConfigField 'String', 'SDK_VERSION', "\"${PUBLISH_VERSION}\""
+
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     lintOptions {
