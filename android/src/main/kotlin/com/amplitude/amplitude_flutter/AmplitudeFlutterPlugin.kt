@@ -65,7 +65,11 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                 amplitude = Amplitude(configuration)
 
                 // Set library
-                amplitude.add(FlutterLibraryPlugin(call.argument<String>("library")!!))
+                amplitude.add(
+                    FlutterLibraryPlugin(
+                        call.argument<String>("library") ?: "amplitude-flutter/unknown"
+                    )
+                )
 
                 call.argument<String>("logLevel")?.let {
                     amplitude.logger.logMode = Logger.LogMode.valueOf(it.uppercase())
