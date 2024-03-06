@@ -17,13 +17,12 @@ import AmplitudeSwift
     // swiftlint:disable cyclomatic_complexity
     // swiftlint:disable function_body_length
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        guard let args = call.arguments as? [String: Any] else {
-            print("\(call.method) called but call.arguments type casting failed.")
-            return
-        }
-
         switch call.method {
         case "init":
+            guard let args = call.arguments as? [String: Any] else {
+                print("\(call.method) called but call.arguments type casting failed.")
+                return
+            }
 
             do {
                 amplitude = Amplitude(configuration: try getConfiguration(args: args))
@@ -43,6 +42,11 @@ import AmplitudeSwift
             result("init called..")
 
         case "track":
+            guard let args = call.arguments as? [String: Any] else {
+                print("\(call.method) called but call.arguments type casting failed.")
+                return
+            }
+
             do {
                 let event = try getEvent(args: args)
                 amplitude?.track(event: event)
@@ -54,6 +58,11 @@ import AmplitudeSwift
             }
 
         case "identify":
+            guard let args = call.arguments as? [String: Any] else {
+                print("\(call.method) called but call.arguments type casting failed.")
+                return
+            }
+
             do {
                 let event = try getEvent(args: args)
                 amplitude?.track(event: event)
@@ -65,6 +74,11 @@ import AmplitudeSwift
             }
 
         case "groupIdentify":
+            guard let args = call.arguments as? [String: Any] else {
+                print("\(call.method) called but call.arguments type casting failed.")
+                return
+            }
+
             do {
                 let event = try getEvent(args: args)
                 amplitude?.track(event: event)
@@ -76,6 +90,11 @@ import AmplitudeSwift
             }
 
         case "setGroup":
+            guard let args = call.arguments as? [String: Any] else {
+                print("\(call.method) called but call.arguments type casting failed.")
+                return
+            }
+
             do {
                 let event = try getEvent(args: args)
                 amplitude?.track(event: event)
@@ -87,6 +106,11 @@ import AmplitudeSwift
             }
 
         case "revenue":
+            guard let args = call.arguments as? [String: Any] else {
+                print("\(call.method) called but call.arguments type casting failed.")
+                return
+            }
+
             do {
                 let event = try getEvent(args: args)
                 amplitude?.track(event: event)
@@ -98,6 +122,11 @@ import AmplitudeSwift
             }
 
         case "setUserId":
+            guard let args = call.arguments as? [String: Any] else {
+                print("\(call.method) called but call.arguments type casting failed.")
+                return
+            }
+
             guard let userId = args["setUserId"] as? String else {
                 amplitude?.logger?.warn(message: "setUserId type casting to String failed.")
                 return
@@ -108,6 +137,11 @@ import AmplitudeSwift
             result("serUserId called..")
 
         case "setDeviceId":
+            guard let args = call.arguments as? [String: Any] else {
+                print("\(call.method) called but call.arguments type casting failed.")
+                return
+            }
+            
             guard let deviceId = args["setDeviceId"] as? String else {
                 amplitude?.logger?.warn(message: "setDeviceId type casting to String failed.")
                 return
