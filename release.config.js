@@ -77,6 +77,20 @@ module.exports = {
             ],
             "countMatches": true
             },
+            {
+                "files": ["ios/Classes/FlutterLibraryPlugin.swift"],
+                "from": "static let sdkVersion = \".*\"",
+                "to": "static let sdkVersion = \"${nextRelease.version}\"",
+                "results": [
+                  {
+                    "file": "ios/Classes/FlutterLibraryPlugin.swift",
+                    "hasChanged": true,
+                    "numMatches": 1,
+                    "numReplacements": 1
+                  }
+                ],
+                "countMatches": true
+            },
         ]
       }
     ],

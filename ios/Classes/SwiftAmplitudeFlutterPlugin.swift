@@ -18,10 +18,12 @@ import AmplitudeSwift
 
                 amplitude = Amplitude(configuration: getConfiguration(call: call))
 
-                // TODO(xinyi): add library plugin
+                // Set library
+                amplitude?.add(plugin: FlutterLibraryPlugin())
+
                 amplitude?.logger?.debug(message: "Amplitude has been successfully initialized.")
 
-                // TODO(xinyi): check app lifecycle events
+                // TODO(xinyi): add app lifecycle events
 
                 result("init called..")
 
@@ -171,7 +173,7 @@ import AmplitudeSwift
         case "debug":
             return .DEBUG
         default:
-            return .WARN
+            return .DEBUG
         }
     }
 

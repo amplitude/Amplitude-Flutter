@@ -1,9 +1,12 @@
 #
 # To learn more about a Podspec see http://guides.cocoapods.org/syntax/podspec.html
 #
+
+amplitude_version = "4.0.0-beta.0" # Version is managed automatically by semantic-release, please don't change it manually
+
 Pod::Spec.new do |s|
   s.name             = 'amplitude_flutter'
-  s.version          = '0.0.1'
+  s.version          = amplitude_version
   s.summary          = 'A new flutter plugin project.'
   s.homepage         = 'http://example.com'
   s.license          = { :file => '../LICENSE' }
