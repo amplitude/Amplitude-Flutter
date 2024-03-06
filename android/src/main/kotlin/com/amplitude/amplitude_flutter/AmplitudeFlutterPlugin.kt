@@ -28,7 +28,6 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 
     private lateinit var channel: MethodChannel
 
-
     companion object {
         private const val methodChannelName = "amplitude_flutter"
     }
@@ -66,7 +65,11 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                 amplitude = Amplitude(configuration)
 
                 // Set library
-                amplitude.add(FlutterLibraryPlugin())
+                amplitude.add(
+                    FlutterLibraryPlugin(
+                        call.argument<String>("library") ?: "amplitude-flutter/unknown"
+                    )
+                )
 
                 call.argument<String>("logLevel")?.let {
                     amplitude.logger.logMode = Logger.LogMode.valueOf(it.uppercase())
@@ -81,44 +84,12 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                 result.success("init called..")
             }
 
-            "track" -> {
+            "track", "identify", "groupIdentify", "setGroup", "revenue" -> {
                 val event = getEvent(call)
                 amplitude.track(event)
-                amplitude.logger.debug("Track event: ${call.arguments}")
+                amplitude.logger.debug("Track ${call.method} event: ${call.arguments}")
 
-                result.success("track called..")
-            }
-
-            "identify" -> {
-                val event = getEvent(call)
-                amplitude.track(event)
-                amplitude.logger.debug("Track identify event: ${call.arguments}")
-
-                result.success("identify called..")
-            }
-
-            "groupIdentify" -> {
-                val event = getEvent(call)
-                amplitude.track(event)
-                amplitude.logger.debug("Track group identify event: ${call.arguments}")
-
-                result.success("groupIdentify called..")
-            }
-
-            "setGroup" -> {
-                val event = getEvent(call)
-                amplitude.track(event)
-                amplitude.logger.debug("Track set group event: ${call.arguments}")
-
-                result.success("setGroup called..")
-            }
-
-            "revenue" -> {
-                val event = getEvent(call)
-                amplitude.track(event)
-                amplitude.logger.debug("Track revenue event: ${call.arguments}")
-
-                result.success("revenue called..")
+                result.success("${call.method} called..")
             }
 
             "setUserId" -> {
@@ -196,6 +167,7 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         call.argument<Boolean>("useBatch")?.let { configuration.useBatch = it }
         call.argument<String>("serverZone")
             ?.let { configuration.serverZone = com.amplitude.core.ServerZone.valueOf(it.uppercase()) }
+        call.argument<String>("serverUrl")?.let { configuration.serverUrl = it }
         call.argument<Int>("minTimeBetweenSessionsMillis")
             ?.let { configuration.minTimeBetweenSessionsMillis = it.toLong() }
         call.argument<Map<String, Any>>("defaultTracking")?.let { map ->
@@ -237,6 +209,7 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         (map["deviceManufacturer"] as? Boolean)?.let { if (!it) trackingOptions.disableDeviceManufacturer() }
         (map["osVersion"] as? Boolean)?.let { if (!it) trackingOptions.disableOsVersion() }
         (map["osName"] as? Boolean)?.let { if (!it) trackingOptions.disableOsName() }
+        (map["versionName"] as? Boolean)?.let { if (!it) trackingOptions.disableVersionName() }
         (map["adid"] as? Boolean)?.let { if (!it) trackingOptions.disableAdid() }
         (map["appSetId"] as? Boolean)?.let { if (!it) trackingOptions.disableAppSetId() }
         (map["deviceBrand"] as? Boolean)?.let { if (!it) trackingOptions.disableDeviceBrand() }
