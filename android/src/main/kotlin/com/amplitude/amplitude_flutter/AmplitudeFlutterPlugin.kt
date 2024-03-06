@@ -196,6 +196,7 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         call.argument<Boolean>("useBatch")?.let { configuration.useBatch = it }
         call.argument<String>("serverZone")
             ?.let { configuration.serverZone = com.amplitude.core.ServerZone.valueOf(it.uppercase()) }
+        call.argument<String>("serverUrl")?.let { configuration.serverUrl = it }
         call.argument<Int>("minTimeBetweenSessionsMillis")
             ?.let { configuration.minTimeBetweenSessionsMillis = it.toLong() }
         call.argument<Map<String, Any>>("defaultTracking")?.let { map ->

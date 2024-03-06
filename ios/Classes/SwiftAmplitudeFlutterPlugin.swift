@@ -2,9 +2,7 @@ import Flutter
 import UIKit
 import AmplitudeSwift
 
-// swiftlint:disable type_body_length
 @objc public class SwiftAmplitudeFlutterPlugin: NSObject, FlutterPlugin {
-// swiftlint:enable type_body_length
     var amplitude: Amplitude?
     static let methodChannelName = "amplitude_flutter"
 
@@ -14,8 +12,6 @@ import AmplitudeSwift
         registrar.addMethodCallDelegate(instance, channel: channel)
     }
 
-    // swiftlint:disable cyclomatic_complexity
-    // swiftlint:disable function_body_length
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method {
         case "init":
@@ -35,9 +31,7 @@ import AmplitudeSwift
 
             amplitude?.logger?.debug(message: "Amplitude has been successfully initialized.")
 
-            // swiftlint:disable todo
             // TODO(xinyi): add app lifecycle events
-            // swiftlint:enable todo
 
             result("init called..")
 
@@ -352,6 +346,63 @@ import AmplitudeSwift
         if let locationLng = args["location_lng"] as? Double {
             event.locationLng = locationLng
         }
+        if let appVersion = args["app_version"] as? String {
+            event.appVersion = appVersion
+        }
+        if let versionName = args["version_name"] as? String {
+            event.versionName = versionName
+        }
+        if let platform = args["platform"] as? String {
+            event.platform = platform
+        }
+        if let osName = args["os_name"] as? String {
+            event.osName = osName
+        }
+        if let osVersion = args["os_version"] as? String {
+            event.osVersion = osVersion
+        }
+        if let deviceBrand = args["device_brand"] as? String {
+            event.deviceBrand = deviceBrand
+        }
+        if let deviceManufacturer = args["device_manufacturer"] as? String {
+            event.deviceManufacturer = deviceManufacturer
+        }
+        if let deviceModel = args["device_model"] as? String {
+            event.deviceModel = deviceModel
+        }
+        if let carrier = args["carrier"] as? String {
+            event.carrier = carrier
+        }
+        if let country = args["country"] as? String {
+            event.country = country
+        }
+        if let region = args["region"] as? String {
+            event.region = region
+        }
+        if let city = args["city"] as? String {
+            event.city = city
+        }
+        if let dma = args["dma"] as? String {
+            event.dma = dma
+        }
+        if let idfa = args["idfa"] as? String {
+            event.idfa = idfa
+        }
+        if let idfv = args["idfv"] as? String {
+            event.idfv = idfv
+        }
+        if let adid = args["adid"] as? String {
+            event.adid = adid
+        }
+        if let language = args["language"] as? String {
+            event.language = language
+        }
+        if let library = args["library"] as? String {
+            event.library = library
+        }
+        if let ip = args["ip"] as? String {
+            event.ip = ip
+        }
         if let planMap = args["plan"] as? [String: Any] {
             event.plan = Plan(
                 branch: planMap["branch"] as? String,
@@ -395,6 +446,4 @@ import AmplitudeSwift
         case apiKeyNotFound
         case eventTypeNotFound
     }
-    // swiftlint:enable cyclomatic_complexity
-    // swiftlint:enable function_body_length
 }

@@ -1,0 +1,21 @@
+disabled_rules:
+  - file_length
+  - line_length
+  - function_body_length
+  - type_body_length
+  - trailing_comma
+  - opening_brace
+  - todo
+  - cyclomatic_complexity
+identifier_name:
+  allowed_symbols: "_"
+  min_length: 1
+nesting:
+  type_level:
+    warning: 3
+    error: 6
+  function_level:
+    warning: 5
+    error: 10
+excluded:
+  - Examples
