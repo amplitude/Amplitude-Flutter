@@ -35,7 +35,7 @@ import AmplitudeSwift
 
             result("init called..")
 
-        case "track":
+        case "track", "identify", "groupIdentify", "setGroup", "revenue":
             guard let args = call.arguments as? [String: Any] else {
                 print("\(call.method) called but call.arguments type casting failed.")
                 return
@@ -44,75 +44,11 @@ import AmplitudeSwift
             do {
                 let event = try getEvent(args: args)
                 amplitude?.track(event: event)
-                amplitude?.logger?.debug(message: "Track event: \(String(describing: call.arguments))")
+                amplitude?.logger?.debug(message: "Track \(call.method) event: \(String(describing: call.arguments))")
 
-                result("track called..")
+                result("\(call.method) called..")
             } catch {
-                amplitude?.logger?.warn(message: "track called but failed.")
-            }
-
-        case "identify":
-            guard let args = call.arguments as? [String: Any] else {
-                print("\(call.method) called but call.arguments type casting failed.")
-                return
-            }
-
-            do {
-                let event = try getEvent(args: args)
-                amplitude?.track(event: event)
-                amplitude?.logger?.debug(message: "Track identify event: \(String(describing: call.arguments))")
-
-                result("identify called..")
-            } catch {
-                amplitude?.logger?.warn(message: "identify called but failed.")
-            }
-
-        case "groupIdentify":
-            guard let args = call.arguments as? [String: Any] else {
-                print("\(call.method) called but call.arguments type casting failed.")
-                return
-            }
-
-            do {
-                let event = try getEvent(args: args)
-                amplitude?.track(event: event)
-                amplitude?.logger?.debug(message: "Track group identify event: \(String(describing: call.arguments))")
-
-                result("groupIdentify called..")
-            } catch {
-                amplitude?.logger?.warn(message: "groupIdentify called but failed.")
-            }
-
-        case "setGroup":
-            guard let args = call.arguments as? [String: Any] else {
-                print("\(call.method) called but call.arguments type casting failed.")
-                return
-            }
-
-            do {
-                let event = try getEvent(args: args)
-                amplitude?.track(event: event)
-                amplitude?.logger?.debug(message: "Track set group event: \(String(describing: call.arguments))")
-
-                result("setGroup called..")
-            } catch {
-                amplitude?.logger?.warn(message: "setGroup called but failed.")
-            }
-
-        case "revenue":
-            guard let args = call.arguments as? [String: Any] else {
-                print("\(call.method) called but call.arguments type casting failed.")
-                return
-            }
-
-            do {
-                let event = try getEvent(args: args)
-                amplitude?.track(event: event)
-                amplitude?.logger?.debug(message: "Track revenue event: \(String(describing: call.arguments))")
-
-                result("revenue called..")
-            } catch {
-                amplitude?.logger?.warn(message: "revenue called but failed.")
+                amplitude?.logger?.warn(message: "\(call.method) called but failed.")
             }
 
         case "setUserId":

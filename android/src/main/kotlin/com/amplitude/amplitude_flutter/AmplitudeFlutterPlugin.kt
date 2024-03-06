@@ -81,44 +81,12 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                 result.success("init called..")
             }
 
-            "track" -> {
+            "track", "identify", "groupIdentify", "setGroup", "revenue" -> {
                 val event = getEvent(call)
                 amplitude.track(event)
-                amplitude.logger.debug("Track event: ${call.arguments}")
+                amplitude.logger.debug("Track ${call.method} event: ${call.arguments}")
 
-                result.success("track called..")
-            }
-
-            "identify" -> {
-                val event = getEvent(call)
-                amplitude.track(event)
-                amplitude.logger.debug("Track identify event: ${call.arguments}")
-
-                result.success("identify called..")
-            }
-
-            "groupIdentify" -> {
-                val event = getEvent(call)
-                amplitude.track(event)
-                amplitude.logger.debug("Track group identify event: ${call.arguments}")
-
-                result.success("groupIdentify called..")
-            }
-
-            "setGroup" -> {
-                val event = getEvent(call)
-                amplitude.track(event)
-                amplitude.logger.debug("Track set group event: ${call.arguments}")
-
-                result.success("setGroup called..")
-            }
-
-            "revenue" -> {
-                val event = getEvent(call)
-                amplitude.track(event)
-                amplitude.logger.debug("Track revenue event: ${call.arguments}")
-
-                result.success("revenue called..")
+                result.success("${call.method} called..")
             }
 
             "setUserId" -> {
