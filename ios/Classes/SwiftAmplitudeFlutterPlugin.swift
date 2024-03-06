@@ -2,7 +2,9 @@ import Flutter
 import UIKit
 import AmplitudeSwift
 
+// swiftlint:disable type_body_length
 @objc public class SwiftAmplitudeFlutterPlugin: NSObject, FlutterPlugin {
+// swiftlint:enable type_body_length
     var amplitude: Amplitude?
     static let methodChannelName = "amplitude_flutter"
 
@@ -12,98 +14,140 @@ import AmplitudeSwift
         registrar.addMethodCallDelegate(instance, channel: channel)
     }
 
+    // swiftlint:disable cyclomatic_complexity
+    // swiftlint:disable function_body_length
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-            switch call.method {
-            case "init":
+        guard let args = call.arguments as? [String: Any] else {
+            print("\(call.method) called but call.arguments type casting failed.")
+            return
+        }
 
-                amplitude = Amplitude(configuration: getConfiguration(call: call))
+        switch call.method {
+        case "init":
 
-                // Set library
-                amplitude?.add(plugin: FlutterLibraryPlugin())
+            do {
+                amplitude = Amplitude(configuration: try getConfiguration(args: args))
+            } catch {
+                print("Initialization failed.")
+            }
 
-                amplitude?.logger?.debug(message: "Amplitude has been successfully initialized.")
+            // Set library
+            amplitude?.add(plugin: FlutterLibraryPlugin())
 
-                // TODO(xinyi): add app lifecycle events
+            amplitude?.logger?.debug(message: "Amplitude has been successfully initialized.")
 
-                result("init called..")
+            // swiftlint:disable todo
+            // TODO(xinyi): add app lifecycle events
+            // swiftlint:enable todo
 
-            case "track":
-                let event = getEvent(call: call)
+            result("init called..")
+
+        case "track":
+            do {
+                let event = try getEvent(args: args)
                 amplitude?.track(event: event)
                 amplitude?.logger?.debug(message: "Track event: \(String(describing: call.arguments))")
 
                 result("track called..")
+            } catch {
+                amplitude?.logger?.warn(message: "track called but failed.")
+            }
 
-            case "identify":
-                let event = getEvent(call: call)
+        case "identify":
+            do {
+                let event = try getEvent(args: args)
                 amplitude?.track(event: event)
                 amplitude?.logger?.debug(message: "Track identify event: \(String(describing: call.arguments))")
 
                 result("identify called..")
+            } catch {
+                amplitude?.logger?.warn(message: "identify called but failed.")
+            }
 
-            case "groupIdentify":
-                let event = getEvent(call: call)
+        case "groupIdentify":
+            do {
+                let event = try getEvent(args: args)
                 amplitude?.track(event: event)
                 amplitude?.logger?.debug(message: "Track group identify event: \(String(describing: call.arguments))")
 
                 result("groupIdentify called..")
+            } catch {
+                amplitude?.logger?.warn(message: "groupIdentify called but failed.")
+            }
 
-            case "setGroup":
-                let event = getEvent(call: call)
+        case "setGroup":
+            do {
+                let event = try getEvent(args: args)
                 amplitude?.track(event: event)
                 amplitude?.logger?.debug(message: "Track set group event: \(String(describing: call.arguments))")
 
                 result("setGroup called..")
+            } catch {
+                amplitude?.logger?.warn(message: "setGroup called but failed.")
+            }
 
-            case "revenue":
-                let event = getEvent(call: call)
+        case "revenue":
+            do {
+                let event = try getEvent(args: args)
                 amplitude?.track(event: event)
                 amplitude?.logger?.debug(message: "Track revenue event: \(String(describing: call.arguments))")
 
                 result("revenue called..")
-
-            case "setUserId":
-                let args = call.arguments as! [String: String]
-                let userId = args["setUserId"]
-                amplitude?.setUserId(userId: userId)
-                amplitude?.logger?.debug(message: "Set user Id to \(String(describing: userId))")
-
-                result("serUserId called..")
-
-            case "setDeviceId":
-                let args = call.arguments as! [String: String]
-                let deviceId = args["setDeviceId"]
-                amplitude?.setDeviceId(deviceId: deviceId)
-                amplitude?.logger?.debug(message: "Set device Id to \(String(describing: deviceId))")
-
-                result("setDeviceId called..")
-
-            case "reset":
-                amplitude?.reset()
-                amplitude?.logger?.debug(message: "Reset userId and deviceId.")
-
-                result("reset called..")
-
-            case "flush":
-                amplitude?.flush()
-                amplitude?.logger?.debug(message: "Flush events.")
-
-                result("flush called..")
-
-            default:
-                amplitude?.logger?.debug(message: "Method \(call.method) is not recognized.")
-                result(FlutterMethodNotImplemented)
+            } catch {
+                amplitude?.logger?.warn(message: "revenue called but failed.")
             }
+
+        case "setUserId":
+            guard let userId = args["setUserId"] as? String else {
+                amplitude?.logger?.warn(message: "setUserId type casting to String failed.")
+                return
+            }
+            amplitude?.setUserId(userId: userId)
+            amplitude?.logger?.debug(message: "Set user Id to \(String(describing: userId))")
+
+            result("serUserId called..")
+
+        case "setDeviceId":
+            guard let deviceId = args["setDeviceId"] as? String else {
+                amplitude?.logger?.warn(message: "setDeviceId type casting to String failed.")
+                return
+            }
+            amplitude?.setDeviceId(deviceId: deviceId)
+            amplitude?.logger?.debug(message: "Set device Id to \(String(describing: deviceId))")
+
+            result("setDeviceId called..")
+
+        case "reset":
+            amplitude?.reset()
+            amplitude?.logger?.debug(message: "Reset userId and deviceId.")
+
+            result("reset called..")
+
+        case "flush":
+            amplitude?.flush()
+            amplitude?.logger?.debug(message: "Flush events.")
+
+            result("flush called..")
+
+        default:
+            amplitude?.logger?.debug(message: "Method \(call.method) is not recognized.")
+            result(FlutterMethodNotImplemented)
+        }
+    }
+
+    private func getConfiguration(args: [String: Any]) throws -> Configuration {
+        guard let apiKey = args["apiKey"] as? String else {
+            print("apiKey type casting failed.")
+            throw AmplitudeFlutterPluginError.apiKeyNotFound
         }
 
-    private func getConfiguration(call: FlutterMethodCall) -> Configuration {
-        let args = call.arguments as! [String: Any]
-        let apiKey = args["apiKey"] as! String
+        let instanceName = args["instanceName"] as? String ?? Constants.Configuration.DEFAULT_INSTANCE
+        let migrateLegacyData = args["migrateLegacyData"] as? Bool ?? true
 
-        let instanceName = args["instanceName"] as! String
-        let migrateLegacyData = args["migrateLegacyData"] as! Bool
-
-        let configuration = Configuration(apiKey: apiKey, instanceName: instanceName, migrateLegacyData: migrateLegacyData)
+        let configuration = Configuration(
+            apiKey: apiKey,
+            instanceName: instanceName,
+            migrateLegacyData: migrateLegacyData)
 
         if let flushQueueSize = args["flushQueueSize"] as? Int {
             configuration.flushQueueSize = flushQueueSize
@@ -129,7 +173,8 @@ import AmplitudeSwift
         if let useBatch = args["useBatch"] as? Bool {
             configuration.useBatch = useBatch
         }
-        if let serverZone = args["serverZone"] as? String, let serverZoneValue = ServerZone(rawValue: serverZone.uppercased()) {
+        if let serverZone = args["serverZone"] as? String, let serverZoneValue = ServerZone(
+            rawValue: serverZone.uppercased()) {
             configuration.serverZone = serverZoneValue
         }
         if let serverUrl = args["serverUrl"] as? String {
@@ -154,7 +199,11 @@ import AmplitudeSwift
             let sessions = defaultTrackingDict["sessions"] ?? true
             let appLifecycles = defaultTrackingDict["appLifecycles"] ?? false
             let screenViews = defaultTrackingDict["screenViews"] ?? false
-            configuration.defaultTracking = DefaultTrackingOptions(sessions: sessions, appLifecycles: appLifecycles, screenViews: screenViews)
+            configuration.defaultTracking = DefaultTrackingOptions(
+                sessions: sessions,
+                appLifecycles: appLifecycles,
+                screenViews: screenViews
+            )
         }
 
         return configuration
@@ -176,7 +225,6 @@ import AmplitudeSwift
             return .DEBUG
         }
     }
-
 
     private func convertMapToTrackingOptions(map: [String: Any]) -> TrackingOptions {
         let trackingOptions = TrackingOptions()
@@ -227,10 +275,11 @@ import AmplitudeSwift
         return trackingOptions
     }
 
-
-    private func getEvent(call: FlutterMethodCall) -> BaseEvent {
-        let args = call.arguments as! [String: Any]
-        let eventType = args["event_type"] as! String
+    private func getEvent(args: [String: Any]) throws -> BaseEvent {
+        guard let eventType = args["event_type"] as? String else {
+            amplitude?.logger?.warn(message: "eventType type casting failed.")
+            throw AmplitudeFlutterPluginError.eventTypeNotFound
+        }
 
         let event = BaseEvent(eventType: eventType)
 
@@ -271,10 +320,18 @@ import AmplitudeSwift
             event.locationLng = locationLng
         }
         if let planMap = args["plan"] as? [String: Any] {
-            event.plan = Plan(branch: planMap["branch"] as? String, source: planMap["source"] as? String, version: planMap["version"] as? String, versionId: planMap["versionId"] as? String)
+            event.plan = Plan(
+                branch: planMap["branch"] as? String,
+                source: planMap["source"] as? String,
+                version: planMap["version"] as? String,
+                versionId: planMap["versionId"] as? String
+            )
         }
         if let ingestionMetadataMap = args["ingestion_metadata"] as? [String: Any] {
-            event.ingestionMetadata = IngestionMetadata(sourceName: ingestionMetadataMap["sourceName"] as? String, sourceVersion: ingestionMetadataMap["sourceVersion"] as? String)
+            event.ingestionMetadata = IngestionMetadata(
+                sourceName: ingestionMetadataMap["sourceName"] as? String,
+                sourceVersion: ingestionMetadataMap["sourceVersion"] as? String
+            )
         }
         if let revenue = args["revenue"] as? Double {
             event.revenue = revenue
@@ -301,4 +358,11 @@ import AmplitudeSwift
         return event
     }
 
+    enum AmplitudeFlutterPluginError: Error {
+        case apiKeyNotFound
+        case eventTypeNotFound
+    }
+
+    // swiftlint:enable cyclomatic_complexity
+    // swiftlint:enable function_body_length
 }
