@@ -27,7 +27,7 @@ import AmplitudeSwift
             }
 
             // Set library
-            amplitude?.add(plugin: FlutterLibraryPlugin())
+            amplitude?.add(plugin: FlutterLibraryPlugin(library: args["library"] as! String))
 
             amplitude?.logger?.debug(message: "Amplitude has been successfully initialized.")
 

@@ -2,12 +2,14 @@ import Foundation
 import AmplitudeSwift
 
 class FlutterLibraryPlugin: BeforePlugin {
-    static let sdkLibrary = "amplitude-flutter"
-    // Version is managed automatically by semantic-release in release.config.js, please don't change it manually
-    static let sdkVersion = "4.0.0-beta.0"
+    let library: String
+
+    init(library: String) {
+        self.library = library
+    }
 
     override func execute(event: BaseEvent) -> BaseEvent? {
-        event.library = "\(FlutterLibraryPlugin.sdkLibrary)/\(FlutterLibraryPlugin.sdkVersion)"
+        event.library = library
 
         return event
     }

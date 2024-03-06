@@ -28,7 +28,6 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 
     private lateinit var channel: MethodChannel
 
-
     companion object {
         private const val methodChannelName = "amplitude_flutter"
     }
@@ -66,7 +65,7 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                 amplitude = Amplitude(configuration)
 
                 // Set library
-                amplitude.add(FlutterLibraryPlugin())
+                amplitude.add(FlutterLibraryPlugin(call.argument<String>("library")!!))
 
                 call.argument<String>("logLevel")?.let {
                     amplitude.logger.logMode = Logger.LogMode.valueOf(it.uppercase())

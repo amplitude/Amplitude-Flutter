@@ -93,6 +93,9 @@ class Configuration {
       'useAdvertisingIdForDeviceId': useAdvertisingIdForDeviceId,
       'useAppSetIdForDeviceId': useAppSetIdForDeviceId,
       'appVersion': appVersion,
+      // This field doesn't belong to Configuration
+      // Pass it for FlutterLibraryPlugin
+      'library': "${Constants.packageName}/${Constants.packageVersion}"
     };
   }
 }

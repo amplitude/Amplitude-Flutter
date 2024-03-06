@@ -83,6 +83,9 @@ void main() {
     "useAdvertisingIdForDeviceId": false,
     "useAppSetIdForDeviceId": false,
     "appVersion": null,
+    // This field doesn't belong to Configuration
+    // Pass it for FlutterLibraryPlugin
+    "library": "${Constants.packageName}/${Constants.packageVersion}"
   };
   final testEvent = BaseEvent(eventType: "testEvent");
   final testEventMap = {

@@ -63,34 +63,6 @@ module.exports = {
             ],
             "countMatches": true
           },
-          {
-            "files": ["android/build.gradle"],
-            "from": "PUBLISH_VERSION = \'.*\'",
-            "to": "PUBLISH_VERSION = \'${nextRelease.version}\'",
-            "results": [
-                {
-                  "file": "android/build.gradle",
-                  "hasChanged": true,
-                  "numMatches": 1,
-                  "numReplacements": 1
-                }
-            ],
-            "countMatches": true
-            },
-            {
-                "files": ["ios/Classes/FlutterLibraryPlugin.swift"],
-                "from": "static let sdkVersion = \".*\"",
-                "to": "static let sdkVersion = \"${nextRelease.version}\"",
-                "results": [
-                  {
-                    "file": "ios/Classes/FlutterLibraryPlugin.swift",
-                    "hasChanged": true,
-                    "numMatches": 1,
-                    "numReplacements": 1
-                  }
-                ],
-                "countMatches": true
-            },
         ]
       }
     ],
