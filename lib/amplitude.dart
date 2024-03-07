@@ -14,6 +14,12 @@ class Amplitude {
   MethodChannel _channel = const MethodChannel("amplitude_flutter");
 
   /// Returns an Amplitude instance
+  ///
+  /// Call `init()` to initialize underlying SDKs on native platforms
+  /// ```
+  /// var amplitude = Amplitude(Configuration(apiKey: "apiKey"));
+  /// await amplitude.init();
+  /// ```
   Amplitude(this.configuration);
 
   /// Initializes an Amplitude instance
@@ -184,14 +190,14 @@ class Amplitude {
     Map<String, String?> properties = {};
     properties["setDeviceId"] = deviceId;
 
-    await await _channel.invokeMethod("setDeviceId", properties);
+    return await _channel.invokeMethod("setDeviceId", properties);
   }
 
   /// Resets userId to "null" and deviceId to a random UUID.
   ///
   /// Note different devices on different platforms should have different device Ids.
   Future<void> reset() async {
-    await await _channel.invokeMethod("reset");
+    return await _channel.invokeMethod("reset");
   }
 
   /// Flush events in storage.
