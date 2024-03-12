@@ -30,7 +30,7 @@ class _MyAppState extends State<MyApp> {
   late Amplitude analytics;
 
   initAnalytics() async {
-    await analytics.init();
+    await analytics.isBuilt;
 
     setMessage('Amplitude initialized');
   }

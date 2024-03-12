@@ -12,26 +12,36 @@ import 'package:amplitude_flutter/events/group_identify_event.dart';
 class Amplitude {
   Configuration configuration;
   MethodChannel _channel = const MethodChannel("amplitude_flutter");
+  /// Whether the Amplitude instance has been successfully initialized
+  ///
+  /// ```
+  /// var amplitude = Amplitude(Configuration(apiKey: "apiKey"));
+  /// // If care about init complete
+  /// await amplitude.isBuilt;
+  /// ```
+  late Future<bool> isBuilt;
 
   /// Returns an Amplitude instance
   ///
-  /// Call `init()` to initialize underlying SDKs on native platforms
   /// ```
   /// var amplitude = Amplitude(Configuration(apiKey: "apiKey"));
-  /// await amplitude.init();
+  /// // If care about init complete
+  /// await amplitude.isBuilt;
   /// ```
-  Amplitude(this.configuration);
-
-  /// Initializes an Amplitude instance
-  ///
-  /// ```
-  /// var amplitude = Amplitude(Configuration(apiKey: "apiKey"));
-  /// await amplitude.init();
-  /// ```
-  Future<void> init([MethodChannel? methodChannel]) async {
+  Amplitude(this.configuration, [MethodChannel? methodChannel]){
     _channel = methodChannel ?? this._channel;
-    return await _channel.invokeMethod(
-        "init", this.configuration.toMap());
+    isBuilt = _init();
+  }
+
+  /// Private method to initialize and return a Future<bool>
+  Future<bool> _init() async {
+    try {
+      await _channel.invokeMethod("init", configuration.toMap());
+      return true; // Initialization successful
+    } catch (e) {
+      print("Error initializing Amplitude: $e");
+      return false; // Initialization failed
+    }
   }
 
   /// Tracks an event. Events are saved locally.
