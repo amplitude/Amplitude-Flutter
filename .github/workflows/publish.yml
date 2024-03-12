@@ -1,9 +1,16 @@
 name: Publish to pub.dev
 
 on:
-  push:
-    tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+*'
+  workflow_dispatch:
+    inputs:
+      dryRun:
+        description: 'Do a dry run to preview instead of a real publish'
+        type: choice
+        required: true
+        default: 'true'
+        options:
+          - 'true'
+          - 'false'
 
 jobs:
   publish:
@@ -34,5 +41,10 @@ jobs:
       - name: Check Flutter version
         run: flutter --version
 
+      - name: Publish to pub.dev --dry-run
+        if: ${{ github.event.inputs.dryRun == 'false' }}
+        run: flutter pub publish --dry-run
+
       - name: Publish to pub.dev
+        if: ${{ github.event.inputs.dryRun == 'false' }}
         run: flutter pub publish --force
