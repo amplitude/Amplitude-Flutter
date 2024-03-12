@@ -49,8 +49,8 @@ jobs:
       - name: Analyze
         run: flutter analyze --no-fatal-infos
 
-#      - name: Test
-#        run: flutter test
+      - name: Test
+        run: flutter test
 
       - name: Semantic Release --dry-run
         if: ${{ github.event.inputs.dryRun == 'true'}}

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:amplitude_flutter/amplitude.dart';
 import 'package:amplitude_flutter/configuration.dart';
 import 'package:amplitude_flutter/constants.dart';
+import 'package:amplitude_flutter/default_tracking.dart';
 import 'package:flutter/material.dart';
 
 import 'app_state.dart';
@@ -30,7 +31,7 @@ class _MyAppState extends State<MyApp> {
   late Amplitude analytics;
 
   initAnalytics() async {
-    await analytics.init();
+    await analytics.isBuilt;
 
     setMessage('Amplitude initialized');
   }
@@ -39,7 +40,12 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     analytics = Amplitude(
-        Configuration(apiKey: widget.apiKey, logLevel: LogLevel.debug));
+        Configuration(
+            apiKey: widget.apiKey,
+            logLevel: LogLevel.debug,
+            defaultTracking: DefaultTrackingOptions.all()
+        )
+    );
     initAnalytics();
   }
 

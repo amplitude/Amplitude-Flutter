@@ -12,20 +12,36 @@ import 'package:amplitude_flutter/events/group_identify_event.dart';
 class Amplitude {
   Configuration configuration;
   MethodChannel _channel = const MethodChannel("amplitude_flutter");
-
-  /// Returns an Amplitude instance
-  Amplitude(this.configuration);
-
-  /// Initializes an Amplitude instance
+  /// Whether the Amplitude instance has been successfully initialized
   ///
   /// ```
   /// var amplitude = Amplitude(Configuration(apiKey: "apiKey"));
-  /// await amplitude.init();
+  /// // If care about init complete
+  /// await amplitude.isBuilt;
   /// ```
-  Future<void> init([MethodChannel? methodChannel]) async {
+  late Future<bool> isBuilt;
+
+  /// Returns an Amplitude instance
+  ///
+  /// ```
+  /// var amplitude = Amplitude(Configuration(apiKey: "apiKey"));
+  /// // If care about init complete
+  /// await amplitude.isBuilt;
+  /// ```
+  Amplitude(this.configuration, [MethodChannel? methodChannel]){
     _channel = methodChannel ?? this._channel;
-    return await _channel.invokeMethod(
-        "init", this.configuration.toMap());
+    isBuilt = _init();
+  }
+
+  /// Private method to initialize and return a Future<bool>
+  Future<bool> _init() async {
+    try {
+      await _channel.invokeMethod("init", configuration.toMap());
+      return true; // Initialization successful
+    } catch (e) {
+      print("Error initializing Amplitude: $e");
+      return false; // Initialization failed
+    }
   }
 
   /// Tracks an event. Events are saved locally.
@@ -184,14 +200,14 @@ class Amplitude {
     Map<String, String?> properties = {};
     properties["setDeviceId"] = deviceId;
 
-    await await _channel.invokeMethod("setDeviceId", properties);
+    return await _channel.invokeMethod("setDeviceId", properties);
   }
 
   /// Resets userId to "null" and deviceId to a random UUID.
   ///
   /// Note different devices on different platforms should have different device Ids.
   Future<void> reset() async {
-    await await _channel.invokeMethod("reset");
+    return await _channel.invokeMethod("reset");
   }
 
   /// Flush events in storage.

@@ -2,12 +2,6 @@ import 'constants.dart';
 import 'tracking_options.dart';
 import 'default_tracking.dart';
 
-/// Configuration for Amplitude instance.
-/// 
-/// Before initializing Amplitude instance, create a Configuration instance
-/// with your desired configuration and pass it to the Amplitude instance.
-/// Note the Configuration is immutable (cannot be changed) after being passed to Amplitude.init()
-/// `optOut` can be changed later by calling `setOptOut()`.
 class Configuration {
   String apiKey;
   int flushQueueSize;
@@ -40,6 +34,14 @@ class Configuration {
   bool useAppSetIdForDeviceId;
   /// Web specific
   String? appVersion;
+
+  /// Configuration for Amplitude instance.
+  ///
+  /// Before initializing Amplitude instance, create a Configuration instance
+  /// with your desired configuration and pass it to the Amplitude instance.
+  ///
+  /// Note the Configuration is immutable (cannot be changed) after being passed to Amplitude
+  /// `optOut` can be changed later by calling `setOptOut()`.
   Configuration({
     required this.apiKey,
     this.flushQueueSize = Constants.flushQueueSize,
