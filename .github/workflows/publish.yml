@@ -42,7 +42,7 @@ jobs:
         run: flutter --version
 
       - name: Publish to pub.dev --dry-run
-        if: ${{ github.event.inputs.dryRun == 'false' }}
+        if: ${{ github.event.inputs.dryRun == 'true' }}
         run: flutter pub publish --dry-run
 
       - name: Publish to pub.dev
