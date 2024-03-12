@@ -1,3 +1,15 @@
+# [4.0.0-beta.1](https://github.com/amplitude/Amplitude-Flutter/compare/v3.16.1...v4.0.0-beta.1) (2024-03-12)
+
+
+### Features
+
+* update to the latests native SDKs ([#179](https://github.com/amplitude/Amplitude-Flutter/issues/179)) ([fa0b4b9](https://github.com/amplitude/Amplitude-Flutter/commit/fa0b4b9d9ed6ca6f0d7763cced876dfae319dcd5))
+
+
+### BREAKING CHANGES
+
+* Update to the latest native SDKs
+
 ## [3.16.1](https://github.com/amplitude/Amplitude-Flutter/compare/v3.16.0...v3.16.1) (2023-11-08)
 
 
