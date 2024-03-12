@@ -7,10 +7,10 @@ on:
         description: 'Do a dry run to preview instead of a real publish'
         type: choice
         required: true
-        default: 'true'
+        default: 'dry-run'
         options:
-          - 'true'
-          - 'false'
+          - 'dry-run'
+          - 'publish'
 
 jobs:
   publish:
@@ -42,9 +42,9 @@ jobs:
         run: flutter --version
 
       - name: Publish to pub.dev --dry-run
-        if: ${{ github.event.inputs.dryRun == 'true' }}
+        if: ${{ github.event.inputs.dryRun == 'dry-run' }}
         run: flutter pub publish --dry-run
 
       - name: Publish to pub.dev
-        if: ${{ github.event.inputs.dryRun == 'false' }}
+        if: ${{ github.event.inputs.dryRun == 'publish' }}
         run: flutter pub publish --force
