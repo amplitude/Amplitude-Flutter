@@ -7,10 +7,10 @@ on:
         description: 'Do a dry run to preview instead of a real release'
         type: choice
         required: true
-        default: 'true'
+        default: 'dry-run'
         options:
-          - 'true'
-          - 'false'
+          - 'dry-run'
+          - 'release'
 
 jobs:
   authorize:
@@ -53,7 +53,7 @@ jobs:
         run: flutter test
 
       - name: Semantic Release --dry-run
-        if: ${{ github.event.inputs.dryRun == 'true'}}
+        if: ${{ github.event.inputs.dryRun == 'dry-run'}}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GIT_AUTHOR_NAME: amplitude-sdk-bot
@@ -71,7 +71,7 @@ jobs:
           semantic-release --dry-run
 
       - name: Semantic Release
-        if: ${{ github.event.inputs.dryRun == 'false'}}
+        if: ${{ github.event.inputs.dryRun == 'release'}}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GIT_AUTHOR_NAME: amplitude-sdk-bot
