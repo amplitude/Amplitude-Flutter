@@ -12,7 +12,7 @@ Pod::Spec.new do |s|
   s.source_files = 'Classes/**/*'
   s.public_header_files = 'Classes/**/*.h'
   s.dependency 'Flutter'
-  s.dependency 'AmplitudeSwift', '~> 1.0.0'
+  s.dependency 'AmplitudeSwift', '~> 1.4.4' # enable default app lifecycle events
 
   s.ios.deployment_target = '13.0'
 end
