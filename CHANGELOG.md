@@ -1,3 +1,10 @@
+# [4.0.0-beta.2](https://github.com/amplitude/Amplitude-Flutter/compare/v4.0.0-beta.1...v4.0.0-beta.2) (2024-04-03)
+
+
+### Features
+
+* enable app installed & updated events for iOS ([#183](https://github.com/amplitude/Amplitude-Flutter/issues/183)) ([2d4cfe2](https://github.com/amplitude/Amplitude-Flutter/commit/2d4cfe2d4ec87aaaf1b5d530c2b725ee64ce608f))
+
 # [4.0.0-beta.1](https://github.com/amplitude/Amplitude-Flutter/compare/v3.16.1...v4.0.0-beta.1) (2024-03-12)
 
 
