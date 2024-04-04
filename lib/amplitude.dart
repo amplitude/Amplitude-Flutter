@@ -30,7 +30,7 @@ class Amplitude {
   /// await amplitude.isBuilt;
   /// ```
   Amplitude(this.configuration, [MethodChannel? methodChannel]) {
-    _channel = methodChannel ?? this._channel;
+    _channel = methodChannel ?? _channel;
     isBuilt = _init();
   }
 
@@ -116,7 +116,7 @@ class Amplitude {
       String groupType, String groupName, Identify identify,
       [EventOptions? options]) async {
     final event = GroupIdentifyEvent();
-    final group = Map<String, dynamic>();
+    final group = <String, dynamic>{};
     group[groupType] = groupName;
     event.groups = group;
     event.groupProperties = identify.properties;
@@ -142,7 +142,7 @@ class Amplitude {
   /// Note: This will also set groupType: groupName as a user property.
   Future<void> setGroup(String groupType, dynamic groupName,
       [EventOptions? options]) async {
-    if (!(groupName is String) && !(groupName is List<String>)) {
+    if (groupName is! String && groupName is! List<String>) {
       // TODO(xinyi): log warn that groupName should be either a string or an array of string.
       return;
     }

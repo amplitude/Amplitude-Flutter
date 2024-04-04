@@ -2,13 +2,13 @@ import 'package:amplitude_flutter/events/plan.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  final testBranch = "test-branch";
-  final testSource = "test-source";
-  final testVersion = "test-version";
-  final testVersionId = "test-version-id";
+  final testBranch = 'test-branch';
+  final testSource = 'test-source';
+  final testVersion = 'test-version';
+  final testVersionId = 'test-version-id';
 
-  group("Plan", () {
-    test("Should init with default values", () {
+  group('Plan', () {
+    test('Should init with default values', () {
       final plan = Plan();
 
       expect(plan.branch, isNull);
@@ -17,7 +17,7 @@ void main() {
       expect(plan.versionId, isNull);
     });
 
-    test("Should init with custom values", () {
+    test('Should init with custom values', () {
       final plan = Plan(
         branch: testBranch,
         source: testSource,

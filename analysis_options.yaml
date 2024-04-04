@@ -1,0 +1,9 @@
+include: package:lints/recommended.yaml
+
+analyzer:
+  exclude: [lib/amplitude_web.dart, lib/web/amplitude_js.dart] # Uncomment when web is supported
+
+linter:
+  rules:
+    - prefer_single_quotes
+    - prefer_relative_imports

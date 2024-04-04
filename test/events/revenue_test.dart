@@ -5,11 +5,11 @@ void main() {
   final int testQuantity = 2;
   final double testPrice = 9.99;
   final double testRevenue = 19.98;
-  final String testProductId = "test_product";
-  final String testRevenueType = "test_type";
-  final String testReceipt = "test_receipt";
-  final String testReceiptSig = "test_receiptSig";
-  final Map<String, dynamic> testProperties = {"custom_property": "custom_value"};
+  final String testProductId = 'test_product';
+  final String testRevenueType = 'test_type';
+  final String testReceipt = 'test_receipt';
+  final String testReceiptSig = 'test_receiptSig';
+  final Map<String, dynamic> testProperties = {'custom_property': 'custom_value'};
 
   Revenue createTestRevenue() {
     return Revenue()
@@ -23,8 +23,8 @@ void main() {
       ..properties = testProperties;
   }
 
-  group("Revenue", () {
-    test("should create a Revenue instance with default values", () {
+  group('Revenue', () {
+    test('should create a Revenue instance with default values', () {
       final revenue = Revenue();
       expect(revenue.quantity, 1);
       expect(revenue.price, isNull);
@@ -36,7 +36,7 @@ void main() {
       expect(revenue.properties, isNull);
     });
 
-    test("should correctly assign properties", () {
+    test('should correctly assign properties', () {
       final revenue = createTestRevenue();
       expect(revenue.quantity, testQuantity);
       expect(revenue.price, testPrice);
@@ -48,7 +48,7 @@ void main() {
       expect(revenue.properties, testProperties);
     });
 
-    test("toRevenueEvent should correctly convert to RevenueEvent", () {
+    test('toRevenueEvent should correctly convert to RevenueEvent', () {
       final revenue = createTestRevenue();
       final event = revenue.toRevenueEvent();
 
@@ -63,12 +63,12 @@ void main() {
       expect(event.eventProperties![RevenueConstants.revenue], testRevenue);
     });
 
-    test("isValid should return true when price is not null", () {
+    test('isValid should return true when price is not null', () {
       final revenue = createTestRevenue();
       expect(revenue.isValid(), isTrue);
     });
 
-    test("isValid should return false when price is null", () {
+    test('isValid should return false when price is null', () {
       final revenue = Revenue();
       expect(revenue.isValid(), isFalse);
     });

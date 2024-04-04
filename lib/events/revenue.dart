@@ -1,13 +1,13 @@
 import 'revenue_event.dart';
 
 class RevenueConstants {
-  static const String revenueProductId = "\$productId";
-  static const String revenueQuantity = "\$quantity";
-  static const String revenuePrice = "\$price";
-  static const String revenueType = "\$revenueType";
-  static const String revenueReceipt = "\$receipt";
-  static const String revenueReceiptSig = "\$receiptSig";
-  static const String revenue = "\$revenue";
+  static const String revenueProductId = '\$productId';
+  static const String revenueQuantity = '\$quantity';
+  static const String revenuePrice = '\$price';
+  static const String revenueType = '\$revenueType';
+  static const String revenueReceipt = '\$receipt';
+  static const String revenueReceiptSig = '\$receiptSig';
+  static const String revenue = '\$revenue';
 }
 
 class Revenue {

@@ -2,21 +2,21 @@ import 'package:test/test.dart';
 import 'package:amplitude_flutter/events/identify.dart';
 
 void main() {
-  final String testProperty = "test-property";
-  final String testValue = "test-value";
+  final String testProperty = 'test-property';
+  final String testValue = 'test-value';
 
   group('IdentifyOperation', () {
     test('Operation types should be correct', () {
-      expect(IdentifyOperation.set.operationType, "\$set");
-      expect(IdentifyOperation.setOnce.operationType, "\$setOnce");
-      expect(IdentifyOperation.add.operationType, "\$add");
-      expect(IdentifyOperation.append.operationType, "\$append");
-      expect(IdentifyOperation.clearAll.operationType, "\$clearAll");
-      expect(IdentifyOperation.prepend.operationType, "\$prepend");
-      expect(IdentifyOperation.unset.operationType, "\$unset");
-      expect(IdentifyOperation.preInsert.operationType, "\$preInsert");
-      expect(IdentifyOperation.postInsert.operationType, "\$postInsert");
-      expect(IdentifyOperation.remove.operationType, "\$remove");
+      expect(IdentifyOperation.set.operationType, '\$set');
+      expect(IdentifyOperation.setOnce.operationType, '\$setOnce');
+      expect(IdentifyOperation.add.operationType, '\$add');
+      expect(IdentifyOperation.append.operationType, '\$append');
+      expect(IdentifyOperation.clearAll.operationType, '\$clearAll');
+      expect(IdentifyOperation.prepend.operationType, '\$prepend');
+      expect(IdentifyOperation.unset.operationType, '\$unset');
+      expect(IdentifyOperation.preInsert.operationType, '\$preInsert');
+      expect(IdentifyOperation.postInsert.operationType, '\$postInsert');
+      expect(IdentifyOperation.remove.operationType, '\$remove');
     });
   });
 
@@ -25,8 +25,8 @@ void main() {
       final identify = Identify();
       identify.set(testProperty, testValue);
 
-      expect(identify.properties.containsKey("\$set"), isTrue);
-      expect(identify.properties["\$set"][testProperty], testValue);
+      expect(identify.properties.containsKey('\$set'), isTrue);
+      expect(identify.properties['\$set'][testProperty], testValue);
       expect(identify.propertySet.contains(testProperty), isTrue);
     });
 
@@ -34,8 +34,8 @@ void main() {
       final identify = Identify();
       identify.setOnce(testProperty, testValue);
 
-      expect(identify.properties.containsKey("\$setOnce"), isTrue);
-      expect(identify.properties["\$setOnce"][testProperty], testValue);
+      expect(identify.properties.containsKey('\$setOnce'), isTrue);
+      expect(identify.properties['\$setOnce'][testProperty], testValue);
       expect(identify.propertySet.contains(testProperty), isTrue);
     });
 
@@ -43,8 +43,8 @@ void main() {
       final identify = Identify();
       identify.add(testProperty, testValue);
 
-      expect(identify.properties.containsKey("\$add"), isTrue);
-      expect(identify.properties["\$add"][testProperty], testValue);
+      expect(identify.properties.containsKey('\$add'), isTrue);
+      expect(identify.properties['\$add'][testProperty], testValue);
       expect(identify.propertySet.contains(testProperty), isTrue);
     });
 
@@ -52,8 +52,8 @@ void main() {
       final identify = Identify();
       identify.append(testProperty, testValue);
 
-      expect(identify.properties.containsKey("\$append"), isTrue);
-      expect(identify.properties["\$append"][testProperty], testValue);
+      expect(identify.properties.containsKey('\$append'), isTrue);
+      expect(identify.properties['\$append'][testProperty], testValue);
       expect(identify.propertySet.contains(testProperty), isTrue);
     });
 
@@ -61,8 +61,8 @@ void main() {
       final identify = Identify();
       identify.prepend(testProperty, testValue);
 
-      expect(identify.properties.containsKey("\$prepend"), isTrue);
-      expect(identify.properties["\$prepend"][testProperty], testValue);
+      expect(identify.properties.containsKey('\$prepend'), isTrue);
+      expect(identify.properties['\$prepend'][testProperty], testValue);
       expect(identify.propertySet.contains(testProperty), isTrue);
     });
 
@@ -70,8 +70,8 @@ void main() {
       final identify = Identify();
       identify.preInsert(testProperty, testValue);
 
-      expect(identify.properties.containsKey("\$preInsert"), isTrue);
-      expect(identify.properties["\$preInsert"][testProperty], testValue);
+      expect(identify.properties.containsKey('\$preInsert'), isTrue);
+      expect(identify.properties['\$preInsert'][testProperty], testValue);
       expect(identify.propertySet.contains(testProperty), isTrue);
     });
 
@@ -79,8 +79,8 @@ void main() {
       final identify = Identify();
       identify.remove(testProperty, testValue);
 
-      expect(identify.properties.containsKey("\$remove"), isTrue);
-      expect(identify.properties["\$remove"][testProperty], testValue);
+      expect(identify.properties.containsKey('\$remove'), isTrue);
+      expect(identify.properties['\$remove'][testProperty], testValue);
       expect(identify.propertySet.contains(testProperty), isTrue);
     });
 
@@ -88,9 +88,9 @@ void main() {
       final identify = Identify();
       identify.unset(testProperty);
 
-      expect(identify.properties.containsKey("\$unset"), isTrue);
+      expect(identify.properties.containsKey('\$unset'), isTrue);
       expect(
-          identify.properties["\$unset"][testProperty], Identify.UNSET_VALUE);
+          identify.properties['\$unset'][testProperty], Identify.UNSET_VALUE);
       expect(identify.propertySet.contains(testProperty), isTrue);
     });
 
@@ -101,16 +101,16 @@ void main() {
 
       // After clearAll, properties should be cleared except for the clearAll operation itself
       expect(identify.properties.length, 1);
-      expect(identify.properties.containsKey("\$clearAll"), isTrue);
+      expect(identify.properties.containsKey('\$clearAll'), isTrue);
 
       // Attempt to set another property after clearAll should be ignored
       identify.set(testProperty, testValue);
-      expect(identify.properties.containsKey("\$set"), isFalse);
+      expect(identify.properties.containsKey('\$set'), isFalse);
     });
 
     test('Should not proceed when property is empty', () {
       final identify = Identify();
-      identify.set("", testValue);
+      identify.set('', testValue);
 
       expect(identify.properties.length, 0);
     });
@@ -126,7 +126,7 @@ void main() {
         () {
       final identify = Identify();
       identify.set(testProperty, testValue);
-      identify.set(testProperty, "new Value");
+      identify.set(testProperty, 'new Value');
       expect(identify.properties.length, 1);
       expect(identify.propertySet.length, 1);
       expect(identify.properties[IdentifyOperation.set.operationType],

@@ -97,7 +97,7 @@ class Configuration {
       'appVersion': appVersion,
       // This field doesn't belong to Configuration
       // Pass it for FlutterLibraryPlugin
-      'library': "${Constants.packageName}/${Constants.packageVersion}"
+      'library': '${Constants.packageName}/${Constants.packageVersion}'
     };
   }
 }

@@ -2,18 +2,18 @@ import 'package:amplitude_flutter/events/ingestion_metadata.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  final testSourceName = "test-source-name";
-  final testSourceVersion = "test-source-version";
+  final testSourceName = 'test-source-name';
+  final testSourceVersion = 'test-source-version';
 
-  group("IngestionMetadata", () {
-    test("Should init with default values", () {
+  group('IngestionMetadata', () {
+    test('Should init with default values', () {
       final ingestionMetadata = IngestionMetadata();
 
       expect(ingestionMetadata.sourceName, isNull);
       expect(ingestionMetadata.sourceVersion, isNull);
     });
 
-    test("Should init with custom values", () {
+    test('Should init with custom values', () {
       final ingestionMetadata = IngestionMetadata(
         sourceName: testSourceName,
         sourceVersion: testSourceVersion,

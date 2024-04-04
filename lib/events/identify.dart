@@ -100,5 +100,6 @@ class Identify {
     propertySet.add(property);
   }
 
+  // ignore: constant_identifier_names
   static const UNSET_VALUE = '-';
 }
