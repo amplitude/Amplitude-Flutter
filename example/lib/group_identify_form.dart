@@ -15,10 +15,10 @@ class _GroupIdentifyFormState extends State<GroupIdentifyForm> {
         groupPropertyKey.text.isNotEmpty &&
         groupPropertyValue.text.isNotEmpty) {
       final Identify identify = Identify()
-        ..set(property: groupPropertyKey.text, value: groupPropertyValue.text);
+        ..set(groupPropertyKey.text, groupPropertyValue.text);
 
       AppState.of(context)
-        ..analytics.groupIdentify(groupType: groupType.text, groupName: groupValue.text, identify: identify)
+        ..analytics.groupIdentify(groupType.text, groupValue.text, identify)
         ..setMessage('Group Identify sent.');
     }
   }

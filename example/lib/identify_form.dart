@@ -11,17 +11,17 @@ class IdentifyForm extends StatefulWidget {
 class _IdentifyFormState extends State<IdentifyForm> {
   void onPress() {
     final Identify identify = Identify()
-      ..set(property: 'identify_test', value: 'identify sent at ${DateTime
+      ..set('identify_test', 'identify sent at ${DateTime
           .now()
           .millisecondsSinceEpoch}')
-    ..add(property: "identify_count", value: 1);
+    ..add('identify_count', 1);
 
     if (userPropKey.isNotEmpty && userPropValue.isNotEmpty) {
-      identify.set(property: userPropKey, value: userPropValue);
+      identify.set(userPropKey, userPropValue);
     }
 
     AppState.of(context)
-      ..analytics.identify(identify: identify)
+      ..analytics.identify(identify)
       ..setMessage('Identify sent.');
   }
 

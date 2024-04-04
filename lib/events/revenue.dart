@@ -1,4 +1,4 @@
-import 'package:amplitude_flutter/events/revenue_event.dart';
+import 'revenue_event.dart';
 
 class RevenueConstants {
   static const String revenueProductId = "\$productId";

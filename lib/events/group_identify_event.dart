@@ -1,4 +1,4 @@
-import 'package:amplitude_flutter/constants.dart';
+import '../constants.dart';
 import 'base_event.dart';
 
 class GroupIdentifyEvent extends BaseEvent {

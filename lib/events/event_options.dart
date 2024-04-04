@@ -1,7 +1,6 @@
 import 'dart:core';
 
-import 'package:amplitude_flutter/events/plan.dart';
-
+import 'plan.dart';
 import 'ingestion_metadata.dart';
 
 /// Keys for event arguments
