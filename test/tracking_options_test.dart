@@ -2,8 +2,8 @@ import 'package:test/test.dart';
 import 'package:amplitude_flutter/tracking_options.dart';
 
 void main() {
-  group("TrackingOptions", () {
-    test("Should have all tracking enabled by default", () {
+  group('TrackingOptions', () {
+    test('Should have all tracking enabled by default', () {
       final trackingOptions = TrackingOptions();
       expect(trackingOptions.ipAddress, true);
       expect(trackingOptions.language, true);
@@ -26,7 +26,7 @@ void main() {
       expect(trackingOptions.idfv, true);
     });
 
-    test("Should init with custom options", () {
+    test('Should init with custom options', () {
       final trackingOptions =
           TrackingOptions(ipAddress: false, country: false, city: true);
       expect(trackingOptions.ipAddress, false);
@@ -50,28 +50,28 @@ void main() {
       expect(trackingOptions.idfv, true);
     });
 
-    test("Should toMap correctly", () {
+    test('Should toMap correctly', () {
       final trackingOptions = TrackingOptions();
       expect(trackingOptions.toMap(), {
-        "ipAddress": true,
-        "language": true,
-        "platform": true,
-        "region": true,
-        "dma": true,
-        "country": true,
-        "city": true,
-        "carrier": true,
-        "deviceModel": true,
-        "deviceManufacturer": true,
-        "osVersion": true,
-        "osName": true,
-        "versionName": true,
-        "adid": true,
-        "appSetId": true,
-        "deviceBrand": true,
-        "latLag": true,
-        "apiLevel": true,
-        "idfv": true,
+        'ipAddress': true,
+        'language': true,
+        'platform': true,
+        'region': true,
+        'dma': true,
+        'country': true,
+        'city': true,
+        'carrier': true,
+        'deviceModel': true,
+        'deviceManufacturer': true,
+        'osVersion': true,
+        'osName': true,
+        'versionName': true,
+        'adid': true,
+        'appSetId': true,
+        'deviceBrand': true,
+        'latLag': true,
+        'apiLevel': true,
+        'idfv': true,
       });
     });
   });

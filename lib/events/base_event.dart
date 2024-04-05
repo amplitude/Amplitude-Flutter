@@ -1,4 +1,4 @@
-import 'package:amplitude_flutter/events/plan.dart';
+import 'plan.dart';
 import 'event_options.dart';
 import 'ingestion_metadata.dart';
 

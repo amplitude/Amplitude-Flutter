@@ -3,15 +3,25 @@ import 'package:flutter/foundation.dart';
 class Identify {
   Identify() : payload = <String, dynamic>{};
 
+  // ignore: constant_identifier_names
   static const String OP_SET = r'$set';
+  // ignore: constant_identifier_names
   static const String OP_SET_ONCE = r'$setOnce';
+  // ignore: constant_identifier_names
   static const String OP_ADD = r'$add';
+  // ignore: constant_identifier_names
   static const String OP_APPEND = r'$append';
+  // ignore: constant_identifier_names
   static const String OP_UNSET = r'$unset';
+  // ignore: constant_identifier_names
   static const String OP_PREPEND = r'$prepend';
+  // ignore: constant_identifier_names
   static const String OP_PREINSERT = r'$preInsert';
+  // ignore: constant_identifier_names
   static const String OP_POSTINSERT = r'$postInsert';
+  // ignore: constant_identifier_names
   static const String OP_REMOVE = r'$remove';
+  // ignore: constant_identifier_names
   static const String OP_CLEAR_ALL = r'$clearAll';
 
   final Map<String, dynamic> payload;
