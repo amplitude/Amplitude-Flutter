@@ -167,7 +167,9 @@ import AmplitudeSwift
         if let defaultTrackingDict = args["defaultTracking"] as? [String: Bool] {
             let sessions = defaultTrackingDict["sessions"] ?? true
             let appLifecycles = defaultTrackingDict["appLifecycles"] ?? false
-            let screenViews = defaultTrackingDict["screenViews"] ?? false
+            // Set false to disable screenViews on iOS
+            // screenViews is implemented in Flutter
+            let screenViews = false
             configuration.defaultTracking = DefaultTrackingOptions(
                 sessions: sessions,
                 appLifecycles: appLifecycles,

@@ -10,8 +10,9 @@ class DefaultTrackingOptions {
   final bool sessions;
   /// Mobile (iOS and Android) specific
   final bool appLifecycles;
-  /// Mobile (iOS and Android) specific
-  final bool screenViews;
+  // TODO(xinyi): implement screenViews in Flutter
+  // /// Mobile (iOS and Android) specific
+  // final bool screenViews;
   /// Android specific
   final bool deepLinks;
   /// Web specific
@@ -26,7 +27,7 @@ class DefaultTrackingOptions {
   const DefaultTrackingOptions({
     this.sessions = true,
     this.appLifecycles = false,
-    this.screenViews = false,
+    // this.screenViews = false,
     this.deepLinks = false,
     this.attribution = true,
     this.pageViews = true,
@@ -41,7 +42,7 @@ class DefaultTrackingOptions {
     return const DefaultTrackingOptions(
       sessions: true,
         appLifecycles: true, 
-        screenViews: true,
+        // screenViews: true,
         deepLinks: true,
         attribution: true,
         pageViews: true,
@@ -55,7 +56,7 @@ class DefaultTrackingOptions {
     return const DefaultTrackingOptions(
       sessions: false,
         appLifecycles: false, 
-        screenViews: false,
+        // screenViews: false,
         deepLinks: false,
         attribution: false,
         pageViews: false,
@@ -68,7 +69,6 @@ class DefaultTrackingOptions {
     return {
       'sessions': sessions,
       'appLifecycles': appLifecycles,
-      'screenViews': screenViews,
       'deepLinks': deepLinks,
       'attribution': attribution,
       'pageViews': pageViews,

@@ -175,7 +175,9 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                 sessions = (map["sessions"] as? Boolean) ?: true,
                 appLifecycles = (map["appLifecycles"] as? Boolean) ?: false,
                 deepLinks = (map["deepLinks"] as? Boolean) ?: false,
-                screenViews = (map["screenViews"] as? Boolean) ?: false
+                // Set false to disable screenViews on Android
+                // screenViews is implemented in Flutter
+                screenViews = false
             )
         }
         call.argument<Map<String, Any>>("trackingOptions")?.let { map ->
