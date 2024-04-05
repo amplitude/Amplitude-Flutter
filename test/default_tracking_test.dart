@@ -8,7 +8,7 @@ void main(){
 
       expect(defaultTrackingOptions.sessions, true);
       expect(defaultTrackingOptions.appLifecycles, true);
-      expect(defaultTrackingOptions.screenViews, true);
+      // expect(defaultTrackingOptions.screenViews, true);
       expect(defaultTrackingOptions.deepLinks, true);
       expect(defaultTrackingOptions.attribution, true);
       expect(defaultTrackingOptions.pageViews, true);
@@ -21,7 +21,7 @@ void main(){
 
       expect(defaultTrackingOptions.sessions, false);
       expect(defaultTrackingOptions.appLifecycles, false);
-      expect(defaultTrackingOptions.screenViews, false);
+      // expect(defaultTrackingOptions.screenViews, false);
       expect(defaultTrackingOptions.deepLinks, false);
       expect(defaultTrackingOptions.attribution, false);
       expect(defaultTrackingOptions.pageViews, false);

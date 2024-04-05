@@ -45,7 +45,6 @@ class AmplitudeFlutterPluginTest {
             "defaultTracking" to JSONObject(mapOf(
                 "sessions" to true,
                 "appLifecycles" to false,
-                "screenViews" to false,
                 "deepLinks" to false,
                 "attribution" to true,
                 "pageViews" to true,

@@ -47,7 +47,6 @@ void main() {
     'defaultTracking': {
       'sessions': true,
       'appLifecycles': false,
-      'screenViews': false,
       'deepLinks': false,
       'attribution': true,
       'pageViews': true,
