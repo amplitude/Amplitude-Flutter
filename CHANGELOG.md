@@ -1,3 +1,10 @@
+# [4.0.0-beta.3](https://github.com/amplitude/Amplitude-Flutter/compare/v4.0.0-beta.2...v4.0.0-beta.3) (2024-04-08)
+
+
+### Bug Fixes
+
+* eventType should be required positional param ([#186](https://github.com/amplitude/Amplitude-Flutter/issues/186)) ([1cb1f9b](https://github.com/amplitude/Amplitude-Flutter/commit/1cb1f9bfaf41c0f2d527b6ac02f6f17b69efbcec))
+
 # [4.0.0-beta.2](https://github.com/amplitude/Amplitude-Flutter/compare/v4.0.0-beta.1...v4.0.0-beta.2) (2024-04-03)
 
 
