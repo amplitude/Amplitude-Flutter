@@ -14,7 +14,7 @@ class _EventFormState extends State<EventForm> {
 
   void onPress() {
     AppState.of(context)
-      ..analytics.track(BaseEvent(eventType: _controller.text))
+      ..analytics.track(BaseEvent(_controller.text))
       ..setMessage('Event sent.');
   }
 

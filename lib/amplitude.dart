@@ -51,7 +51,7 @@ class Amplitude {
   /// (whichever comes first), as well as on app close.
   ///
   /// ```
-  /// amplitude.track(BaseEvent(eventType: 'Button Clicked'))
+  /// amplitude.track(BaseEvent('Button Clicked'))
   /// ```
   Future<void> track(
     BaseEvent event, [

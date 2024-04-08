@@ -8,7 +8,7 @@ void main() {
   group('BaseEvent', () {
     test('Should init with default values', () {
       final testEventType = 'test-event-type';
-      final event = BaseEvent(eventType: testEventType);
+      final event = BaseEvent(testEventType);
 
       expect(event.eventType, testEventType);
       expect(event.eventProperties, isNull);
@@ -30,7 +30,7 @@ void main() {
         'test-group-property-key': 'test-group-property-value'
       };
       final event = BaseEvent(
-        eventType: testEventType,
+        testEventType,
         eventProperties: testEventProperties,
         userProperties: testUserProperties,
         groups: testGroups,
@@ -86,6 +86,7 @@ void main() {
       final partnerId = 'partner_id';
 
       final event = BaseEvent(
+        eventType,
         userId: userId,
         deviceId: deviceId,
         timestamp: timestamp,
@@ -124,7 +125,6 @@ void main() {
         revenueType: revenueType,
         extra: extra,
         partnerId: partnerId,
-        eventType: eventType,
       );
 
       final expectedMap = {
@@ -179,7 +179,7 @@ void main() {
       final deviceId = 'device_id';
       final eventType = 'event_type';
 
-      final originalEvent = BaseEvent(userId: originalUserId, deviceId: deviceId, eventType: eventType);
+      final originalEvent = BaseEvent(eventType, userId: originalUserId, deviceId: deviceId);
       final newOptions = EventOptions(userId: newUserId);
 
       originalEvent.mergeEventOptions(newOptions);

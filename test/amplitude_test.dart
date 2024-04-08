@@ -86,7 +86,7 @@ void main() {
     // Pass it for FlutterLibraryPlugin
     'library': '${Constants.packageName}/${Constants.packageVersion}'
   };
-  final testEvent = BaseEvent(eventType: 'testEvent');
+  final testEvent = BaseEvent('testEvent');
   final testEventMap = {
     'event_type': 'testEvent',
     'attempts': 0,
