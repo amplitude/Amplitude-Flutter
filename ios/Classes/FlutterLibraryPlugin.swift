@@ -9,8 +9,11 @@ class FlutterLibraryPlugin: BeforePlugin {
     }
 
     override func execute(event: BaseEvent) -> BaseEvent? {
-        event.library = library
-
+        if let eventLibrary = event.library {
+            event.library = "\(library)_\(eventLibrary)"
+        } else {
+            event.library = library
+        }
         return event
     }
 }
