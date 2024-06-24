@@ -9,7 +9,11 @@ class FlutterLibraryPlugin(val library: String): Plugin {
     override lateinit var amplitude: Amplitude
 
     override fun execute(event: BaseEvent): BaseEvent? {
-        event.library = library
+        if (event.library == null) {
+            event.library = library
+        } else {
+            event.library = "$library_${event.library}"
+        }
         return super.execute(event)
     }
 }
