@@ -1,8 +1,8 @@
 PODS:
   - amplitude_flutter (0.0.1):
-    - AmplitudeSwift (~> 1.4.4)
+    - AmplitudeSwift (~> 1.6)
     - Flutter
-  - AmplitudeSwift (1.4.4):
+  - AmplitudeSwift (1.6.2):
     - AnalyticsConnector (~> 1.0.1)
   - AnalyticsConnector (1.0.3)
   - Flutter (1.0.0)
@@ -23,11 +23,11 @@ EXTERNAL SOURCES:
     :path: Flutter
 
 SPEC CHECKSUMS:
-  amplitude_flutter: 490e6b7e89b4dcac86dced0cd85e8a477419f751
-  AmplitudeSwift: 13725c3313c2e2cac30836dc2c973d3883baabef
+  amplitude_flutter: aed4ad5d2da06894245fde7e8c56fed39ac6dca8
+  AmplitudeSwift: cc22038404dc5581e2dea5dc2501302959dd3c90
   AnalyticsConnector: a53214d38ae22734c6266106c0492b37832633a9
   Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
 
 PODFILE CHECKSUM: cc1f88378b4bfcf93a6ce00d2c587857c6008d3b
 
-COCOAPODS: 1.12.1
+COCOAPODS: 1.15.2
