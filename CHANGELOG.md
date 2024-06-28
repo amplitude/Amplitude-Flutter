@@ -1,3 +1,10 @@
+# [4.0.0-beta.5](https://github.com/amplitude/Amplitude-Flutter/compare/v4.0.0-beta.4...v4.0.0-beta.5) (2024-06-28)
+
+
+### Bug Fixes
+
+* Adding underlying library version to library field ([#195](https://github.com/amplitude/Amplitude-Flutter/issues/195)) ([bd72e9d](https://github.com/amplitude/Amplitude-Flutter/commit/bd72e9d97dffbd9f4128f59578d02dd6f595b628))
+
 # [4.0.0-beta.4](https://github.com/amplitude/Amplitude-Flutter/compare/v4.0.0-beta.3...v4.0.0-beta.4) (2024-06-24)
 
 
