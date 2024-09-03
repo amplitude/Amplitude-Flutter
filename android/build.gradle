@@ -25,7 +25,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 31
     // Condition for namespace compatibility in AGP 8
     if (project.android.hasProperty("namespace")) {
         namespace 'com.amplitude.amplitude_flutter'
