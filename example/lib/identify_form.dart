@@ -35,7 +35,7 @@ class _IdentifyFormState extends State<IdentifyForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text('Identify', style: Theme.of(context).textTheme.headline5),
+        Text('Identify', style: Theme.of(context).textTheme.headlineSmall),
         const SizedBox(height: 10),
         Row(children: <Widget>[
           Expanded(
