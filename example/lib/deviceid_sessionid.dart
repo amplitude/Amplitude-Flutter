@@ -13,7 +13,7 @@ class _DeviceIdSessionIdState extends State<DeviceIdSessionId> {
       children: [
         Row(
           children: [
-            Text('Device Id', style: Theme.of(context).textTheme.headline5),
+            Text('Device Id', style: Theme.of(context).textTheme.headlineSmall),
           ],
         ),
         Row(
@@ -28,7 +28,7 @@ class _DeviceIdSessionIdState extends State<DeviceIdSessionId> {
         ),
         Row(
           children: [
-            Text('Session Id', style: Theme.of(context).textTheme.headline5),
+            Text('Session Id', style: Theme.of(context).textTheme.headlineSmall),
           ],
         ),
         Row(children: [

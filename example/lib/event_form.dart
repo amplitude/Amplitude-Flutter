@@ -22,7 +22,7 @@ class _EventFormState extends State<EventForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text('Event', style: Theme.of(context).textTheme.headline5),
+        Text('Event', style: Theme.of(context).textTheme.headlineSmall),
         const SizedBox(height: 10),
         TextField(
             decoration: InputDecoration(

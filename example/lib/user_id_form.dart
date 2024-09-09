@@ -19,7 +19,7 @@ class _UserIdFormState extends State<UserIdForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text('Current User Id', style: Theme.of(context).textTheme.headline5),
+        Text('Current User Id', style: Theme.of(context).textTheme.headlineSmall),
         FutureBuilder(
           future: AppState.of(context).analytics.getUserId(),
           builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
@@ -27,7 +27,7 @@ class _UserIdFormState extends State<UserIdForm> {
           },
         ),
         const SizedBox(height: 10),
-        Text('User Id', style: Theme.of(context).textTheme.headline5),
+        Text('User Id', style: Theme.of(context).textTheme.headlineSmall),
         const SizedBox(height: 10),
         new TextField(
             autocorrect: false,
