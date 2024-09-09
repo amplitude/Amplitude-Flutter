@@ -1,3 +1,10 @@
+## [3.16.4](https://github.com/amplitude/Amplitude-Flutter/compare/v3.16.3...v3.16.4) (2024-09-09)
+
+
+### Bug Fixes
+
+* support kotlin 1.8 ([#202](https://github.com/amplitude/Amplitude-Flutter/issues/202)) ([f72d09a](https://github.com/amplitude/Amplitude-Flutter/commit/f72d09a487e7e856ccf80663be33d8d3d9a4e257))
+
 ## [3.16.3](https://github.com/amplitude/Amplitude-Flutter/compare/v3.16.2...v3.16.3) (2024-09-09)
 
 
