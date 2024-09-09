@@ -1,3 +1,10 @@
+## [3.16.3](https://github.com/amplitude/Amplitude-Flutter/compare/v3.16.2...v3.16.3) (2024-09-09)
+
+
+### Bug Fixes
+
+* solve issue that sdk can not be compiled on android platform ([#203](https://github.com/amplitude/Amplitude-Flutter/issues/203)) ([a2b21de](https://github.com/amplitude/Amplitude-Flutter/commit/a2b21de12d548794096291636d78d1ab9de5f4cc))
+
 ## [3.16.2](https://github.com/amplitude/Amplitude-Flutter/compare/v3.16.1...v3.16.2) (2024-02-08)
 
 
