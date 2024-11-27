@@ -13,6 +13,7 @@ Pod::Spec.new do |s|
   s.public_header_files = 'Classes/**/*.h'
   s.dependency 'Flutter'
   s.dependency 'Amplitude', '8.18.0'
+  s.swift_version    = '4.1'
 
   s.ios.deployment_target = '10.0'
 end
