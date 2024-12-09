@@ -1,3 +1,10 @@
+## [3.16.5](https://github.com/amplitude/Amplitude-Flutter/compare/v3.16.4...v3.16.5) (2024-12-09)
+
+
+### Bug Fixes
+
+* upgrade package:js min dependency to 0.7.0 ([#215](https://github.com/amplitude/Amplitude-Flutter/issues/215)) ([8190940](https://github.com/amplitude/Amplitude-Flutter/commit/8190940c77997b3fdec95e73ba7d2dcab5c528f9))
+
 ## [3.16.4](https://github.com/amplitude/Amplitude-Flutter/compare/v3.16.3...v3.16.4) (2024-09-09)
 
 
