@@ -30,146 +30,26 @@ class AmplitudeFlutterPlugin {
       case "init":
         {
           var args = call.arguments;
-          var instanceName = args['instanceName'];
-          // Configuration configuration = getConfiguration(call);
-          JSObject configuration = mapToJSObj(call.arguments);
+          String apiKey = args['apiKey'];
+          JSObject configuration = getConfiguration(call);
 
-          amplitude.init(args['apiKey'], configuration);
-          // String apiKey = args['apiKey'];
-          // var userId = args['userId'] ?? null;
-          // return amplitude.init(apiKey, userId);
-          return;
+          return amplitude.init(apiKey, configuration);;
         }
       case "track":
+      case "identify":
+      case "groupIdentify":
+      case "setGroup":
+      case "revenue":
       {
         JSObject event = getEvent(call);
         amplitude.track(event);
         // amplitude.logger.debug("Track ")
         return;
       }
-      // case "enableCoppaControl":
-      //   {
-      //     return false;
-      //   }
-      // case "disableCoppaControl":
-      //   {
-      //     return false;
-      //   }
-      // case "setOptOut":
-      //   {
-      //     bool optOut = args['optOut'];
-      //     return amplitude.setOptOut(optOut);
-      //   }
-      // case "trackingSessionEvents":
-      //   {
-      //     return false;
-      //   }
-      // case "setUserId":
-      //   {
-      //     String? userId = args['userId'] ?? null;
-      //     bool startNewSession = args['startNewSession'] ?? false;
-      //     return amplitude.setUserId(userId, startNewSession);
-      //   }
-      // case "setDeviceId":
-      //   {
-      //     String deviceId = args['deviceId'];
-      //     return amplitude.setDeviceId(deviceId);
-      //   }
-      // case "setServerUrl":
-      //   {
-      //     String serverUrl = args['serverUrl'];
-      //     return amplitude.setServerUrl(serverUrl);
-      //   }
-      // case "setEventUploadThreshold":
-      //   {
-      //     int eventUploadThreshold = args['eventUploadThreshold'];
-      //     return amplitude.setEventUploadThreshold(eventUploadThreshold);
-      //   }
-      // case "setEventUploadPeriodMillis":
-      //   {
-      //     int eventUploadPeriodMillis = args['eventUploadPeriodMillis'];
-      //     return amplitude.options.eventUploadPeriodMillis = eventUploadPeriodMillis;
-      //   }
-      // case "regenerateDeviceId":
-      //   {
-      //     return amplitude.regenerateDeviceId();
-      //   }
-      // case "setUseDynamicConfig":
-      //   {
-      //     bool useDynamicConfig = args['useDynamicConfig'];
-      //     return amplitude.setUseDynamicConfig(useDynamicConfig);
-      //   }
-      // case "identify":
-      //   {
-      //     var userProperties = args['userProperties'];
-      //     Identify identify = createIdentify(userProperties);
-      //     return amplitude.identify(identify);
-      //   }
-      // case "setGroup":
-      //   {
-      //     String groupType = args['groupType'];
-      //     dynamic groupName = args['groupName'];
-      //     return amplitude.setGroup(groupType, groupName);
-      //   }
-      // case "groupIdentify":
-      //   {
-      //     String groupType = args['groupType'];
-      //     dynamic groupName = args['groupName'];
-      //     var userProperties = args['userProperties'];
-      //     Identify groupIdentify = createIdentify(userProperties);
-      //     bool outOfSession = args['outOfSession'] ?? false;
-      //     return amplitude.groupIdentify(
-      //         groupType, groupName, groupIdentify, null, null, outOfSession);
-      //   }
-      // case "clearUserProperties":
-      //   {
-      //     return amplitude.clearUserProperties();
-      //   }
-      // case "uploadEvents":
-      //   {
-      //     return amplitude.sendEvents();
-      //   }
-      // case "setLibraryName":
-      //   {
-      //     String libraryName = args['libraryName'];
-      //     return amplitude.setLibrary(libraryName, null);
-      //   }
-      // case "setLibraryVersion":
-      //   {
-      //     String libraryVersion = args['libraryVersion'];
-      //     return amplitude.setLibrary(null, libraryVersion);
-      //   }
-      // case "getDeviceId":
-      //   {
-      //     return amplitude.getDeviceId();
-      //   }
-      // case "getUserId":
-      //   {
-      //     return amplitude.getUserId();
-      //   }
-      // case "getSessionId":
-      //   {
-      //     return amplitude.getSessionId();
-      //   }
-      // case "useAppSetIdForDeviceId":
-      //   {
-      //     return false;
-      //   }
-      // case "setMinTimeBetweenSessionsMillis":
-      //   {
-      //     int timeInMillis = args['timeInMillis'];
-      //     return amplitude.setMinTimeBetweenSessionsMillis(timeInMillis);
-      //   }
-      // case "setServerZone":
-      //   {
-      //     String serverZone = args['serverZone'];
-      //     bool updateServerUrl = args['updateServerUrl'];
-      //     return amplitude.setServerZone(serverZone, updateServerUrl);
-      //   }
-      // case "setOffline":
-      //   {
-      //     return false;
-      //   }
+      case "setUserId":
+      {
+        String userId = call.arguments[setUserId];
+      }
       default:
         throw PlatformException(
           code: 'Unimplemented',
@@ -179,21 +59,120 @@ class AmplitudeFlutterPlugin {
     }
   }
 
-  JSObject getEvent(MethodCall call) {
-    // TODO: chungdaniel 2024-12-04 use types, actually extract event args properly
-    JSObject event = mapToJSObj(call.arguments);
-    return event;
+  Object mapToJSObj(Map<dynamic, dynamic> map) {
+    var object = js.newObject();
+    map.forEach((k, v) {
+      var key = k;
+      var value = (v is Map) ? mapToJSObj(v) : v;
+      js.setProperty(object, key, value);
+    });
+    return object;
   }
 
-    JSObject mapToJSObj(Map<dynamic, dynamic> map) {
-      var object = JSObject();
-      map.forEach((k, v) {
-        var key = k;
-        var value = (v is Map) ? mapToJSObj(v) : v;
-        object.setProperty(key, value);
-      });
-      return object;
+  // TODO: 2024-12-05 chungdaniel use safer/static js_interop if possible
+  // https://amplitude.com/docs/sdks/analytics/browser/browser-sdk-2#configure-the-sdk
+  JSObject getConfiguration(MethodCall call) {
+    JSObject configuration = JSObject();
+    final LinkedHashMap<String, dynamic> arguments = call.arguments;
+    if (arguments.containsKey('instanceName')) {
+      configuration.setProperty('instanceName', arguments['instanceName']);
     }
+    if (arguments.containsKey('flushIntervalMillis')) {
+      configuration.setProperty('flushIntervalMillis', arguments['flushIntervalMillis']);
+    }
+    if (arguments.containsKey('flushQueueSize')) {
+      configuration.setProperty('flushQueueSize', arguments['flushQueueSize']);
+    }
+    if (arguments.containsKey('flushMaxRetries')) {
+      configuration.setProperty('flushMaxRetries', arguments['flushMaxRetries']);
+    }
+    if (arguments.containsKey('logLevel')) {
+      configuration.setProperty('logLevel', arguments['logLevel']);
+    }
+    if (arguments.containsKey('loggerProvider')) {
+      configuration.setProperty('loggerProvider', arguments['loggerProvider']);
+    }
+    if (arguments.containsKey('minIdLength')) {
+      configuration.setProperty('minIdLength', arguments['minIdLength']);
+    }
+    if (arguments.containsKey('optOut')) {
+      configuration.setProperty('optOut', arguments['optOut']);
+    }
+    if (arguments.containsKey('serverUrl')) {
+      configuration.setProperty('serverUrl', arguments['serverUrl']);
+    }
+    if (arguments.containsKey('serverZone')) {
+      configuration.setProperty('serverZone', arguments['serverZone']);
+    }
+    if (arguments.containsKey('useBatch')) {
+      configuration.setProperty('useBatch', arguments['useBatch']);
+    }
+    if (arguments.containsKey('appVersion')) {
+      configuration.setProperty('appVersion', arguments['appVersion']);
+    }
+    if (arguments.containsKey('autocapture')) {
+      configuration.setProperty('autocapture', arguments['autocapture']);
+    }
+    if (arguments.containsKey('defaultTracking')) {
+      configuration.setProperty('defaultTracking', arguments['defaultTracking']);
+    }
+    if (arguments.containsKey('deviceId')) {
+      configuration.setProperty('deviceId', arguments['deviceId']);
+    }
+    if (arguments.containsKey('cookieOptions.domain')) {
+      configuration.setProperty('cookieOptions.domain', arguments['cookieOptions.domain']);
+    }
+    if (arguments.containsKey('cookieOptions.expiration')) {
+      configuration.setProperty('cookieOptions.expiration', arguments['cookieOptions.expiration']);
+    }
+    if (arguments.containsKey('cookieOptions.sameSite')) {
+      configuration.setProperty('cookieOptions.sameSite', arguments['cookieOptions.sameSite']);
+    }
+    if (arguments.containsKey('cookieOptions.secure')) {
+      configuration.setProperty('cookieOptions.secure', arguments['cookieOptions.secure']);
+    }
+    if (arguments.containsKey('cookieOptions.upgrade')) {
+      configuration.setProperty('cookieOptions.upgrade', arguments['cookieOptions.upgrade']);
+    }
+    if (arguments.containsKey('identityStorage')) {
+      configuration.setProperty('identityStorage', arguments['identityStorage']);
+    }
+    if (arguments.containsKey('partnerId')) {
+      configuration.setProperty('partnerId', arguments['partnerId']);
+    }
+    if (arguments.containsKey('sessionTimeout')) {
+      configuration.setProperty('sessionTimeout', arguments['sessionTimeout']);
+    }
+    if (arguments.containsKey('storageProvider')) {
+      configuration.setProperty('storageProvider', arguments['storageProvider']);
+    }
+    if (arguments.containsKey('userId')) {
+      configuration.setProperty('userId', arguments['userId']);
+    }
+    if (arguments.containsKey('trackingOptions')) {
+      configuration.setProperty('trackingOptions', arguments['trackingOptions']);
+    }
+    if (arguments.containsKey('transport')) {
+      configuration.setProperty('transport', arguments['transport']);
+    }
+    if (arguments.containsKey('offline')) {
+      configuration.setProperty('offline', arguments['offline']);
+    }
+    if (arguments.containsKey('fetchRemoteConfig')) {
+      configuration.setProperty('fetchRemoteConfig', arguments['fetchRemoteConfig']);
+    }
+    return configuration;
+  }
+
+  JSObject mapToJSObj(Map<dynamic, dynamic> map) {
+    var object = JSObject();
+    map.forEach((k, v) {
+      var key = k;
+      var value = (v is Map) ? mapToJSObj(v) : v;
+      object.setProperty(key, value);
+    });
+    return object;
+  }
 
   // Configuration getConfiguration(MethodCall call) {
   //   Configuration configuration = new Configuration();
