@@ -5,7 +5,7 @@ import 'dart:js_interop';
 
 extension type Configuration(JSObject _) implements JSObject {
   // String apiKey;
-  external set flushQueueSize(int flushQueueSize);
+  // external set flushQueueSize(int flushQueueSize);
 
   // int flushIntervalMillis;
   // late String instanceName;
@@ -21,12 +21,17 @@ extension type Configuration(JSObject _) implements JSObject {
   // DefaultTrackingOptions defaultTracking;
   // TrackingOptions trackingOptions;
   /// Web specific
-  external set appVersion(String appVersion);
+  // external set appVersion(String appVersion);
+  external JSBoolean? autocapture;
 }
 
 extension type Amplitude(JSObject _) implements JSObject {
-  external void init(String apiKey, JSObject? configuration);
+  external JSPromise init(String apiKey, Configuration? configuration);
   external void track(JSObject event);
+  external void setUserId(String userId);
+  external void setDevideId(String devideId);
+  external void reset();
+  external void flush();
 }
 
 // @JS('@amplitude/analytics-types')

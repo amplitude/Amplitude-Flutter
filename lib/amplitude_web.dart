@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
 import 'web/amplitude_js.dart';
+// import 'configuration.dart'
 
 @JS()
 external Amplitude get amplitude;
@@ -29,11 +30,18 @@ class AmplitudeFlutterPlugin {
     switch (call.method) {
       case "init":
         {
+          // TODO: 2024-12-16 chungdaniel add FlutterLibraryPlugin
+          // how do I do this? write in JS then interop it over or in dart?
+          // potentially look into JSExportedDartFunction?
           var args = call.arguments;
           String apiKey = args['apiKey'];
-          JSObject configuration = getConfiguration(call);
+          // JSObject configuration = getConfiguration(call);
+          // JSObject configuration = mapToJSObj(call.arguments);
+          Configuration configuration = Configuration(JSObject());
+          configuration.autocapture = false.toJS;
+          // configuration.autocapture = false;
 
-          return amplitude.init(apiKey, configuration);;
+          // amplitude.init(apiKey, configuration);
         }
       case "track":
       case "identify":
@@ -41,14 +49,28 @@ class AmplitudeFlutterPlugin {
       case "setGroup":
       case "revenue":
       {
-        JSObject event = getEvent(call);
+        // TODO: 2024-12-16 chungdanile make getEvent method
+        JSObject event = mapToJSObj(call.arguments);
         amplitude.track(event);
         // amplitude.logger.debug("Track ")
-        return;
       }
       case "setUserId":
       {
-        String userId = call.arguments[setUserId];
+        String userId = call.arguments['setUserId'];
+        amplitude.setUserId(userId);
+      }
+      case "setDeviceId":
+      {
+        String deviceId = call.arguments['setDeviceId'];
+        amplitude.setDevideId(deviceId);
+      }
+      case "reset":
+      {
+        amplitude.reset();
+      }
+      case "flush":
+      {
+        amplitude.flush();
       }
       default:
         throw PlatformException(
@@ -57,111 +79,6 @@ class AmplitudeFlutterPlugin {
               "The amplitude_flutter plugin for web doesn't implement the method '${call.method}'",
         );
     }
-  }
-
-  Object mapToJSObj(Map<dynamic, dynamic> map) {
-    var object = js.newObject();
-    map.forEach((k, v) {
-      var key = k;
-      var value = (v is Map) ? mapToJSObj(v) : v;
-      js.setProperty(object, key, value);
-    });
-    return object;
-  }
-
-  // TODO: 2024-12-05 chungdaniel use safer/static js_interop if possible
-  // https://amplitude.com/docs/sdks/analytics/browser/browser-sdk-2#configure-the-sdk
-  JSObject getConfiguration(MethodCall call) {
-    JSObject configuration = JSObject();
-    final LinkedHashMap<String, dynamic> arguments = call.arguments;
-    if (arguments.containsKey('instanceName')) {
-      configuration.setProperty('instanceName', arguments['instanceName']);
-    }
-    if (arguments.containsKey('flushIntervalMillis')) {
-      configuration.setProperty('flushIntervalMillis', arguments['flushIntervalMillis']);
-    }
-    if (arguments.containsKey('flushQueueSize')) {
-      configuration.setProperty('flushQueueSize', arguments['flushQueueSize']);
-    }
-    if (arguments.containsKey('flushMaxRetries')) {
-      configuration.setProperty('flushMaxRetries', arguments['flushMaxRetries']);
-    }
-    if (arguments.containsKey('logLevel')) {
-      configuration.setProperty('logLevel', arguments['logLevel']);
-    }
-    if (arguments.containsKey('loggerProvider')) {
-      configuration.setProperty('loggerProvider', arguments['loggerProvider']);
-    }
-    if (arguments.containsKey('minIdLength')) {
-      configuration.setProperty('minIdLength', arguments['minIdLength']);
-    }
-    if (arguments.containsKey('optOut')) {
-      configuration.setProperty('optOut', arguments['optOut']);
-    }
-    if (arguments.containsKey('serverUrl')) {
-      configuration.setProperty('serverUrl', arguments['serverUrl']);
-    }
-    if (arguments.containsKey('serverZone')) {
-      configuration.setProperty('serverZone', arguments['serverZone']);
-    }
-    if (arguments.containsKey('useBatch')) {
-      configuration.setProperty('useBatch', arguments['useBatch']);
-    }
-    if (arguments.containsKey('appVersion')) {
-      configuration.setProperty('appVersion', arguments['appVersion']);
-    }
-    if (arguments.containsKey('autocapture')) {
-      configuration.setProperty('autocapture', arguments['autocapture']);
-    }
-    if (arguments.containsKey('defaultTracking')) {
-      configuration.setProperty('defaultTracking', arguments['defaultTracking']);
-    }
-    if (arguments.containsKey('deviceId')) {
-      configuration.setProperty('deviceId', arguments['deviceId']);
-    }
-    if (arguments.containsKey('cookieOptions.domain')) {
-      configuration.setProperty('cookieOptions.domain', arguments['cookieOptions.domain']);
-    }
-    if (arguments.containsKey('cookieOptions.expiration')) {
-      configuration.setProperty('cookieOptions.expiration', arguments['cookieOptions.expiration']);
-    }
-    if (arguments.containsKey('cookieOptions.sameSite')) {
-      configuration.setProperty('cookieOptions.sameSite', arguments['cookieOptions.sameSite']);
-    }
-    if (arguments.containsKey('cookieOptions.secure')) {
-      configuration.setProperty('cookieOptions.secure', arguments['cookieOptions.secure']);
-    }
-    if (arguments.containsKey('cookieOptions.upgrade')) {
-      configuration.setProperty('cookieOptions.upgrade', arguments['cookieOptions.upgrade']);
-    }
-    if (arguments.containsKey('identityStorage')) {
-      configuration.setProperty('identityStorage', arguments['identityStorage']);
-    }
-    if (arguments.containsKey('partnerId')) {
-      configuration.setProperty('partnerId', arguments['partnerId']);
-    }
-    if (arguments.containsKey('sessionTimeout')) {
-      configuration.setProperty('sessionTimeout', arguments['sessionTimeout']);
-    }
-    if (arguments.containsKey('storageProvider')) {
-      configuration.setProperty('storageProvider', arguments['storageProvider']);
-    }
-    if (arguments.containsKey('userId')) {
-      configuration.setProperty('userId', arguments['userId']);
-    }
-    if (arguments.containsKey('trackingOptions')) {
-      configuration.setProperty('trackingOptions', arguments['trackingOptions']);
-    }
-    if (arguments.containsKey('transport')) {
-      configuration.setProperty('transport', arguments['transport']);
-    }
-    if (arguments.containsKey('offline')) {
-      configuration.setProperty('offline', arguments['offline']);
-    }
-    if (arguments.containsKey('fetchRemoteConfig')) {
-      configuration.setProperty('fetchRemoteConfig', arguments['fetchRemoteConfig']);
-    }
-    return configuration;
   }
 
   JSObject mapToJSObj(Map<dynamic, dynamic> map) {
@@ -173,6 +90,105 @@ class AmplitudeFlutterPlugin {
     });
     return object;
   }
+
+  // TODO: 2024-12-05 chungdaniel use safer/static js_interop if possible
+  // https://amplitude.com/docs/sdks/analytics/browser/browser-sdk-2#configure-the-sdk
+  JSObject getConfiguration(MethodCall call) {
+    JSObject configuration = JSObject();
+    var arguments = call.arguments;
+    if (arguments.containsKey('instanceName')) {
+      configuration.setProperty('instanceName'.toJS, arguments['instanceName']);
+    }
+    if (arguments.containsKey('flushIntervalMillis')) {
+      configuration.setProperty('flushIntervalMillis'.toJS, arguments['flushIntervalMillis']);
+    }
+    if (arguments.containsKey('flushQueueSize')) {
+      configuration.setProperty('flushQueueSize'.toJS, arguments['flushQueueSize']);
+    }
+    if (arguments.containsKey('flushMaxRetries')) {
+      configuration.setProperty('flushMaxRetries'.toJS, arguments['flushMaxRetries']);
+    }
+    if (arguments.containsKey('logLevel')) {
+      configuration.setProperty('logLevel'.toJS, arguments['logLevel']);
+    }
+    if (arguments.containsKey('loggerProvider')) {
+      configuration.setProperty('loggerProvider'.toJS, arguments['loggerProvider']);
+    }
+    if (arguments.containsKey('minIdLength')) {
+      configuration.setProperty('minIdLength'.toJS, arguments['minIdLength']);
+    }
+    if (arguments.containsKey('optOut')) {
+      configuration.setProperty('optOut'.toJS, arguments['optOut']);
+    }
+    if (arguments.containsKey('serverUrl')) {
+      configuration.setProperty('serverUrl'.toJS, arguments['serverUrl']);
+    }
+    if (arguments.containsKey('serverZone')) {
+      configuration.setProperty('serverZone'.toJS, arguments['serverZone']);
+    }
+    if (arguments.containsKey('useBatch')) {
+      configuration.setProperty('useBatch'.toJS, arguments['useBatch']);
+    }
+    if (arguments.containsKey('appVersion')) {
+      configuration.setProperty('appVersion'.toJS, arguments['appVersion']);
+    }
+    // TODO: chungdaniel 20241216 look into this to see if I should bake this into configuration
+    // vaguely remember hearing that it shouldn't be?
+    // if (arguments.containsKey('autocapture')) {
+      // configuration.setProperty('autocapture'.toJS, arguments['autocapture']);
+    // }
+    configuration.setProperty('autocapture'.toJS, false.toJS);
+    if (arguments.containsKey('defaultTracking')) {
+      configuration.setProperty('defaultTracking'.toJS, arguments['defaultTracking']);
+    }
+    if (arguments.containsKey('deviceId')) {
+      configuration.setProperty('deviceId'.toJS, arguments['deviceId']);
+    }
+    if (arguments.containsKey('cookieOptions.domain')) {
+      configuration.setProperty('cookieOptions.domain'.toJS, arguments['cookieOptions.domain']);
+    }
+    if (arguments.containsKey('cookieOptions.expiration')) {
+      configuration.setProperty('cookieOptions.expiration'.toJS, arguments['cookieOptions.expiration']);
+    }
+    if (arguments.containsKey('cookieOptions.sameSite')) {
+      configuration.setProperty('cookieOptions.sameSite'.toJS, arguments['cookieOptions.sameSite']);
+    }
+    if (arguments.containsKey('cookieOptions.secure')) {
+      configuration.setProperty('cookieOptions.secure'.toJS, arguments['cookieOptions.secure']);
+    }
+    if (arguments.containsKey('cookieOptions.upgrade')) {
+      configuration.setProperty('cookieOptions.upgrade'.toJS, arguments['cookieOptions.upgrade']);
+    }
+    if (arguments.containsKey('identityStorage')) {
+      configuration.setProperty('identityStorage'.toJS, arguments['identityStorage']);
+    }
+    if (arguments.containsKey('partnerId')) {
+      configuration.setProperty('partnerId'.toJS, arguments['partnerId']);
+    }
+    if (arguments.containsKey('sessionTimeout')) {
+      configuration.setProperty('sessionTimeout'.toJS, arguments['sessionTimeout']);
+    }
+    if (arguments.containsKey('storageProvider')) {
+      configuration.setProperty('storageProvider'.toJS, arguments['storageProvider']);
+    }
+    if (arguments.containsKey('userId')) {
+      configuration.setProperty('userId'.toJS, arguments['userId']);
+    }
+    if (arguments.containsKey('trackingOptions')) {
+      configuration.setProperty('trackingOptions'.toJS, arguments['trackingOptions']);
+    }
+    if (arguments.containsKey('transport')) {
+      configuration.setProperty('transport'.toJS, arguments['transport']);
+    }
+    if (arguments.containsKey('offline')) {
+      configuration.setProperty('offline'.toJS, arguments['offline']);
+    }
+    if (arguments.containsKey('fetchRemoteConfig')) {
+      configuration.setProperty('fetchRemoteConfig'.toJS, arguments['fetchRemoteConfig']);
+    }
+    return configuration;
+  }
+
 
   // Configuration getConfiguration(MethodCall call) {
   //   Configuration configuration = new Configuration();
