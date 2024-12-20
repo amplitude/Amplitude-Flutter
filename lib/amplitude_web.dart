@@ -8,7 +8,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
 import 'web/amplitude_js.dart';
-// import 'configuration.dart'
+import 'web/flutter_library_plugin.dart';
+import 'web/configuration_js.dart';
+import 'web/event_js.dart';
+import 'web/ingestion_metadata_js.dart';
+import 'web/plan_js.dart';
 
 @JS()
 external Amplitude get amplitude;
@@ -35,13 +39,11 @@ class AmplitudeFlutterPlugin {
           // potentially look into JSExportedDartFunction?
           var args = call.arguments;
           String apiKey = args['apiKey'];
-          // JSObject configuration = getConfiguration(call);
-          // JSObject configuration = mapToJSObj(call.arguments);
-          Configuration configuration = Configuration(JSObject());
-          configuration.autocapture = false.toJS;
-          // configuration.autocapture = false;
+          Configuration configuration = getConfiguration(call);
+          // var wrapped = createJSInteropWrapper(FlutterLibraryPlugin(args['library'] ?? 'amplitude_flutter/unknown'));
+          // amplitude.add(wrapped);
 
-          // amplitude.init(apiKey, configuration);
+          amplitude.init(apiKey, configuration);
         }
       case "track":
       case "identify":
@@ -50,19 +52,18 @@ class AmplitudeFlutterPlugin {
       case "revenue":
       {
         // TODO: 2024-12-16 chungdanile make getEvent method
-        JSObject event = mapToJSObj(call.arguments);
+        Event event = getEvent(call);
         amplitude.track(event);
-        // amplitude.logger.debug("Track ")
       }
       case "setUserId":
       {
         String userId = call.arguments['setUserId'];
-        amplitude.setUserId(userId);
+        amplitude.setUserId(userId.toJS);
       }
       case "setDeviceId":
       {
         String deviceId = call.arguments['setDeviceId'];
-        amplitude.setDevideId(deviceId);
+        amplitude.setDeviceId(deviceId.toJS);
       }
       case "reset":
       {
@@ -91,176 +92,237 @@ class AmplitudeFlutterPlugin {
     return object;
   }
 
-  // TODO: 2024-12-05 chungdaniel use safer/static js_interop if possible
-  // https://amplitude.com/docs/sdks/analytics/browser/browser-sdk-2#configure-the-sdk
-  JSObject getConfiguration(MethodCall call) {
-    JSObject configuration = JSObject();
+
+  Event getEvent(MethodCall call) {
+    Event event = Event(JSObject());
     var arguments = call.arguments;
-    if (arguments.containsKey('instanceName')) {
-      configuration.setProperty('instanceName'.toJS, arguments['instanceName']);
+    if (arguments.containsKey('event_type')) {
+      event.event_type = (arguments['event_type'] as String).toJS;
     }
-    if (arguments.containsKey('flushIntervalMillis')) {
-      configuration.setProperty('flushIntervalMillis'.toJS, arguments['flushIntervalMillis']);
+    if (arguments.containsKey('event_properties')) {
+      event.event_properties = mapToJSObj(arguments['event_properties'] as Map);
     }
-    if (arguments.containsKey('flushQueueSize')) {
-      configuration.setProperty('flushQueueSize'.toJS, arguments['flushQueueSize']);
+    if (arguments.containsKey('user_properties')) {
+      event.user_properties = mapToJSObj(arguments['user_properties'] as Map);
     }
-    if (arguments.containsKey('flushMaxRetries')) {
-      configuration.setProperty('flushMaxRetries'.toJS, arguments['flushMaxRetries']);
+    if (arguments.containsKey('groups')) {
+      event.groups = mapToJSObj(arguments['groups'] as Map);
     }
-    if (arguments.containsKey('logLevel')) {
-      configuration.setProperty('logLevel'.toJS, arguments['logLevel']);
+    if (arguments.containsKey('group_properties')) {
+      event.group_properties = mapToJSObj(arguments['group_properties'] as Map);
     }
-    if (arguments.containsKey('loggerProvider')) {
-      configuration.setProperty('loggerProvider'.toJS, arguments['loggerProvider']);
+    if (arguments.containsKey('user_id')) {
+      event.user_id = (arguments['user_id'] as String).toJS;
     }
-    if (arguments.containsKey('minIdLength')) {
-      configuration.setProperty('minIdLength'.toJS, arguments['minIdLength']);
+    if (arguments.containsKey('device_id')) {
+      event.device_id = (arguments['device_id'] as String).toJS;
     }
-    if (arguments.containsKey('optOut')) {
-      configuration.setProperty('optOut'.toJS, arguments['optOut']);
+    if (arguments.containsKey('timestamp')) {
+      event.timestamp = (arguments['timestamp'] as int).toJS;
     }
-    if (arguments.containsKey('serverUrl')) {
-      configuration.setProperty('serverUrl'.toJS, arguments['serverUrl']);
+    if (arguments.containsKey('event_id')) {
+      event.event_id = (arguments['event_id'] as int).toJS;
     }
-    if (arguments.containsKey('serverZone')) {
-      configuration.setProperty('serverZone'.toJS, arguments['serverZone']);
+    if (arguments.containsKey('session_id')) {
+      event.session_id = (arguments['session_id'] as int).toJS;
     }
-    if (arguments.containsKey('useBatch')) {
-      configuration.setProperty('useBatch'.toJS, arguments['useBatch']);
+    if (arguments.containsKey('insert_id')) {
+      event.insert_id = (arguments['insert_id'] as String).toJS;
     }
-    if (arguments.containsKey('appVersion')) {
-      configuration.setProperty('appVersion'.toJS, arguments['appVersion']);
+    if (arguments.containsKey('location_lat')) {
+      event.location_lat = (arguments['location_lat'] as double).toJS;
     }
-    // TODO: chungdaniel 20241216 look into this to see if I should bake this into configuration
-    // vaguely remember hearing that it shouldn't be?
-    // if (arguments.containsKey('autocapture')) {
-      // configuration.setProperty('autocapture'.toJS, arguments['autocapture']);
-    // }
-    configuration.setProperty('autocapture'.toJS, false.toJS);
-    if (arguments.containsKey('defaultTracking')) {
-      configuration.setProperty('defaultTracking'.toJS, arguments['defaultTracking']);
+    if (arguments.containsKey('location_lng')) {
+      event.location_lng = (arguments['location_lng'] as double).toJS;
     }
-    if (arguments.containsKey('deviceId')) {
-      configuration.setProperty('deviceId'.toJS, arguments['deviceId']);
+    if (arguments.containsKey('app_version')) {
+      event.app_version = (arguments['app_version'] as String).toJS;
     }
-    if (arguments.containsKey('cookieOptions.domain')) {
-      configuration.setProperty('cookieOptions.domain'.toJS, arguments['cookieOptions.domain']);
+    if (arguments.containsKey('version_name')) {
+      event.version_name = (arguments['version_name'] as String).toJS;
     }
-    if (arguments.containsKey('cookieOptions.expiration')) {
-      configuration.setProperty('cookieOptions.expiration'.toJS, arguments['cookieOptions.expiration']);
+    if (arguments.containsKey('platform')) {
+      event.platform = (arguments['platform'] as String).toJS;
     }
-    if (arguments.containsKey('cookieOptions.sameSite')) {
-      configuration.setProperty('cookieOptions.sameSite'.toJS, arguments['cookieOptions.sameSite']);
+    if (arguments.containsKey('os_name')) {
+      event.os_name = (arguments['os_name'] as String).toJS;
     }
-    if (arguments.containsKey('cookieOptions.secure')) {
-      configuration.setProperty('cookieOptions.secure'.toJS, arguments['cookieOptions.secure']);
+    if (arguments.containsKey('os_version')) {
+      event.os_version = (arguments['os_version'] as String).toJS;
     }
-    if (arguments.containsKey('cookieOptions.upgrade')) {
-      configuration.setProperty('cookieOptions.upgrade'.toJS, arguments['cookieOptions.upgrade']);
+    if (arguments.containsKey('device_brand')) {
+      event.device_brand = (arguments['device_brand'] as String).toJS;
     }
-    if (arguments.containsKey('identityStorage')) {
-      configuration.setProperty('identityStorage'.toJS, arguments['identityStorage']);
+    if (arguments.containsKey('device_manufacturer')) {
+      event.device_manufacturer = (arguments['device_manufacturer'] as String).toJS;
     }
-    if (arguments.containsKey('partnerId')) {
-      configuration.setProperty('partnerId'.toJS, arguments['partnerId']);
+    if (arguments.containsKey('device_model')) {
+      event.device_model = (arguments['device_model'] as String).toJS;
     }
-    if (arguments.containsKey('sessionTimeout')) {
-      configuration.setProperty('sessionTimeout'.toJS, arguments['sessionTimeout']);
+    if (arguments.containsKey('carrier')) {
+      event.carrier = (arguments['carrier'] as String).toJS;
     }
-    if (arguments.containsKey('storageProvider')) {
-      configuration.setProperty('storageProvider'.toJS, arguments['storageProvider']);
+    if (arguments.containsKey('country')) {
+      event.country = (arguments['country'] as String).toJS;
     }
-    if (arguments.containsKey('userId')) {
-      configuration.setProperty('userId'.toJS, arguments['userId']);
+    if (arguments.containsKey('region')) {
+      event.region = (arguments['region'] as String).toJS;
     }
-    if (arguments.containsKey('trackingOptions')) {
-      configuration.setProperty('trackingOptions'.toJS, arguments['trackingOptions']);
+    if (arguments.containsKey('city')) {
+      event.city = (arguments['city'] as String).toJS;
     }
-    if (arguments.containsKey('transport')) {
-      configuration.setProperty('transport'.toJS, arguments['transport']);
+    if (arguments.containsKey('dma')) {
+      event.dma = (arguments['dma'] as String).toJS;
     }
-    if (arguments.containsKey('offline')) {
-      configuration.setProperty('offline'.toJS, arguments['offline']);
+    if (arguments.containsKey('idfa')) {
+      event.idfa = (arguments['idfa'] as String).toJS;
     }
-    if (arguments.containsKey('fetchRemoteConfig')) {
-      configuration.setProperty('fetchRemoteConfig'.toJS, arguments['fetchRemoteConfig']);
+    if (arguments.containsKey('idfv')) {
+      event.idfv = (arguments['idfv'] as String).toJS;
     }
-    return configuration;
+    if (arguments.containsKey('adid')) {
+      event.adid = (arguments['adid'] as String).toJS;
+    }
+    if (arguments.containsKey('app_set_id')) {
+      event.app_set_id = (arguments['app_set_id'] as String).toJS;
+    }
+    if (arguments.containsKey('android_id')) {
+      event.android_id = (arguments['android_id'] as String).toJS;
+    }
+    if (arguments.containsKey('language')) {
+      event.language = (arguments['language'] as String).toJS;
+    }
+    if (arguments.containsKey('library')) {
+      event.library = (arguments['library'] as String).toJS;
+    }
+    if (arguments.containsKey('ip')) {
+      event.ip = (arguments['ip'] as String).toJS;
+    }
+    if (arguments.containsKey('plan')) {
+      event.plan = arguments['plan'] as Plan;
+    }
+    if (arguments.containsKey('ingestion_metadata')) {
+      event.ingestion_metadata = arguments['ingestion_metadata'] as IngestionMetadata;
+    }
+    if (arguments.containsKey('revenue')) {
+      event.revenue = (arguments['revenue'] as double).toJS;
+    }
+    if (arguments.containsKey('price')) {
+      event.price = (arguments['price'] as double).toJS;
+    }
+    if (arguments.containsKey('quantity')) {
+      event.quantity = (arguments['quantity'] as int).toJS;
+    }
+    if (arguments.containsKey('product_id')) {
+      event.product_id = (arguments['product_id'] as String).toJS;
+    }
+    if (arguments.containsKey('revenue_type')) {
+      event.revenue_type = (arguments['revenue_type'] as String).toJS;
+    }
+    if (arguments.containsKey('extra')) {
+      event.extra = mapToJSObj(arguments['extra'] as Map);
+    }
+    if (arguments.containsKey('partner_id')) {
+      event.partner_id = (arguments['partner_id'] as String).toJS;
+    }
+    if (arguments.containsKey('attempts')) {
+      event.attempts = (arguments['attempts'] as int).toJS;
+    }
+    return event;
   }
 
 
-  // Configuration getConfiguration(MethodCall call) {
-  //   Configuration configuration = new Configuration();
-  //   final LinkedHashMap<String, dynamic> arguments = call.arguments;
-  //   if (arguments.containsKey('flushQueueSize')) {
-  //     configuration.flushQueueSize = arguments['flushQueueSize'];
-  //   }
-
-  //   return configuration;
-  // }
-
-//   Identify createIdentify(Map<String, dynamic> userProperties) {
-//     Identify identify = new Identify();
-//     userProperties.forEach((String operation, dynamic properties) {
-//       properties.forEach((String key, dynamic value) {
-//         switch (operation) {
-//           case "\$add":
-//             {
-//               identify.add(key, value);
-//               break;
-//             }
-
-//           case "\$append":
-//             {
-//               identify.append(key, value);
-//               break;
-//             }
-//           case "\$prepend":
-//             {
-//               identify.prepend(key, value);
-//               break;
-//             }
-//           case "\$set":
-//             {
-//               identify.set(key, value);
-//               break;
-//             }
-//           case "\$setOnce":
-//             {
-//               identify.setOnce(key, value);
-//               break;
-//             }
-//           case "\$unset":
-//             {
-//               identify.unset(key);
-//               break;
-//             }
-//           case "\$preInsert":
-//             {
-//               identify.preInsert(key, value);
-//               break;
-//             }
-//           case "\$postInsert":
-//             {
-//               identify.postInsert(key, value);
-//               break;
-//             }
-//           case "\$remove":
-//             {
-//               identify.remove(key, value);
-//               break;
-//             }
-//           case "\$clearAll":
-//             {
-//               identify.clearAll();
-//               break;
-//             }
-//           default:
-//             break;
-//         }
-//       });
-//     });
-//     return identify;
-//   }
+  // TODO: 2024-12-05 chungdaniel use safer/static js_interop if possible
+  // https://amplitude.com/docs/sdks/analytics/browser/browser-sdk-2#configure-the-sdk
+  Configuration getConfiguration(MethodCall call) {
+    Configuration configuration = Configuration(JSObject());
+    // autocapture is not supported in flutter web
+    configuration.autocapture = false.toJS;
+    var arguments = call.arguments;
+    if (arguments.containsKey('instanceName')) {
+      configuration.instanceName = (arguments['instanceName'] as String).toJS;
+    }
+    if (arguments.containsKey('flushIntervalMillis')) {
+      configuration.flushIntervalMillis = (arguments['flushIntervalMillis'] as int).toJS;
+    }
+    if (arguments.containsKey('flushQueueSize')) {
+      configuration.flushQueueSize = (arguments['flushQueueSize'] as int).toJS;
+    }
+    if (arguments.containsKey('flushMaxRetries')) {
+      configuration.flushMaxRetries = (arguments['flushMaxRetries'] as int).toJS;
+    }
+    if (arguments.containsKey('logLevel')) {
+      configuration.logLevel = (arguments['logLevel'] as String).toJS;
+    }
+    if (arguments.containsKey('loggerProvider')) {
+      // configuration.loggerProvider = arguments['loggerProvider'].toJS;
+    }
+    if (arguments.containsKey('minIdLength') && arguments['minIdLength'] != null) {
+      configuration.minIdLength = (arguments['minIdLength'] as int).toJS;
+    }
+    if (arguments.containsKey('optOut') && arguments['optOut'] != null) {
+      configuration.optOut = (arguments['optOut'] as bool).toJS;
+    }
+    if (arguments.containsKey('serverUrl') && arguments['serverUrl'] != null) {
+      configuration.serverUrl = (arguments['serverUrl'] as String).toJS;
+    }
+    if (arguments.containsKey('serverZone') && arguments['serverZone'] != null) {
+      configuration.serverZone = (arguments['serverZone'] as String).toJS;
+    }
+    if (arguments.containsKey('useBatch') && arguments['useBatch'] != null) {
+      configuration.useBatch = (arguments['useBatch'] as bool).toJS;
+    }
+    if (arguments.containsKey('appVersion') && arguments['appVersion'] != null) {
+      configuration.appVersion = (arguments['appVersion'] as String).toJS;
+    }
+    if (arguments.containsKey('defaultTracking') && arguments['defaultTracking'] != null) {
+      // configuration.defaultTracking = (arguments['defaultTracking'] as bool).toJS;
+    }
+    if (arguments.containsKey('deviceId') && arguments['deviceId'] != null) {
+      // configuration.deviceId = (arguments['deviceId'] as String).toJS;
+    }
+    if (arguments.containsKey('cookieOptions.domain') && arguments['cookieOptions.domain'] != null) {
+      // configuration.cookieOptions.domain = (arguments['cookieOptions.domain'] as String).toJS;
+    }
+    if (arguments.containsKey('cookieOptions.expiration') && arguments['cookieOptions.expiration'] != null) {
+      // configuration.cookieOptions.expiration = (arguments['cookieOptions.expiration'] as int).toJS;
+    }
+    if (arguments.containsKey('cookieOptions.sameSite') && arguments['cookieOptions.sameSite'] != null) {
+      // configuration.cookieOptions.sameSite = (arguments['cookieOptions.sameSite'] as String).toJS;
+    }
+    if (arguments.containsKey('cookieOptions.secure') && arguments['cookieOptions.secure'] != null) {
+      // configuration.cookieOptions.secure = (arguments['cookieOptions.secure'] as bool).toJS;
+    }
+    if (arguments.containsKey('cookieOptions.upgrade') && arguments['cookieOptions.upgrade'] != null) {
+      // configuration.cookieOptions.upgrade = (arguments['cookieOptions.upgrade'] as bool).toJS;
+    }
+    if (arguments.containsKey('identityStorage') && arguments['identityStorage'] != null) {
+      // configuration.identityStorage = (arguments['identityStorage'] as String).toJS;
+    }
+    if (arguments.containsKey('partnerId') && arguments['partnerId'] != null) {
+      configuration.partnerId = (arguments['partnerId'] as String).toJS;
+    }
+    if (arguments.containsKey('sessionTimeout') && arguments['sessionTimeout'] != null) {
+      // configuration.sessionTimeout = (arguments['sessionTimeout'] as int).toJS;
+    }
+    if (arguments.containsKey('storageProvider') && arguments['storageProvider'] != null) {
+      // configuration.storageProvider = (arguments['storageProvider'] as String).toJS;
+    }
+    if (arguments.containsKey('userId') && arguments['userId'] != null) {
+      // configuration.userId = (arguments['userId'] as String).toJS;
+    }
+    if (arguments.containsKey('trackingOptions') && arguments['trackingOptions'] != null) {
+      // configuration.trackingOptions = (arguments['trackingOptions'] as TrackingOptions);
+    }
+    if (arguments.containsKey('transport') && arguments['transport'] != null) {
+      // configuration.transport = (arguments['transport'] as String).toJS;
+    }
+    if (arguments.containsKey('offline') && arguments['offline'] != null) {
+      // configuration.offline = (arguments['offline'] as bool).toJS;
+    }
+    if (arguments.containsKey('fetchRemoteConfig') && arguments['fetchRemoteConfig'] != null) {
+      // configuration.fetchRemoteConfig = (arguments['fetchRemoteConfig'] as bool).toJS;
+    }
+    return configuration;
+  }
 }

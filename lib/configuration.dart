@@ -15,6 +15,7 @@ class Configuration {
   bool useBatch;
   ServerZone serverZone;
   String? serverUrl;
+  /// Mobile (iOS and Android) specific
   int minTimeBetweenSessionsMillis;
   DefaultTrackingOptions defaultTracking;
   TrackingOptions trackingOptions;
