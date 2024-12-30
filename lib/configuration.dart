@@ -1,6 +1,7 @@
 import 'constants.dart';
 import 'tracking_options.dart';
 import 'default_tracking.dart';
+import 'cookie_options.dart';
 
 class Configuration {
   String apiKey;
@@ -35,6 +36,30 @@ class Configuration {
   bool useAppSetIdForDeviceId;
   /// Web specific
   String? appVersion;
+  // are we supporting loggerProvider? it's present in iOS/Android but was left out
+  // also present in web
+  // TODO: chungdaniel 20241227 add ticket to put this into a future version
+  // Function loggerProvider
+  /// Web specific
+  String? deviceId;
+  /// Web specific
+  CookieOptions cookieOptions;
+  /// Web specific
+  String? identityStorage;
+  // partnerId?
+  /// Web specific
+  int sessionTimeout;
+  // storageProvider?
+  /// Web specific
+  String? userId;
+  /// Web specific
+  String? transport;
+  /// Web specific
+  bool offline;
+  /// Web specific
+  bool fetchRemoteConfig;
+
+
 
   /// Configuration for Amplitude instance.
   ///
@@ -67,8 +92,18 @@ class Configuration {
     this.useAdvertisingIdForDeviceId = false,
     this.useAppSetIdForDeviceId = false,
     this.appVersion,
-  }): trackingOptions = trackingOptions ?? TrackingOptions() {
+    this.deviceId,
+    CookieOptions? cookieOptions,
+    String identityStorage = '',
+    this.sessionTimeout = Constants.sessionTimeoutMillis,
+    this.userId,
+    this.transport = 'fetch',
+    this.offline = false,
+    this.fetchRemoteConfig = false,
+  }): trackingOptions = trackingOptions ?? TrackingOptions(),
+      cookieOptions = cookieOptions ?? CookieOptions() {
     this.instanceName = instanceName.isEmpty ? Constants.defaultInstanceName : instanceName;
+    this.identityStorage = identityStorage.isEmpty ? IdentityStorage.cookie.name : identityStorage;
   }
 
   Map<String, dynamic> toMap() {

@@ -1,33 +1,19 @@
 import 'dart:js_interop';
-import 'event_js.dart';
+import 'dart:js_interop_unsafe';
 
-extension type Plugin(JSObject _) implements JSObject {
-  @JS()
-  external set execute(JSFunction value);
-}
-
-@JS()
-external set exportedExecute(JSFunction value);
-
-void printString(JSString string) {
-  print(string.toDart);
-}
-
-void main() {
-  exportedExecute = printString.toJS;
-}
+var libraryJSKey = 'library'.toJS;
 
 @JSExport()
 class FlutterLibraryPlugin {
   String library = 'amplitude-flutter/unknown';
   String name = 'FlutterLibraryPlugin';
 
-  Event execute(Event event) {
-    print('is this ever being hit?');
-    if (event.library == null) {
-      event.library = library.toJS;
+  JSObject execute(JSObject event) {
+    event.hasProperty('library'.toJS);
+    if (!event.hasProperty(libraryJSKey).toDart) {
+      event.setProperty(libraryJSKey, library.toJS);
     } else {
-      event.library = '${library}_${event.library}'.toJS;
+      event.setProperty(libraryJSKey, '${library}_${event.getProperty(libraryJSKey)}'.toJS);
     }
     return event;
   }
