@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
-import 'dart:collection';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
@@ -47,7 +46,7 @@ class AmplitudeFlutterPlugin {
       case "setGroup":
       case "revenue":
       {
-        JSObject event = mapToJSObj(call.arguments);
+        JSObject event = getEvent(call);
         amplitude.track(event);
       }
       case "setUserId":
@@ -94,6 +93,19 @@ class AmplitudeFlutterPlugin {
       object.setProperty(key, value);
     });
     return object;
+  }
+
+  /// Gets event properties from call.arguments and converts it to a JSObject.
+  ///
+  /// This method extracts the event properties from the provided MethodCall
+  /// argument and converts them into a JavaScript object using the mapToJSObj
+  /// method.
+  ///
+  /// Returns:
+  /// - `JSObject`: A JavaScript object representing the event properties.
+  JSObject getEvent(MethodCall call) {
+    var eventMap = call.arguments;
+    return mapToJSObj(eventMap);
   }
 
 

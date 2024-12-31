@@ -36,20 +36,14 @@ class Configuration {
   bool useAppSetIdForDeviceId;
   /// Web specific
   String? appVersion;
-  // are we supporting loggerProvider? it's present in iOS/Android but was left out
-  // also present in web
-  // TODO: chungdaniel 20241227 add ticket to put this into a future version
-  // Function loggerProvider
   /// Web specific
   String? deviceId;
   /// Web specific
   CookieOptions cookieOptions;
   /// Web specific
   String? identityStorage;
-  // partnerId?
   /// Web specific
   int sessionTimeout;
-  // storageProvider?
   /// Web specific
   String? userId;
   /// Web specific
