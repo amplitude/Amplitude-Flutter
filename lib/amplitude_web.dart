@@ -90,7 +90,7 @@ class AmplitudeFlutterPlugin {
     map.forEach((k, v) {
       var key = k;
       var value = (v is Map) ? mapToJSObj(v) : v;
-      object.setProperty(key, value);
+      object[key] = value;
     });
     return object;
   }
@@ -119,11 +119,11 @@ class AmplitudeFlutterPlugin {
     var configuration = mapToJSObj(call.arguments);
 
     // autocapture is not supported in flutter web
-    configuration.setProperty('autocapture'.toJS, false.toJS);
+    configuration['autocapture'] = false.toJS;
 
     if (call.arguments.containsKey('logLevel')) {
       var logLevelString = call.arguments['logLevel'] as String;
-      configuration.setProperty('logLevel'.toJS, LogLevel.values.byName(logLevelString).index.toJS);
+      configuration['logLevel'] = LogLevel.values.byName(logLevelString).index.toJS;
     }
 
     return configuration;

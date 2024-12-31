@@ -125,6 +125,14 @@ class Configuration {
       'useAdvertisingIdForDeviceId': useAdvertisingIdForDeviceId,
       'useAppSetIdForDeviceId': useAppSetIdForDeviceId,
       'appVersion': appVersion,
+      'deviceId': deviceId,
+      'cookieOptions': cookieOptions.toMap(),
+      'identityStorage': identityStorage,
+      'sessionTimeout': sessionTimeout,
+      'userId': userId,
+      'transport': transport,
+      'offline': offline,
+      'fetchRemoteConfig': fetchRemoteConfig,
       // This field doesn't belong to Configuration
       // Pass it for FlutterLibraryPlugin
       'library': '${Constants.packageName}/${Constants.packageVersion}'
