@@ -4,6 +4,7 @@ import 'default_tracking.dart';
 import 'cookie_options.dart';
 
 class Configuration {
+  /// Applicable to all platforms
   String apiKey;
   int flushQueueSize;
   int flushIntervalMillis;
@@ -16,41 +17,30 @@ class Configuration {
   bool useBatch;
   ServerZone serverZone;
   String? serverUrl;
+
   /// Mobile (iOS and Android) specific
   int minTimeBetweenSessionsMillis;
   DefaultTrackingOptions defaultTracking;
   TrackingOptions trackingOptions;
-  /// Mobile (iOS and Android) specific
   bool enableCoppaControl;
-  /// Mobile (iOS and Android) specific
   bool flushEventsOnClose;
-  /// Mobile (iOS and Android) specific
   int identifyBatchIntervalMillis;
-  /// Mobile (iOS and Android) specific
   bool migrateLegacyData;
+
   /// Android specific
   bool locationListening;
-  /// Android specific
   bool useAdvertisingIdForDeviceId;
-  /// Android specific
   bool useAppSetIdForDeviceId;
+
   /// Web specific
   String? appVersion;
-  /// Web specific
   String? deviceId;
-  /// Web specific
   CookieOptions cookieOptions;
-  /// Web specific
   String? identityStorage;
-  /// Web specific
   int sessionTimeout;
-  /// Web specific
   String? userId;
-  /// Web specific
   String? transport;
-  /// Web specific
   bool offline;
-  /// Web specific
   bool fetchRemoteConfig;
 
 
