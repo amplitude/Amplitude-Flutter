@@ -12,6 +12,7 @@ class Constants {
   static const logLevel = 'info';
   static const flushMaxRetries = 5;
   static const minTimeBetweenSessionsMillis = 5 * 60 * 1000; // 5 minutes
+  static const sessionTimeoutMillis = 30 * 60 * 1000; // 30 minutes
 }
 
 enum LogLevel {
@@ -25,4 +26,10 @@ enum LogLevel {
 enum ServerZone {
   us,
   eu,
+}
+
+enum IdentityStorage {
+  cookie,
+  localStorage,
+  none,
 }
