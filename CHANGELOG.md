@@ -1,3 +1,10 @@
+## [3.16.6](https://github.com/amplitude/Amplitude-Flutter/compare/v3.16.5...v3.16.6) (2025-01-02)
+
+
+### Bug Fixes
+
+* add swift version in podspec ([#210](https://github.com/amplitude/Amplitude-Flutter/issues/210)) ([e702ee5](https://github.com/amplitude/Amplitude-Flutter/commit/e702ee599d1a45d66a5580aee337bbdadc111387))
+
 ## [3.16.5](https://github.com/amplitude/Amplitude-Flutter/compare/v3.16.4...v3.16.5) (2024-12-09)
 
 
