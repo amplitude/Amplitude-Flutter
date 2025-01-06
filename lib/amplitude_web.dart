@@ -67,6 +67,11 @@ class AmplitudeFlutterPlugin {
       {
         amplitude.flush();
       }
+      case "setOptOut":
+      {
+        bool enabled = call.arguments['setOptOut'];
+        amplitude.setOptOut(enabled);
+      }
       default:
         throw PlatformException(
           code: 'Unimplemented',
@@ -95,14 +100,14 @@ class AmplitudeFlutterPlugin {
     return object;
   }
 
-  /// Gets event properties from call.arguments and converts it to a JSObject.
+  /// Extracts an event from call.arguments and converts it to a JSObject representing an Event object.
   ///
   /// This method extracts the event properties from the provided MethodCall
   /// argument and converts them into a JavaScript object using the mapToJSObj
   /// method.
   ///
   /// Returns:
-  /// - `JSObject`: A JavaScript object representing the event properties.
+  /// - `JSObject`: A JavaScript object representing the event.
   JSObject getEvent(MethodCall call) {
     var eventMap = call.arguments;
     return mapToJSObj(eventMap);

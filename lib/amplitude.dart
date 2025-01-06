@@ -211,6 +211,19 @@ class Amplitude {
     return await _channel.invokeMethod('setDeviceId', properties);
   }
 
+  /// Web only.
+  /// Disables tracking.
+  ///
+  /// Set setOptOut to true to disable logging for a specific user.
+  /// Set setOptOut to false to re-enable logging.
+  Future<void> setOptOut(bool enabled) async {
+    Map<String, bool> properties = {};
+    properties['setOptOut'] = enabled;
+
+    return await _channel.invokeMethod('setOptOut', properties);
+  }
+
+
   /// Resets userId to 'null' and deviceId to a random UUID.
   ///
   /// Note different devices on different platforms should have different device Ids.
