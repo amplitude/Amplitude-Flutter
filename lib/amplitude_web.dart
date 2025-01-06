@@ -102,9 +102,8 @@ class AmplitudeFlutterPlugin {
 
   /// Extracts an event from call.arguments and converts it to a JSObject representing an Event object.
   ///
-  /// This method extracts the event properties from the provided MethodCall
-  /// argument and converts them into a JavaScript object using the mapToJSObj
-  /// method.
+  /// This method extracts event properties from the provided MethodCall argument
+  /// and converts them into a JavaScript object representing an Event using the mapToJSObj method.
   ///
   /// Returns:
   /// - `JSObject`: A JavaScript object representing the event.
