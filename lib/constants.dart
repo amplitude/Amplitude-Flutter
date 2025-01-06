@@ -11,8 +11,9 @@ class Constants {
   static const defaultInstanceName = '\$default_instance';
   static const logLevel = 'info';
   static const flushMaxRetries = 5;
-  static const minTimeBetweenSessionsMillis = 5 * 60 * 1000; // 5 minutes
-  static const sessionTimeoutMillis = 30 * 60 * 1000; // 30 minutes
+  static const minTimeBetweenSessionsMillisUnset = -1;
+  static const minTimeBetweenSessionsMillisForMobile = 5 * 60 * 1000; // 5 minutes
+  static const minTimeBetweenSessionMillisForWeb = 30 * 60 * 1000; // 30 minutes
 }
 
 enum LogLevel {
