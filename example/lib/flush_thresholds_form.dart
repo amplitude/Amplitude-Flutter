@@ -4,7 +4,7 @@ import 'app_state.dart';
 
 class FlushThresholdForm extends StatefulWidget {
   @override
-  _FlushThresholdFormState createState() => _FlushThresholdFormState();
+  State<FlushThresholdForm> createState() => _FlushThresholdFormState();
 }
 
 class _FlushThresholdFormState extends State<FlushThresholdForm> {
@@ -20,7 +20,7 @@ class _FlushThresholdFormState extends State<FlushThresholdForm> {
     if (eventUploadThresholdInput.text.isNotEmpty && value != null) {
       AppState.of(context)
         // ..analytics.setEventUploadThreshold(value)
-        ..setMessage('Event upload threshold set.');
+        .setMessage('Event upload threshold set.');
     }
   }
 
@@ -30,7 +30,7 @@ class _FlushThresholdFormState extends State<FlushThresholdForm> {
     if (eventUploadPeriodMillisInput.text.isNotEmpty && value != null) {
       AppState.of(context)
         // ..analytics.setEventUploadPeriodMillis(value)
-        ..setMessage('Event upload period millis set.');
+        .setMessage('Event upload period millis set.');
     }
   }
 

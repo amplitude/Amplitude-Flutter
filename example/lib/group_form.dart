@@ -4,7 +4,7 @@ import 'app_state.dart';
 
 class GroupForm extends StatefulWidget {
   @override
-  _GroupFormState createState() => _GroupFormState();
+  State<GroupForm> createState() => _GroupFormState();
 }
 
 class _GroupFormState extends State<GroupForm> {

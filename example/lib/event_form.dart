@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+
+// ignore_for_file: depend_on_referenced_packages
 import 'package:amplitude_flutter/events/base_event.dart';
 
 import 'app_state.dart';
 
 class EventForm extends StatefulWidget {
   @override
-  _EventFormState createState() => _EventFormState();
+  State<EventForm> createState() => _EventFormState();
 }
 
 class _EventFormState extends State<EventForm> {
