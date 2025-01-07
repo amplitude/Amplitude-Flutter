@@ -133,7 +133,7 @@ class Configuration {
   ///
   /// Sets storage API for user identity. Options include cookie for document.cookie, localStorage for localStorage,
   /// or none to opt-out of persisting user identity.
-  String? identityStorage;
+  String identityStorage;
   /// Web specific
   ///
   /// Sets an identifier for the tracked user. Must have a minimum length of 5 characters unless overridden with the
@@ -190,7 +190,7 @@ class Configuration {
     this.appVersion,
     this.deviceId,
     CookieOptions? cookieOptions,
-    String identityStorage = 'cookie',
+    this.identityStorage = 'cookie',
     this.userId,
     this.transport = 'fetch',
     this.offline = false,
@@ -228,7 +228,7 @@ class Configuration {
       'deviceId': deviceId,
       'cookieOptions': cookieOptions.toMap(),
       'identityStorage': identityStorage,
-      'sessionTimeout': minTimeBetweenSessionsMillis != Constants.minTimeBetweenSessionsMillisUnset ? minTimeBetweenSessionsMillis : Constants.minTimeBetweenSessionMillisForWeb,
+      'sessionTimeout': minTimeBetweenSessionsMillis != Constants.minTimeBetweenSessionsMillisUnset ? minTimeBetweenSessionsMillis : Constants.minTimeBetweenSessionsMillisForWeb,
       'userId': userId,
       'transport': transport,
       'offline': offline,
