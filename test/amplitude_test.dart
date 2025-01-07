@@ -82,6 +82,20 @@ void main() {
     'useAdvertisingIdForDeviceId': false,
     'useAppSetIdForDeviceId': false,
     'appVersion': null,
+    'deviceId': null,
+    'cookieOptions': {
+      'domain': '',
+      'expiration': 365,
+      'sameSite': 'Lax',
+      'secure': false,
+      'upgrade': true,
+    },
+    'identityStorage': 'cookie',
+    'sessionTimeout': 30 * 60 * 1000,
+    'userId': null,
+    'transport': 'fetch',
+    'offline': false,
+    'fetchRemoteConfig': false,
     // This field doesn't belong to Configuration
     // Pass it for FlutterLibraryPlugin
     'library': '${Constants.packageName}/${Constants.packageVersion}'
