@@ -11,7 +11,7 @@ jobs:
 
       - name: Set Xcode 14.1
         run: |
-          sudo xcode-select -switch /Applications/Xcode_16.1.app
+          sudo xcode-select -switch /Applications/Xcode_14.1.app
 
       - name: Lint
         run: cd ios && swiftlint --strict # force to fix warnings too
