@@ -1,3 +1,10 @@
+# [4.0.0-beta.6](https://github.com/amplitude/Amplitude-Flutter/compare/v4.0.0-beta.5...v4.0.0-beta.6) (2025-01-08)
+
+
+### Features
+
+* use latest Amplitude Browser 2 SDK (2.11.10) for flutter SDK web ([#216](https://github.com/amplitude/Amplitude-Flutter/issues/216)) ([3ba2a54](https://github.com/amplitude/Amplitude-Flutter/commit/3ba2a54965b69b149812448e7e046a796e25d186))
+
 # [4.0.0-beta.5](https://github.com/amplitude/Amplitude-Flutter/compare/v4.0.0-beta.4...v4.0.0-beta.5) (2024-06-28)
 
 
