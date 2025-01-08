@@ -23,7 +23,6 @@ void main() {
       expect(config.serverZone, ServerZone.us);
       expect(config.serverUrl, isNull);
       expect(config.minTimeBetweenSessionsMillis, Constants.minTimeBetweenSessionsMillisUnset);
-      expect(config.offline, false);
       expect(config.trackingOptions, isA<TrackingOptions>());
       expect(config.defaultTracking, isA<DefaultTrackingOptions>());
       expect(config.enableCoppaControl, false);
@@ -56,7 +55,6 @@ void main() {
       expect(map['serverUrl'], isNull);
       expect(map['minTimeBetweenSessionsMillis'], Constants.minTimeBetweenSessionsMillisForMobile);
       expect(map['sessionTimeout'], Constants.minTimeBetweenSessionsMillisForWeb);
-      expect(map['offline'], false);
       expect(map.containsKey('trackingOptions'), true);
       expect(map.containsKey('defaultTracking'), true);
       expect(map['enableCoppaControl'], false);
@@ -90,7 +88,6 @@ void main() {
         serverZone: ServerZone.eu,
         serverUrl: 'https://custom.server.url',
         minTimeBetweenSessionsMillis: 2000,
-        offline: true,
         trackingOptions: TrackingOptions(language: false),
         defaultTracking: DefaultTrackingOptions(sessions: false),
         enableCoppaControl: true,
@@ -121,7 +118,6 @@ void main() {
       expect(customConfig.serverZone, ServerZone.eu);
       expect(customConfig.serverUrl, 'https://custom.server.url');
       expect(customConfig.minTimeBetweenSessionsMillis, 2000);
-      expect(customConfig.offline, true);
       expect(customConfig.trackingOptions.language, false);
       expect(customConfig.defaultTracking.sessions, false);
       expect(customConfig.enableCoppaControl, true);

@@ -68,11 +68,6 @@ class Configuration {
   int minTimeBetweenSessionsMillis;
   /// Applicable to all platforms (iOS, Android, Web)
   ///
-  /// Whether the SDK connects to the network.
-  /// Check platform-specific documentation for more information.
-  bool offline;
-  /// Applicable to all platforms (iOS, Android, Web)
-  ///
   /// Configures tracking of extra properties.
   /// Check platform-specific documentation for more information.
   TrackingOptions trackingOptions;
@@ -193,7 +188,6 @@ class Configuration {
     this.identityStorage = 'cookie',
     this.userId,
     this.transport = 'fetch',
-    this.offline = false,
     this.fetchRemoteConfig = false,
   }): trackingOptions = trackingOptions ?? TrackingOptions(),
       cookieOptions = cookieOptions ?? CookieOptions() {
@@ -231,7 +225,6 @@ class Configuration {
       'sessionTimeout': minTimeBetweenSessionsMillis != Constants.minTimeBetweenSessionsMillisUnset ? minTimeBetweenSessionsMillis : Constants.minTimeBetweenSessionsMillisForWeb,
       'userId': userId,
       'transport': transport,
-      'offline': offline,
       'fetchRemoteConfig': fetchRemoteConfig,
       // This field doesn't belong to Configuration
       // Pass it for FlutterLibraryPlugin

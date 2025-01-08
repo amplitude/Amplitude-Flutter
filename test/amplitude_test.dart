@@ -94,7 +94,6 @@ void main() {
     'sessionTimeout': 30 * 60 * 1000,
     'userId': null,
     'transport': 'fetch',
-    'offline': false,
     'fetchRemoteConfig': false,
     // This field doesn't belong to Configuration
     // Pass it for FlutterLibraryPlugin

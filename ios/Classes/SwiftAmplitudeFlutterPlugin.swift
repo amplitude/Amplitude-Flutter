@@ -176,9 +176,6 @@ import AmplitudeSwift
                 screenViews: screenViews
             )
         }
-        if let offline = args["offline"] as? Bool {
-            configuration.offline = offline
-        }
 
         return configuration
     }
