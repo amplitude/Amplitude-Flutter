@@ -1,5 +1,6 @@
 import 'dart:async';
 
+// ignore_for_file: depend_on_referenced_packages
 import 'package:amplitude_flutter/amplitude.dart';
 import 'package:amplitude_flutter/configuration.dart';
 import 'package:amplitude_flutter/constants.dart';
@@ -22,7 +23,7 @@ class MyApp extends StatefulWidget {
   final String apiKey;
 
   @override
-  _MyAppState createState() => _MyAppState();
+  State<MyApp> createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {

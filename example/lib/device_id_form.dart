@@ -3,7 +3,8 @@ import 'app_state.dart';
 
 class DeviceIdForm extends StatefulWidget {
   @override
-  _DeviceIdFormState createState() => _DeviceIdFormState();
+  // ignore: library_private_types_in_public_api
+  State<DeviceIdForm> createState() => _DeviceIdFormState();
 }
 
 class _DeviceIdFormState extends State<DeviceIdForm> {
@@ -12,7 +13,7 @@ class _DeviceIdFormState extends State<DeviceIdForm> {
       AppState
           .of(context)
           .analytics
-        ..setDeviceId(deviceId);
+          .setDeviceId(deviceId);
     };
   }
 
@@ -23,7 +24,7 @@ class _DeviceIdFormState extends State<DeviceIdForm> {
       children: <Widget>[
         Text('Device Id', style: Theme.of(context).textTheme.headlineSmall),
         const SizedBox(height: 10),
-        new TextField(
+        TextField(
           autocorrect: false,
           decoration: InputDecoration(labelText: 'Device Id'),
           onChanged: makeHandler(context),

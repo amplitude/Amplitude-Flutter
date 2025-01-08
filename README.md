@@ -22,9 +22,9 @@ From Amplitude Flutter v4, we bump up the kotlin version to v1.9.22 to support l
 
 The following matrix lists the minimum support for Amplitude Flutter SDK version.
 
-| Amplitude Flutter | Gradle | Android Gradle Plugin | Kotlin Gradle Plugin |
-|-------------------|-------|-----------------------|----------------------|
-| `4.+`             | `8.2` | `8.2.2`               | `1.9.22`             |
+| Flutter | Amplitude Flutter | Gradle | Android Gradle Plugin | Kotlin Gradle Plugin |
+|---------|-------------------|-------|-----------------------|-----------------------|
+|`3.3+`   | `4.+`             | `8.2` | `8.2.2`               | `1.9.22`              |
 
 
 Learn more about the Android [Gradle Plugin compatibility](https://developer.android.com/studio/releases/gradle-plugin#updating-gradle), [Gradle compatibility](https://docs.gradle.org/current/userguide/compatibility.html#kotlin), and [Kotlin compatibility](https://kotlinlang.org/docs/whatsnew17.html#bumping-minimum-supported-versions).

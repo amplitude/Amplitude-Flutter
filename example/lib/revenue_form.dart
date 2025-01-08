@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+// ignore_for_file: depend_on_referenced_packages
 import 'package:amplitude_flutter/events/revenue.dart';
 
 import 'app_state.dart';
 
 class RevenueForm extends StatefulWidget {
   @override
-  _RevenueFormState createState() => _RevenueFormState();
+  State<RevenueForm> createState() => _RevenueFormState();
 }
 
 class _RevenueFormState extends State<RevenueForm> {

@@ -4,7 +4,7 @@ import 'app_state.dart';
 
 class ResetForm extends StatefulWidget {
   @override
-  _DeviceState createState() => _DeviceState();
+  State<ResetForm> createState() => _DeviceState();
 }
 
 class _DeviceState extends State<ResetForm> {
