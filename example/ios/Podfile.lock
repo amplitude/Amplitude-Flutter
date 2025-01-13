@@ -23,7 +23,7 @@ EXTERNAL SOURCES:
     :path: Flutter
 
 SPEC CHECKSUMS:
-  amplitude_flutter: aed4ad5d2da06894245fde7e8c56fed39ac6dca8
+  amplitude_flutter: 3fc103cd969dd136271d26ef653c6b9475a393f3
   AmplitudeSwift: cc22038404dc5581e2dea5dc2501302959dd3c90
   AnalyticsConnector: a53214d38ae22734c6266106c0492b37832633a9
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
