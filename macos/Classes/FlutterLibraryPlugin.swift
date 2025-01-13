@@ -1,1 +1,0 @@
-../../darwin/Classes/FlutterLibraryPlugin.swift

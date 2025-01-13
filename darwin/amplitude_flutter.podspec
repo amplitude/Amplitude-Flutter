@@ -22,9 +22,11 @@ A new Flutter plugin project.
   # see https://developer.apple.com/documentation/bundleresources/privacy_manifest_files
   # s.resource_bundles = {'amplitude_flutter_privacy' => ['Resources/PrivacyInfo.xcprivacy']}
 
-  s.dependency 'FlutterMacOS'
+  s.ios.dependency 'Flutter'
+  s.osx.dependency 'FlutterMacOS'
+  s.ios.deployment_target = '13.0'
+  s.osx.deployment_target = '10.15'
 
-  s.platform = :osx, '10.15'
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }
   s.swift_version = '5.9'
   s.dependency 'AmplitudeSwift', '~> 1.6'

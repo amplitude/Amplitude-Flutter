@@ -1,1 +1,0 @@
-../../darwin/Classes/AmplitudeFlutterPlugin.m
