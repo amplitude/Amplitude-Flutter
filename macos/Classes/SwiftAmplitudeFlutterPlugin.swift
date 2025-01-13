@@ -1,0 +1,1 @@
+../../darwin/Classes/SwiftAmplitudeFlutterPlugin.swift

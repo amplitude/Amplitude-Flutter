@@ -31,6 +31,8 @@ flutter:
         pluginClass: AmplitudeFlutterPlugin
       ios:
         pluginClass: AmplitudeFlutterPlugin
+      macos:
+        pluginClass: AmplitudeFlutterPlugin
       web:
         pluginClass: AmplitudeFlutterPlugin
         fileName: amplitude_web.dart
