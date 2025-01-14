@@ -14,4 +14,4 @@ jobs:
           sudo xcode-select -switch /Applications/Xcode_14.1.app
 
       - name: Lint
-        run: cd ios && swiftlint --strict # force to fix warnings too
+        run: cd darwin && swiftlint --strict # force to fix warnings too
