@@ -1,0 +1,34 @@
+PODS:
+  - amplitude_flutter (0.0.1):
+    - AmplitudeSwift (~> 1.6)
+    - Flutter
+    - FlutterMacOS
+  - AmplitudeSwift (1.11.2):
+    - AnalyticsConnector (~> 1.3.0)
+  - AnalyticsConnector (1.3.1)
+  - FlutterMacOS (1.0.0)
+
+DEPENDENCIES:
+  - amplitude_flutter (from `Flutter/ephemeral/.symlinks/plugins/amplitude_flutter/darwin`)
+  - FlutterMacOS (from `Flutter/ephemeral`)
+
+SPEC REPOS:
+  trunk:
+    - AmplitudeSwift
+    - AnalyticsConnector
+
+EXTERNAL SOURCES:
+  amplitude_flutter:
+    :path: Flutter/ephemeral/.symlinks/plugins/amplitude_flutter/darwin
+  FlutterMacOS:
+    :path: Flutter/ephemeral
+
+SPEC CHECKSUMS:
+  amplitude_flutter: 17471e681e4b91aab4b90f73b62e2b55831c013a
+  AmplitudeSwift: ec670fe6f0a0b673bde44b6f02359993cc5513b1
+  AnalyticsConnector: 3def11199b4ddcad7202c778bde982ec5da0ebb3
+  FlutterMacOS: 8f6f14fa908a6fb3fba0cd85dbd81ec4b251fb24
+
+PODFILE CHECKSUM: 9ebaf0ce3d369aaa26a9ea0e159195ed94724cf3
+
+COCOAPODS: 1.16.2

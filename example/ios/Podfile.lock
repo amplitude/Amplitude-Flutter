@@ -1,14 +1,15 @@
 PODS:
   - amplitude_flutter (0.0.1):
-    - AmplitudeSwift (~> 1.6)
+    - AmplitudeSwift (~> 1.11.2)
     - Flutter
-  - AmplitudeSwift (1.6.2):
-    - AnalyticsConnector (~> 1.0.1)
-  - AnalyticsConnector (1.0.3)
+    - FlutterMacOS
+  - AmplitudeSwift (1.11.2):
+    - AnalyticsConnector (~> 1.3.0)
+  - AnalyticsConnector (1.3.1)
   - Flutter (1.0.0)
 
 DEPENDENCIES:
-  - amplitude_flutter (from `.symlinks/plugins/amplitude_flutter/ios`)
+  - amplitude_flutter (from `.symlinks/plugins/amplitude_flutter/darwin`)
   - Flutter (from `Flutter`)
 
 SPEC REPOS:
@@ -18,14 +19,14 @@ SPEC REPOS:
 
 EXTERNAL SOURCES:
   amplitude_flutter:
-    :path: ".symlinks/plugins/amplitude_flutter/ios"
+    :path: ".symlinks/plugins/amplitude_flutter/darwin"
   Flutter:
     :path: Flutter
 
 SPEC CHECKSUMS:
-  amplitude_flutter: aed4ad5d2da06894245fde7e8c56fed39ac6dca8
-  AmplitudeSwift: cc22038404dc5581e2dea5dc2501302959dd3c90
-  AnalyticsConnector: a53214d38ae22734c6266106c0492b37832633a9
+  amplitude_flutter: 697c784750f50d407c17f7016d794e3c887f3b88
+  AmplitudeSwift: ec670fe6f0a0b673bde44b6f02359993cc5513b1
+  AnalyticsConnector: 3def11199b4ddcad7202c778bde982ec5da0ebb3
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
 
 PODFILE CHECKSUM: cc1f88378b4bfcf93a6ce00d2c587857c6008d3b

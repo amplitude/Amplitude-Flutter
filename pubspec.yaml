@@ -7,7 +7,7 @@ repository: https://github.com/amplitude/Amplitude-Flutter
 
 environment:
   sdk: ">=3.3.0 < 4.0.0"
-  flutter: ">=2.0.0"
+  flutter: ">=3.7.0"
 dependencies:
   flutter:
     sdk: flutter
@@ -31,6 +31,10 @@ flutter:
         pluginClass: AmplitudeFlutterPlugin
       ios:
         pluginClass: AmplitudeFlutterPlugin
+        sharedDarwinSource: true
+      macos:
+        pluginClass: AmplitudeFlutterPlugin
+        sharedDarwinSource: true
       web:
         pluginClass: AmplitudeFlutterPlugin
         fileName: amplitude_web.dart
