@@ -1,3 +1,10 @@
+# [4.0.0-beta.7](https://github.com/amplitude/Amplitude-Flutter/compare/v4.0.0-beta.6...v4.0.0-beta.7) (2025-01-15)
+
+
+### Features
+
+* add support for macOS ([#217](https://github.com/amplitude/Amplitude-Flutter/issues/217)) ([eb66de8](https://github.com/amplitude/Amplitude-Flutter/commit/eb66de8e93e1d015808fb266b20961bc897df9d8)), closes [#156](https://github.com/amplitude/Amplitude-Flutter/issues/156) [#211](https://github.com/amplitude/Amplitude-Flutter/issues/211) [#46](https://github.com/amplitude/Amplitude-Flutter/issues/46)
+
 # [4.0.0-beta.6](https://github.com/amplitude/Amplitude-Flutter/compare/v4.0.0-beta.5...v4.0.0-beta.6) (2025-01-08)
 
 
