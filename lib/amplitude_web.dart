@@ -130,6 +130,12 @@ class AmplitudeFlutterPlugin {
       configuration['logLevel'] = LogLevel.values.byName(logLevelString).index.toJS;
     }
 
+    if (call.arguments.containsKey('serverZone')) {
+      var serverZoneString = call.arguments['serverZone'] as String;
+      serverZoneString.toUpperCase();
+      configuration['serverZone'] = serverZoneString.toUpperCase().toJS;
+    }
+
     return configuration;
   }
 }
