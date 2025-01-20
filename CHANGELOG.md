@@ -1,3 +1,10 @@
+# [4.0.0-beta.8](https://github.com/amplitude/Amplitude-Flutter/compare/v4.0.0-beta.7...v4.0.0-beta.8) (2025-01-20)
+
+
+### Bug Fixes
+
+* capitalize serverZone before passing to browser SDK ([#219](https://github.com/amplitude/Amplitude-Flutter/issues/219)) ([3e46e78](https://github.com/amplitude/Amplitude-Flutter/commit/3e46e78cc89b1642619b8668d813b880ab0f7ec4))
+
 # [4.0.0-beta.7](https://github.com/amplitude/Amplitude-Flutter/compare/v4.0.0-beta.6...v4.0.0-beta.7) (2025-01-15)
 
 
