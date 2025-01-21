@@ -1,3 +1,10 @@
+## [3.16.7](https://github.com/amplitude/Amplitude-Flutter/compare/v3.16.6...v3.16.7) (2025-01-21)
+
+
+### Bug Fixes
+
+* removed references to deprecated v1 Android embedding ([#220](https://github.com/amplitude/Amplitude-Flutter/issues/220)) ([82aa8db](https://github.com/amplitude/Amplitude-Flutter/commit/82aa8db50bcc5bc19fb9d82ac968d0e9cc2851e3))
+
 ## [3.16.6](https://github.com/amplitude/Amplitude-Flutter/compare/v3.16.5...v3.16.6) (2025-01-02)
 
 
