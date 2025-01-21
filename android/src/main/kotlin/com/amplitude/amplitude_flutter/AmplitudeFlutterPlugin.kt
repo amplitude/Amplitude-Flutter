@@ -11,7 +11,6 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
-import io.flutter.plugin.common.PluginRegistry.Registrar
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -22,12 +21,6 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler {
 
         var ctxt: Context? = null
 
-        @JvmStatic
-        fun registerWith(registrar: Registrar) {
-            ctxt = registrar.context()
-            val channel = MethodChannel(registrar.messenger(), methodChannelName)
-            channel.setMethodCallHandler(AmplitudeFlutterPlugin())
-        }
     }
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
