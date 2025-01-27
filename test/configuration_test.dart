@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:amplitude_flutter/autocapture/autocapture_options.dart';
 import 'package:amplitude_flutter/constants.dart';
 import 'package:amplitude_flutter/configuration.dart';
 import 'package:amplitude_flutter/tracking_options.dart';
@@ -39,6 +40,7 @@ void main() {
       expect(config.userId, isNull);
       expect(config.transport, 'fetch');
       expect(config.fetchRemoteConfig, false);
+      expect(config.autocapture, isA<AutocaptureOptions>());
 
       var map = config.toMap();
       expect(map['apiKey'], 'test_api_key');
@@ -71,6 +73,7 @@ void main() {
       expect(map['userId'], isNull);
       expect(map['transport'], 'fetch');
       expect(map['fetchRemoteConfig'], false);
+      expect(map.containsKey('autocapture'), true);
     });
 
     test('custom values should be set correctly', () {

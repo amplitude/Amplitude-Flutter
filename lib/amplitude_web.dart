@@ -120,10 +120,20 @@ class AmplitudeFlutterPlugin {
   ///
   /// Returns a map containing the configuration settings.
   JSObject getConfiguration(MethodCall call) {
-    var configuration = mapToJSObj(call.arguments);
+    JSObject configuration = mapToJSObj(call.arguments);
 
-    // autocapture is not supported in flutter web
-    configuration['autocapture'] = false.toJS;
+    // defaultTracking is not supported in flutter web
+    if (call.arguments.containsKey('defaultTracking')) {
+      configuration.delete('defaultTracking'.toJS);
+    }
+
+    JSObject autocaptureOptions = configuration['autocapture'] as JSObject;
+    // formInteractions, fileDownloads, elementInteractions are not supported in flutter web
+    autocaptureOptions['formInteractions'] = false.toJS;
+    autocaptureOptions['fileDownloads'] = false.toJS;
+    autocaptureOptions['elementInteractions'] = false.toJS;
+    configuration['autocapture'] = autocaptureOptions;
+
 
     if (call.arguments.containsKey('logLevel')) {
       var logLevelString = call.arguments['logLevel'] as String;
