@@ -22,10 +22,10 @@ From Amplitude Flutter v3.11.0, we bump up the kotlin version to v1.7.10 to supp
 
 From Amplitude Flutter 3.16.5, we switched from `package:js ^v0.6.3` to using `dart:js_interop` for Flutter web, which requires dart 3.1+.
 
-|Amplitude Flutter|Dart    |Gradle   |Android Gradle Plugin|Kotlin Gradle Plugin|
-|-----------------|--------|---------|---------------------|--------------------|
-| `3.11.+`        | `2.12` | `6.7.1` | `3.6.4`             | `1.7.10`           |
-| `3.16.5`        | `3.1+` | `6.7.1` | `3.6.4`             | `1.7.10`           |
+|Amplitude Flutter  |Dart    |Gradle   |Android Gradle Plugin|Kotlin Gradle Plugin|
+|-------------------|--------|---------|---------------------|--------------------|
+| >= 3.16.5         | >= 3.1 |   6.7.1 | 3.6.4               | 1.7.10             |
+| >= 3.11 <= 3.16.4 | >=2.12 |   6.7.1 | 3.6.4               | 1.7.10             |
 
 
 Learn more about the Android [Gradle Plugin compatibility](https://developer.android.com/studio/releases/gradle-plugin#updating-gradle), [Gradle compatibility](https://docs.gradle.org/current/userguide/compatibility.html#kotlin), and [Kotlin compatibility](https://kotlinlang.org/docs/whatsnew17.html#bumping-minimum-supported-versions).
