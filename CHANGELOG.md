@@ -1,3 +1,15 @@
+# [4.0.0-beta.9](https://github.com/amplitude/Amplitude-Flutter/compare/v4.0.0-beta.8...v4.0.0-beta.9) (2025-02-06)
+
+
+### Bug Fixes
+
+* don't set namespace via package attribute in AndroidManifest.xml ([#225](https://github.com/amplitude/Amplitude-Flutter/issues/225)) ([a56915a](https://github.com/amplitude/Amplitude-Flutter/commit/a56915a8d4f70b7b3eb78f35b1f9be6bea38aa0c))
+
+
+### Features
+
+* add subset of Browser SDK  autocapture configuration to flutter web ([#221](https://github.com/amplitude/Amplitude-Flutter/issues/221)) ([ff53638](https://github.com/amplitude/Amplitude-Flutter/commit/ff53638f8b3445ba286480b52190ed0562754a7b))
+
 # [4.0.0-beta.8](https://github.com/amplitude/Amplitude-Flutter/compare/v4.0.0-beta.7...v4.0.0-beta.8) (2025-01-20)
 
 

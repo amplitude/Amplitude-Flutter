@@ -1,6 +1,6 @@
 class Constants {
   static const packageName = 'amplitude-flutter';
-  static const packageVersion = '4.0.0-beta.8';
+  static const packageVersion = '4.0.0-beta.9';
   static const identifyEvent = '\$identify';
   static const groupIdentifyEvent = '\$groupidentify';
   static const revenueEvent = 'revenue_amount';
