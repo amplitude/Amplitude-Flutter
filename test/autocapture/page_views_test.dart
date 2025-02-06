@@ -1,6 +1,23 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:amplitude_flutter/autocapture/page_views_options.dart';
+import 'package:amplitude_flutter/autocapture/page_views.dart';
 void main() {
+  group('PageViews.toMapOrBool', () {
+    test('returns false for PageViewsDisabled()', () {
+      var pageViewsDisabled = PageViewsDisabled();
+      expect(PageViews.toMapOrBool(pageViewsDisabled), false);
+    });
+
+    test('returns true for PageViewsEnabled()', () {
+      var pageViewsEnabled = PageViewsEnabled();
+      expect(PageViews.toMapOrBool(pageViewsEnabled), true);
+    });
+
+    test('returns a map for PageViewsOptions()', () {
+      var pageViewsOptions = PageViewsOptions();
+      expect(PageViews.toMapOrBool(pageViewsOptions), isA<Map<String, dynamic>>());
+    });
+  });
+
   group('PageViewsOptions', () {
     test('should have default values when no parameters are provided', () {
       final options = PageViewsOptions();
@@ -32,6 +49,20 @@ void main() {
       final map = options.toMap();
       expect(map['trackHistoryChanges'], 'all');
       expect(map['eventType'], '');
+    });
+  });
+
+  group('PageViewsEnabled', () {
+    test('should be a subclass of PageViews', () {
+      final pageViewsEnabled = PageViewsEnabled();
+      expect(pageViewsEnabled, isA<PageViews>());
+    });
+  });
+
+  group('PageViewsDisabled', () {
+    test('should be a subclass of PageViews', () {
+      final pageViewsDisabled = PageViewsDisabled();
+      expect(pageViewsDisabled, isA<PageViews>());
     });
   });
 }

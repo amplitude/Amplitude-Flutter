@@ -1,4 +1,4 @@
-import 'autocapture/autocapture_options.dart';
+import 'autocapture/autocapture.dart';
 import 'constants.dart';
 import 'tracking_options.dart';
 import 'default_tracking.dart';
@@ -147,8 +147,9 @@ class Configuration {
   bool fetchRemoteConfig;
   /// Web specific
   ///
-  /// Autocapture options. See [docs](https://amplitude.com/docs/sdks/analytics/browser/browser-sdk-2#autocapture) for more information.
-  AutocaptureOptions autocapture;
+  /// Disable or enable autocapture by using class extensions AutoCaptureDisabled/AutocaptureEnabled, or use AutocaptureOptions
+  /// for more granular control. See [docs](https://amplitude.com/docs/sdks/analytics/browser/browser-sdk-2#autocapture) for more information.
+  Autocapture autocapture;
 
 
 
@@ -232,7 +233,7 @@ class Configuration {
       'userId': userId,
       'transport': transport,
       'fetchRemoteConfig': fetchRemoteConfig,
-      'autocapture': autocapture.toMap(),
+      'autocapture': Autocapture.toMapOrBool(autocapture),
       // This field doesn't belong to Configuration
       // Pass it for FlutterLibraryPlugin
       'library': '${Constants.packageName}/${Constants.packageVersion}'

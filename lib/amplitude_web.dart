@@ -120,32 +120,31 @@ class AmplitudeFlutterPlugin {
   ///
   /// Returns a map containing the configuration settings.
   JSObject getConfiguration(MethodCall call) {
-    JSObject configuration = mapToJSObj(call.arguments);
+    var configuration = call.arguments;
+    if (configuration['autocapture'] is Map) {
+      // formInteractions, fileDownloads, elementInteractions are not supported in flutter web
+      configuration['autocapture']['formInteractions'] = false;
+      configuration['autocapture']['fileDownloads'] = false;
+      configuration['autocapture']['elementInteractions'] = false;
+    }
+    JSObject configurationJS = mapToJSObj(configuration);
 
     // defaultTracking is not supported in flutter web
     if (call.arguments.containsKey('defaultTracking')) {
-      configuration.delete('defaultTracking'.toJS);
+      configurationJS.delete('defaultTracking'.toJS);
     }
-
-    JSObject autocaptureOptions = configuration['autocapture'] as JSObject;
-    // formInteractions, fileDownloads, elementInteractions are not supported in flutter web
-    autocaptureOptions['formInteractions'] = false.toJS;
-    autocaptureOptions['fileDownloads'] = false.toJS;
-    autocaptureOptions['elementInteractions'] = false.toJS;
-    configuration['autocapture'] = autocaptureOptions;
-
 
     if (call.arguments.containsKey('logLevel')) {
       var logLevelString = call.arguments['logLevel'] as String;
-      configuration['logLevel'] = LogLevel.values.byName(logLevelString).index.toJS;
+      configurationJS['logLevel'] = LogLevel.values.byName(logLevelString).index.toJS;
     }
 
     if (call.arguments.containsKey('serverZone')) {
       var serverZoneString = call.arguments['serverZone'] as String;
       serverZoneString.toUpperCase();
-      configuration['serverZone'] = serverZoneString.toUpperCase().toJS;
+      configurationJS['serverZone'] = serverZoneString.toUpperCase().toJS;
     }
 
-    return configuration;
+    return configurationJS;
   }
 }

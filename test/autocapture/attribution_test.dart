@@ -1,7 +1,24 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:amplitude_flutter/autocapture/attribution_options.dart';
+import 'package:amplitude_flutter/autocapture/attribution.dart';
 
 void main() {
+  group('Attribution.toMapOrBool', () {
+    test('returns false for AttributionDisabled()', () {
+      var attributionDisabled = AttributionDisabled();
+      expect(Attribution.toMapOrBool(attributionDisabled), false);
+    });
+
+    test('returns true for AttributionEnabled()', () {
+      var attributionEnabled = AttributionEnabled();
+      expect(Attribution.toMapOrBool(attributionEnabled), true);
+    });
+
+    test('returns a map for AttributionOptions()', () {
+      var attributionOptions = AttributionOptions();
+      expect(Attribution.toMapOrBool(attributionOptions), isA<Map<String, dynamic>>());
+    });
+  });
+
   group('AttributionOptions', () {
     test('default values should be correctly set', () {
       final options = AttributionOptions();
@@ -39,6 +56,18 @@ void main() {
       expect(map['initialEmptyValue'], 'NONE');
       expect(map['resetSessionOnNewCampaign'], true);
       expect(map['excludeReferrers'], ['example.com']);
+    });
+  });
+
+  group('AttributionDisabled', () {
+    test('is a subclass of Attribution', () {
+      expect(AttributionDisabled(), isA<Attribution>());
+    });
+  });
+
+  group('AttributionEnabled', () {
+    test('is a subclass of Attribution', () {
+      expect(AttributionEnabled(), isA<Attribution>());
     });
   });
 }

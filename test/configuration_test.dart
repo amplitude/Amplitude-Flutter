@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:amplitude_flutter/autocapture/autocapture_options.dart';
+import 'package:amplitude_flutter/autocapture/autocapture.dart';
 import 'package:amplitude_flutter/constants.dart';
 import 'package:amplitude_flutter/configuration.dart';
 import 'package:amplitude_flutter/tracking_options.dart';
