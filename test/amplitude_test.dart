@@ -95,6 +95,17 @@ void main() {
     'userId': null,
     'transport': 'fetch',
     'fetchRemoteConfig': false,
+    'autocapture': {
+      'sessions': true,
+      'attribution': {
+        'initialEmptyValue': 'EMPTY',
+        'resetSessionOnNewCampaign': false
+      },
+      'pageViews': {
+        'trackHistoryChanges': 'all',
+        'eventType': ''
+      }
+    },
     // This field doesn't belong to Configuration
     // Pass it for FlutterLibraryPlugin
     'library': '${Constants.packageName}/${Constants.packageVersion}'
