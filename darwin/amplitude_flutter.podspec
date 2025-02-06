@@ -29,5 +29,5 @@ A new Flutter plugin project.
 
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }
   s.swift_version = '5.9'
-  s.dependency 'AmplitudeSwift', '~> 1.11.2'
+  s.dependency 'AmplitudeSwift', '~> 1.11'
 end
