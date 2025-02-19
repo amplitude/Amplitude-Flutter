@@ -1,3 +1,28 @@
+# [4.0.0](https://github.com/amplitude/Amplitude-Flutter/compare/v3.16.1...v4.0.0) (2025-02-19)
+
+
+### Bug Fixes
+
+* Adding underlying library version to library field ([#192](https://github.com/amplitude/Amplitude-Flutter/issues/192)) ([9afeaa1](https://github.com/amplitude/Amplitude-Flutter/commit/9afeaa199347312bbd9d64cfafeb70140b4df361))
+* Adding underlying library version to library field ([#195](https://github.com/amplitude/Amplitude-Flutter/issues/195)) ([bd72e9d](https://github.com/amplitude/Amplitude-Flutter/commit/bd72e9d97dffbd9f4128f59578d02dd6f595b628))
+* capitalize serverZone before passing to browser SDK ([#219](https://github.com/amplitude/Amplitude-Flutter/issues/219)) ([3e46e78](https://github.com/amplitude/Amplitude-Flutter/commit/3e46e78cc89b1642619b8668d813b880ab0f7ec4))
+* don't set namespace via package attribute in AndroidManifest.xml ([#225](https://github.com/amplitude/Amplitude-Flutter/issues/225)) ([a56915a](https://github.com/amplitude/Amplitude-Flutter/commit/a56915a8d4f70b7b3eb78f35b1f9be6bea38aa0c))
+* eventType should be required positional param ([#186](https://github.com/amplitude/Amplitude-Flutter/issues/186)) ([1cb1f9b](https://github.com/amplitude/Amplitude-Flutter/commit/1cb1f9bfaf41c0f2d527b6ac02f6f17b69efbcec))
+
+
+### Features
+
+* add subset of Browser SDK  autocapture configuration to flutter web ([#221](https://github.com/amplitude/Amplitude-Flutter/issues/221)) ([ff53638](https://github.com/amplitude/Amplitude-Flutter/commit/ff53638f8b3445ba286480b52190ed0562754a7b))
+* add support for macOS ([#217](https://github.com/amplitude/Amplitude-Flutter/issues/217)) ([eb66de8](https://github.com/amplitude/Amplitude-Flutter/commit/eb66de8e93e1d015808fb266b20961bc897df9d8)), closes [#156](https://github.com/amplitude/Amplitude-Flutter/issues/156) [#211](https://github.com/amplitude/Amplitude-Flutter/issues/211) [#46](https://github.com/amplitude/Amplitude-Flutter/issues/46)
+* enable app installed & updated events for iOS ([#183](https://github.com/amplitude/Amplitude-Flutter/issues/183)) ([2d4cfe2](https://github.com/amplitude/Amplitude-Flutter/commit/2d4cfe2d4ec87aaaf1b5d530c2b725ee64ce608f))
+* update to the latests native SDKs ([#179](https://github.com/amplitude/Amplitude-Flutter/issues/179)) ([fa0b4b9](https://github.com/amplitude/Amplitude-Flutter/commit/fa0b4b9d9ed6ca6f0d7763cced876dfae319dcd5))
+* use latest Amplitude Browser 2 SDK (2.11.10) for flutter SDK web ([#216](https://github.com/amplitude/Amplitude-Flutter/issues/216)) ([3ba2a54](https://github.com/amplitude/Amplitude-Flutter/commit/3ba2a54965b69b149812448e7e046a796e25d186))
+
+
+### BREAKING CHANGES
+
+* Update to the latest native SDKs
+
 # [4.0.0-beta.9](https://github.com/amplitude/Amplitude-Flutter/compare/v4.0.0-beta.8...v4.0.0-beta.9) (2025-02-06)
 
 
