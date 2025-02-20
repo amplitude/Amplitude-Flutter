@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 
@@ -81,25 +80,6 @@ class AmplitudeFlutterPlugin {
     }
   }
 
-  /// Converts a Dart Map to a JavaScript object using `js_interop_unsafe`.
-  ///
-  /// This method takes a Dart Map and recursively converts it into a JavaScript
-  /// object. Each key-value pair in the Dart Map is set as a property on the
-  /// JavaScript object. If a value in the Dart Map is another Map, this method
-  /// will recursively convert that Map as well.
-  ///
-  /// - Parameter map: The Dart Map to convert.
-  /// - Returns: A JavaScript object with the same properties as the Dart Map.
-  JSObject mapToJSObj(Map<dynamic, dynamic> map) {
-    var object = JSObject();
-    map.forEach((k, v) {
-      var key = k;
-      var value = (v is Map) ? mapToJSObj(v) : v;
-      object[key] = value;
-    });
-    return object;
-  }
-
   /// Extracts an event from call.arguments and converts it to a JSObject representing an Event object.
   ///
   /// This method extracts event properties from the provided MethodCall argument
@@ -108,8 +88,8 @@ class AmplitudeFlutterPlugin {
   /// Returns:
   /// - `JSObject`: A JavaScript object representing the event.
   JSObject getEvent(MethodCall call) {
-    var eventMap = call.arguments;
-    return mapToJSObj(eventMap);
+    var eventMap = call.arguments as Map;
+    return eventMap.jsify() as JSObject;
   }
 
 
@@ -120,27 +100,27 @@ class AmplitudeFlutterPlugin {
   ///
   /// Returns a map containing the configuration settings.
   JSObject getConfiguration(MethodCall call) {
-    var configuration = call.arguments;
+    var configuration = call.arguments as Map;
     if (configuration['autocapture'] is Map) {
       // formInteractions, fileDownloads, elementInteractions are not supported in flutter web
       configuration['autocapture']['formInteractions'] = false;
       configuration['autocapture']['fileDownloads'] = false;
       configuration['autocapture']['elementInteractions'] = false;
     }
-    JSObject configurationJS = mapToJSObj(configuration);
+    JSObject configurationJS = configuration.jsify() as JSObject;
 
     // defaultTracking is not supported in flutter web
-    if (call.arguments.containsKey('defaultTracking')) {
+    if (configuration.containsKey('defaultTracking')) {
       configurationJS.delete('defaultTracking'.toJS);
     }
 
-    if (call.arguments.containsKey('logLevel')) {
-      var logLevelString = call.arguments['logLevel'] as String;
+    if (configuration.containsKey('logLevel')) {
+      var logLevelString = configuration['logLevel'] as String;
       configurationJS['logLevel'] = LogLevel.values.byName(logLevelString).index.toJS;
     }
 
-    if (call.arguments.containsKey('serverZone')) {
-      var serverZoneString = call.arguments['serverZone'] as String;
+    if (configuration.containsKey('serverZone')) {
+      var serverZoneString = configuration['serverZone'] as String;
       serverZoneString.toUpperCase();
       configurationJS['serverZone'] = serverZoneString.toUpperCase().toJS;
     }

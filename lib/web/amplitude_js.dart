@@ -1,5 +1,4 @@
 import 'dart:js_interop';
-import 'flutter_library_plugin.dart';
 
 @JS('amplitude')
 extension type Amplitude(JSObject _) implements JSObject {
