@@ -1,3 +1,10 @@
+## [4.0.1](https://github.com/amplitude/Amplitude-Flutter/compare/v4.0.0...v4.0.1) (2025-02-21)
+
+
+### Bug Fixes
+
+* use js_interop_unsafe jsify() to convert dart object to JSObject rather than DIY mapToJSObj method ([#229](https://github.com/amplitude/Amplitude-Flutter/issues/229)) ([c9be554](https://github.com/amplitude/Amplitude-Flutter/commit/c9be55476ae0680a2ba760dd6f369e151c5de7a5))
+
 # [4.0.0](https://github.com/amplitude/Amplitude-Flutter/compare/v3.16.1...v4.0.0) (2025-02-19)
 
 

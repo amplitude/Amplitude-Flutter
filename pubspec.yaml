@@ -1,6 +1,6 @@
 name: amplitude_flutter
 description: Official Amplitude Flutter SDK, supporting Android, iOS, macOS, and web platforms.
-version: 4.0.0
+version: 4.0.1
 homepage: https://www.amplitude.com
 repository: https://github.com/amplitude/Amplitude-Flutter
 
