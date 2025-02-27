@@ -182,6 +182,14 @@ class Amplitude {
     return await _channel.invokeMethod('revenue', event.toMap());
   }
 
+  /// Get the current user Id.
+  /// ```
+  /// final userId = await amplitude.getUserId();
+  /// ```
+  Future<String?> getUserId() async {
+    return await _channel.invokeMethod('getUserId');
+  }
+
   /// Set a custom user Id.
   ///
   /// If your app has its own login system that you want to track users with,
@@ -195,6 +203,15 @@ class Amplitude {
     properties['setUserId'] = userId;
 
     return await _channel.invokeMethod('setUserId', properties);
+  }
+
+  /// Get the current device ID.
+  ///
+  /// ```
+  /// final deviceId = await amplitude.getDeviceId();
+  /// ```
+  Future<String?> getDeviceId() async {
+    return await _channel.invokeMethod('getDeviceId');
   }
 
   /// Sets a custom device ID.

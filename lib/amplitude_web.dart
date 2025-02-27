@@ -48,10 +48,26 @@ class AmplitudeFlutterPlugin {
         JSObject event = getEvent(call);
         amplitude.track(event);
       }
+      case "getUserId":
+      {
+        JSString? userId = amplitude.getUserId();
+        if (userId == null) {
+          return null;
+        }
+        return userId.toDart;
+      }
       case "setUserId":
       {
         String userId = call.arguments['setUserId'];
         amplitude.setUserId(userId.toJS);
+      }
+      case "getDeviceId":
+      {
+        JSString? deviceId = amplitude.getDeviceId();
+        if (deviceId == null) {
+          return null;
+        }
+        return deviceId.toDart;
       }
       case "setDeviceId":
       {

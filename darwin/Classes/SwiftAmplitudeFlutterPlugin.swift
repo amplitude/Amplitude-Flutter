@@ -67,6 +67,12 @@ import AmplitudeSwift
                 amplitude?.logger?.warn(message: "\(call.method) called but failed.")
             }
 
+        case "getUserId":
+            let userId = amplitude?.getUserId()
+            amplitude?.logger?.debug(message: "Get user Id: \(String(describing: userId))")
+
+            result(userId)
+
         case "setUserId":
             guard let args = call.arguments as? [String: Any] else {
                 print("\(call.method) called but call.arguments type casting failed.")
@@ -81,6 +87,12 @@ import AmplitudeSwift
             amplitude?.logger?.debug(message: "Set user Id to \(String(describing: userId))")
 
             result("serUserId called..")
+
+        case "getDeviceId":
+            let deviceId = amplitude?.getDeviceId()
+            amplitude?.logger?.debug(message: "Get device Id: \(String(describing: deviceId))")
+
+            result(deviceId)
 
         case "setDeviceId":
             guard let args = call.arguments as? [String: Any] else {
