@@ -63,11 +63,7 @@ class AmplitudeFlutterPlugin {
       }
       case "getDeviceId":
       {
-        JSString? deviceId = amplitude.getDeviceId();
-        if (deviceId == null) {
-          return null;
-        }
-        return deviceId.toDart;
+        return amplitude.getDeviceId()?.toDart;
       }
       case "setDeviceId":
       {

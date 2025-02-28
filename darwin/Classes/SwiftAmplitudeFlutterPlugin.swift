@@ -69,7 +69,7 @@ import AmplitudeSwift
 
         case "getUserId":
             let userId = amplitude?.getUserId()
-            amplitude?.logger?.debug(message: "Get user Id: \(String(describing: userId))")
+            amplitude?.logger?.debug(message: "Get userId: \(String(describing: userId))")
 
             result(userId)
 
@@ -84,13 +84,13 @@ import AmplitudeSwift
                 return
             }
             amplitude?.setUserId(userId: userId)
-            amplitude?.logger?.debug(message: "Set user Id to \(String(describing: userId))")
+            amplitude?.logger?.debug(message: "Set userId to \(String(describing: userId))")
 
             result("serUserId called..")
 
         case "getDeviceId":
             let deviceId = amplitude?.getDeviceId()
-            amplitude?.logger?.debug(message: "Get device Id: \(String(describing: deviceId))")
+            amplitude?.logger?.debug(message: "Get deviceId: \(String(describing: deviceId))")
 
             result(deviceId)
 
@@ -104,7 +104,7 @@ import AmplitudeSwift
                 return
             }
             amplitude?.setDeviceId(deviceId: deviceId)
-            amplitude?.logger?.debug(message: "Set device Id to \(String(describing: deviceId))")
+            amplitude?.logger?.debug(message: "Set deviceId to \(String(describing: deviceId))")
 
             result("setDeviceId called..")
 
