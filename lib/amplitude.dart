@@ -34,7 +34,7 @@ class Amplitude {
     isBuilt = _init();
   }
 
-  /// Private method to initialize and return a Future<bool>
+  /// Private method to initialize and return a `Future<bool>`
   Future<bool> _init() async {
     try {
       await _channel.invokeMethod('init', configuration.toMap());
