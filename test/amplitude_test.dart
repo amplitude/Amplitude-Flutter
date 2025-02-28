@@ -314,6 +314,15 @@ void main() {
     verify(mockChannel.invokeMethod('revenue', testRevenueMap)).called(1);
   });
 
+  test('Should getUserId calls MethodChannel', () async {
+    when(mockChannel.invokeMethod('getUserId')).thenAnswer((_) async => testUserId);
+
+    final userId = await amplitude.getUserId();
+
+    expect(userId, testUserId);
+    verify(mockChannel.invokeMethod('getUserId')).called(1);
+  });
+
   test('Should setUserId calls MethodChannel', () async {
     when(mockChannel.invokeMethod('setUserId', any))
         .thenAnswer((_) async => null);
@@ -324,14 +333,13 @@ void main() {
         .called(1);
   });
 
-  test('Should setDeviceId calls MethodChannel', () async {
-    when(mockChannel.invokeMethod('setDeviceId', any))
-        .thenAnswer((_) async => null);
+  test('Should getDeviceId calls MethodChannel', () async {
+    when(mockChannel.invokeMethod('getDeviceId')).thenAnswer((_) async => testDeviceId);
 
-    amplitude.setDeviceId(testDeviceId);
+    final deviceId = await amplitude.getDeviceId();
 
-    verify(mockChannel
-        .invokeMethod('setDeviceId', {'setDeviceId': testDeviceId})).called(1);
+    expect(deviceId, testDeviceId);
+    verify(mockChannel.invokeMethod('getDeviceId')).called(1);
   });
 
   test('Should setDeviceId calls MethodChannel', () async {

@@ -92,18 +92,32 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                 result.success("${call.method} called..")
             }
 
+            "getUserId" -> {
+                val userId = amplitude.getUserId()
+                amplitude.logger.debug("Get userId: $userId")
+
+                result.success(userId)
+            }
+
             "setUserId" -> {
                 val userId = call.argument<String?>("setUserId")
                 amplitude.setUserId(userId)
-                amplitude.logger.debug("Set user Id to ${call.arguments}")
+                amplitude.logger.debug("Set userId to ${call.arguments}")
 
                 result.success("setUserId called..")
+            }
+
+            "getDeviceId" -> {
+                val deviceId = amplitude.getDeviceId()
+                amplitude.logger.debug("Get deviceId: $deviceId")
+
+                result.success(deviceId)
             }
 
             "setDeviceId" -> {
                 val deviceId = call.argument<String>("setDeviceId")
                 deviceId?.let { amplitude.setDeviceId(it) }
-                amplitude.logger.debug("Set device Id to ${call.arguments}")
+                amplitude.logger.debug("Set deviceId to ${call.arguments}")
 
                 result.success("setDeviceId called..")
             }
