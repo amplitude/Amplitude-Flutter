@@ -42,7 +42,8 @@ class _GroupIdentifyFormState extends State<GroupIdentifyForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text('Group Identify', style: Theme.of(context).textTheme.headlineSmall),
+        Text('Group Identify',
+            style: Theme.of(context).textTheme.headlineSmall),
         const SizedBox(height: 10),
         Row(children: <Widget>[
           Expanded(

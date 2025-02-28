@@ -11,7 +11,8 @@ class IdentifyOperation {
   static const IdentifyOperation prepend = IdentifyOperation._('\$prepend');
   static const IdentifyOperation unset = IdentifyOperation._('\$unset');
   static const IdentifyOperation preInsert = IdentifyOperation._('\$preInsert');
-  static const IdentifyOperation postInsert = IdentifyOperation._('\$postInsert');
+  static const IdentifyOperation postInsert =
+      IdentifyOperation._('\$postInsert');
   static const IdentifyOperation remove = IdentifyOperation._('\$remove');
 }
 
@@ -72,7 +73,8 @@ class Identify {
     return this;
   }
 
-  void _setUserProperty(IdentifyOperation operation, String property, dynamic value) {
+  void _setUserProperty(
+      IdentifyOperation operation, String property, dynamic value) {
     if (property.isEmpty) {
       // TODO(xinyi): add logs
       // log.warning('Attempting to perform operation ${operation.operationType} with a null or empty string property, ignoring');
@@ -96,7 +98,8 @@ class Identify {
     if (!properties.containsKey(operation.operationType)) {
       properties[operation.operationType] = <String, dynamic>{};
     }
-    (properties[operation.operationType] as Map<String, dynamic>)[property] = value;
+    (properties[operation.operationType] as Map<String, dynamic>)[property] =
+        value;
     propertySet.add(property);
   }
 

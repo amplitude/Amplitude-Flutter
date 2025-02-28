@@ -40,13 +40,10 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    analytics = Amplitude(
-        Configuration(
-            apiKey: widget.apiKey,
-            logLevel: LogLevel.debug,
-            defaultTracking: DefaultTrackingOptions.all()
-        )
-    );
+    analytics = Amplitude(Configuration(
+        apiKey: widget.apiKey,
+        logLevel: LogLevel.debug,
+        defaultTracking: DefaultTrackingOptions.all()));
     initAnalytics();
   }
 

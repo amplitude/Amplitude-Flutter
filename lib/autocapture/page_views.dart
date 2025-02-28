@@ -50,6 +50,7 @@ class PageViewsOptions extends PageViews {
   /// If omitted, the default behavior is to track page view events on any navigation change to the URL.
   /// See [docs](https://amplitude.com/docs/sdks/analytics/browser/browser-sdk-2#track-page-views)
   final String? trackHistoryChanges;
+
   /// Web specific
   ///
   /// Customize the event_type for page view event. If no event_type is provided, the default event_type is

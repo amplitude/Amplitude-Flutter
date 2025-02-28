@@ -23,7 +23,7 @@ class _RevenueFormState extends State<RevenueForm> {
       final revenue = Revenue()
         ..price = double.tryParse(price.text)!
         ..quantity = int.tryParse(quantity.text)!
-        .. productId = productId.text;
+        ..productId = productId.text;
       AppState.of(context)
         ..analytics.revenue(revenue)
         ..setMessage('Revenue Sent.');

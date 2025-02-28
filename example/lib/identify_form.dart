@@ -12,10 +12,9 @@ class IdentifyForm extends StatefulWidget {
 class _IdentifyFormState extends State<IdentifyForm> {
   void onPress() {
     final Identify identify = Identify()
-      ..set('identify_test', 'identify sent at ${DateTime
-          .now()
-          .millisecondsSinceEpoch}')
-    ..add('identify_count', 1);
+      ..set('identify_test',
+          'identify sent at ${DateTime.now().millisecondsSinceEpoch}')
+      ..add('identify_count', 1);
 
     if (userPropKey.isNotEmpty && userPropValue.isNotEmpty) {
       identify.set(userPropKey, userPropValue);
@@ -32,17 +31,12 @@ class _IdentifyFormState extends State<IdentifyForm> {
   @override
   Widget build(BuildContext context) {
     final InputDecoration dec = InputDecoration()
-      ..applyDefaults(Theme
-          .of(context)
-          .inputDecorationTheme);
+      ..applyDefaults(Theme.of(context).inputDecorationTheme);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text('Identify', style: Theme
-            .of(context)
-            .textTheme
-            .headlineSmall),
+        Text('Identify', style: Theme.of(context).textTheme.headlineSmall),
         const SizedBox(height: 10),
         Row(children: <Widget>[
           Expanded(

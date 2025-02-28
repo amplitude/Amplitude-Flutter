@@ -15,7 +15,8 @@ void main() {
 
     test('returns a map for AttributionOptions()', () {
       var attributionOptions = AttributionOptions();
-      expect(Attribution.toMapOrBool(attributionOptions), isA<Map<String, dynamic>>());
+      expect(Attribution.toMapOrBool(attributionOptions),
+          isA<Map<String, dynamic>>());
     });
   });
 

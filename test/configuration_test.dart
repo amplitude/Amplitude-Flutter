@@ -23,12 +23,14 @@ void main() {
       expect(config.useBatch, false);
       expect(config.serverZone, ServerZone.us);
       expect(config.serverUrl, isNull);
-      expect(config.minTimeBetweenSessionsMillis, Constants.minTimeBetweenSessionsMillisUnset);
+      expect(config.minTimeBetweenSessionsMillis,
+          Constants.minTimeBetweenSessionsMillisUnset);
       expect(config.trackingOptions, isA<TrackingOptions>());
       expect(config.defaultTracking, isA<DefaultTrackingOptions>());
       expect(config.enableCoppaControl, false);
       expect(config.flushEventsOnClose, true);
-      expect(config.identifyBatchIntervalMillis, Constants.identifyBatchIntervalMillis);
+      expect(config.identifyBatchIntervalMillis,
+          Constants.identifyBatchIntervalMillis);
       expect(config.migrateLegacyData, true);
       expect(config.deviceId, isNull);
       expect(config.locationListening, true);
@@ -55,13 +57,16 @@ void main() {
       expect(map['useBatch'], false);
       expect(map['serverZone'], 'us');
       expect(map['serverUrl'], isNull);
-      expect(map['minTimeBetweenSessionsMillis'], Constants.minTimeBetweenSessionsMillisForMobile);
-      expect(map['sessionTimeout'], Constants.minTimeBetweenSessionsMillisForWeb);
+      expect(map['minTimeBetweenSessionsMillis'],
+          Constants.minTimeBetweenSessionsMillisForMobile);
+      expect(
+          map['sessionTimeout'], Constants.minTimeBetweenSessionsMillisForWeb);
       expect(map.containsKey('trackingOptions'), true);
       expect(map.containsKey('defaultTracking'), true);
       expect(map['enableCoppaControl'], false);
       expect(map['flushEventsOnClose'], true);
-      expect(map['identifyBatchIntervalMillis'], Constants.identifyBatchIntervalMillis);
+      expect(map['identifyBatchIntervalMillis'],
+          Constants.identifyBatchIntervalMillis);
       expect(map['migrateLegacyData'], true);
       expect(map['deviceId'], isNull);
       expect(map['locationListening'], true);

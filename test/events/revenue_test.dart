@@ -9,7 +9,9 @@ void main() {
   final String testRevenueType = 'test_type';
   final String testReceipt = 'test_receipt';
   final String testReceiptSig = 'test_receiptSig';
-  final Map<String, dynamic> testProperties = {'custom_property': 'custom_value'};
+  final Map<String, dynamic> testProperties = {
+    'custom_property': 'custom_value'
+  };
 
   Revenue createTestRevenue() {
     return Revenue()
@@ -53,13 +55,18 @@ void main() {
       final event = revenue.toRevenueEvent();
 
       expect(event.eventProperties, isNotNull);
-      expect(event.eventProperties![RevenueConstants.revenueProductId], testProductId);
-      expect(event.eventProperties![RevenueConstants.revenueQuantity], testQuantity);
+      expect(event.eventProperties![RevenueConstants.revenueProductId],
+          testProductId);
+      expect(event.eventProperties![RevenueConstants.revenueQuantity],
+          testQuantity);
       expect(event.eventProperties![RevenueConstants.revenuePrice], testPrice);
       expect(event.eventProperties![RevenueConstants.revenuePrice], testPrice);
-      expect(event.eventProperties![RevenueConstants.revenueType], testRevenueType);
-      expect(event.eventProperties![RevenueConstants.revenueReceipt], testReceipt);
-      expect(event.eventProperties![RevenueConstants.revenueReceiptSig], testReceiptSig);
+      expect(event.eventProperties![RevenueConstants.revenueType],
+          testRevenueType);
+      expect(
+          event.eventProperties![RevenueConstants.revenueReceipt], testReceipt);
+      expect(event.eventProperties![RevenueConstants.revenueReceiptSig],
+          testReceiptSig);
       expect(event.eventProperties![RevenueConstants.revenue], testRevenue);
     });
 

@@ -101,10 +101,7 @@ void main() {
         'initialEmptyValue': 'EMPTY',
         'resetSessionOnNewCampaign': false
       },
-      'pageViews': {
-        'trackHistoryChanges': 'all',
-        'eventType': ''
-      }
+      'pageViews': {'trackHistoryChanges': 'all', 'eventType': ''}
     },
     // This field doesn't belong to Configuration
     // Pass it for FlutterLibraryPlugin
@@ -315,7 +312,8 @@ void main() {
   });
 
   test('Should getUserId calls MethodChannel', () async {
-    when(mockChannel.invokeMethod('getUserId')).thenAnswer((_) async => testUserId);
+    when(mockChannel.invokeMethod('getUserId'))
+        .thenAnswer((_) async => testUserId);
 
     final userId = await amplitude.getUserId();
 
@@ -334,7 +332,8 @@ void main() {
   });
 
   test('Should getDeviceId calls MethodChannel', () async {
-    when(mockChannel.invokeMethod('getDeviceId')).thenAnswer((_) async => testDeviceId);
+    when(mockChannel.invokeMethod('getDeviceId'))
+        .thenAnswer((_) async => testDeviceId);
 
     final deviceId = await amplitude.getDeviceId();
 

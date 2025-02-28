@@ -11,6 +11,7 @@ import 'constants.dart';
 
 @JS()
 external Amplitude get amplitude;
+
 class AmplitudeFlutterPlugin {
   static void registerWith(Registrar registrar) {
     final channel = MethodChannel(
@@ -34,9 +35,8 @@ class AmplitudeFlutterPlugin {
           JSObject configuration = getConfiguration(call);
 
           // Set library
-          amplitude.add(createJSInteropWrapper(
-            FlutterLibraryPlugin(args['library'] ?? 'amplitude_flutter/unknown')
-          ));
+          amplitude.add(createJSInteropWrapper(FlutterLibraryPlugin(
+              args['library'] ?? 'amplitude_flutter/unknown')));
           amplitude.init(apiKey, configuration);
         }
       case "track":
@@ -44,45 +44,45 @@ class AmplitudeFlutterPlugin {
       case "groupIdentify":
       case "setGroup":
       case "revenue":
-      {
-        JSObject event = getEvent(call);
-        amplitude.track(event);
-      }
-      case "getUserId":
-      {
-        JSString? userId = amplitude.getUserId();
-        if (userId == null) {
-          return null;
+        {
+          JSObject event = getEvent(call);
+          amplitude.track(event);
         }
-        return userId.toDart;
-      }
+      case "getUserId":
+        {
+          JSString? userId = amplitude.getUserId();
+          if (userId == null) {
+            return null;
+          }
+          return userId.toDart;
+        }
       case "setUserId":
-      {
-        String userId = call.arguments['setUserId'];
-        amplitude.setUserId(userId.toJS);
-      }
+        {
+          String userId = call.arguments['setUserId'];
+          amplitude.setUserId(userId.toJS);
+        }
       case "getDeviceId":
-      {
-        return amplitude.getDeviceId()?.toDart;
-      }
+        {
+          return amplitude.getDeviceId()?.toDart;
+        }
       case "setDeviceId":
-      {
-        String deviceId = call.arguments['setDeviceId'];
-        amplitude.setDeviceId(deviceId.toJS);
-      }
+        {
+          String deviceId = call.arguments['setDeviceId'];
+          amplitude.setDeviceId(deviceId.toJS);
+        }
       case "reset":
-      {
-        amplitude.reset();
-      }
+        {
+          amplitude.reset();
+        }
       case "flush":
-      {
-        amplitude.flush();
-      }
+        {
+          amplitude.flush();
+        }
       case "setOptOut":
-      {
-        bool enabled = call.arguments['setOptOut'];
-        amplitude.setOptOut(enabled);
-      }
+        {
+          bool enabled = call.arguments['setOptOut'];
+          amplitude.setOptOut(enabled);
+        }
       default:
         throw PlatformException(
           code: 'Unimplemented',
@@ -103,7 +103,6 @@ class AmplitudeFlutterPlugin {
     var eventMap = call.arguments as Map;
     return eventMap.jsify() as JSObject;
   }
-
 
   /// Maps the configuration settings for the Amplitude SDK to a JavaScript object.
   ///
@@ -128,7 +127,8 @@ class AmplitudeFlutterPlugin {
 
     if (configuration.containsKey('logLevel')) {
       var logLevelString = configuration['logLevel'] as String;
-      configurationJS['logLevel'] = LogLevel.values.byName(logLevelString).index.toJS;
+      configurationJS['logLevel'] =
+          LogLevel.values.byName(logLevelString).index.toJS;
     }
 
     if (configuration.containsKey('serverZone')) {

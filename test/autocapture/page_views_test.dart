@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:amplitude_flutter/autocapture/page_views.dart';
+
 void main() {
   group('PageViews.toMapOrBool', () {
     test('returns false for PageViewsDisabled()', () {
@@ -14,7 +15,8 @@ void main() {
 
     test('returns a map for PageViewsOptions()', () {
       var pageViewsOptions = PageViewsOptions();
-      expect(PageViews.toMapOrBool(pageViewsOptions), isA<Map<String, dynamic>>());
+      expect(
+          PageViews.toMapOrBool(pageViewsOptions), isA<Map<String, dynamic>>());
     });
   });
 
@@ -44,7 +46,9 @@ void main() {
       expect(map['eventType'], 'Custom Event');
     });
 
-    test('toMap should return a map with default values when no parameters are provided', () {
+    test(
+        'toMap should return a map with default values when no parameters are provided',
+        () {
       final options = PageViewsOptions();
       final map = options.toMap();
       expect(map['trackHistoryChanges'], 'all');
