@@ -13,9 +13,11 @@ class FlutterLibraryPlugin {
     if (!event.hasProperty(libraryJSKey).toDart) {
       event.setProperty(libraryJSKey, library.toJS);
     } else {
-      event.setProperty(libraryJSKey, '${library}_${event.getProperty(libraryJSKey)}'.toJS);
+      event.setProperty(
+          libraryJSKey, '${library}_${event.getProperty(libraryJSKey)}'.toJS);
     }
     return event;
   }
+
   FlutterLibraryPlugin(this.library);
 }

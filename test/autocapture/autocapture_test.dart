@@ -16,12 +16,14 @@ void main() {
 
     test('returns a map for AutocaptureEnabled()', () {
       var autocaptureEnabled = AutocaptureEnabled();
-      expect(Autocapture.toMapOrBool(autocaptureEnabled), isA<Map<String, dynamic>>());
+      expect(Autocapture.toMapOrBool(autocaptureEnabled),
+          isA<Map<String, dynamic>>());
     });
 
     test('returns a map for AutocaptureOptions()', () {
       var autocaptureOptions = AutocaptureOptions();
-      expect(Autocapture.toMapOrBool(autocaptureOptions), isA<Map<String, dynamic>>());
+      expect(Autocapture.toMapOrBool(autocaptureOptions),
+          isA<Map<String, dynamic>>());
     });
   });
 

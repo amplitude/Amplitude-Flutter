@@ -37,8 +37,7 @@ class EventOptions {
   String? library;
   String? ip;
   Plan? plan;
-  IngestionMetadata?
-      ingestionMetadata;
+  IngestionMetadata? ingestionMetadata;
   double? revenue;
   double? price;
   int? quantity;

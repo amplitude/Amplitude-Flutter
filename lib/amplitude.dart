@@ -240,7 +240,6 @@ class Amplitude {
     return await _channel.invokeMethod('setOptOut', properties);
   }
 
-
   /// Resets userId to 'null' and deviceId to a random UUID.
   ///
   /// Note different devices on different platforms should have different device Ids.

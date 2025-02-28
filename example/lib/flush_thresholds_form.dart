@@ -12,15 +12,16 @@ class _FlushThresholdFormState extends State<FlushThresholdForm> {
       TextEditingController(text: '5');
   final TextEditingController eventUploadPeriodMillisInput =
       TextEditingController(text: '30000');
-  final EdgeInsetsGeometry contentPadding = EdgeInsets.symmetric(horizontal: 8, vertical: 8);
+  final EdgeInsetsGeometry contentPadding =
+      EdgeInsets.symmetric(horizontal: 8, vertical: 8);
 
   void onPressSetUploadThreshold() {
     final value = int.tryParse(eventUploadThresholdInput.text);
 
     if (eventUploadThresholdInput.text.isNotEmpty && value != null) {
       AppState.of(context)
-        // ..analytics.setEventUploadThreshold(value)
-        .setMessage('Event upload threshold set.');
+          // ..analytics.setEventUploadThreshold(value)
+          .setMessage('Event upload threshold set.');
     }
   }
 
@@ -29,8 +30,8 @@ class _FlushThresholdFormState extends State<FlushThresholdForm> {
 
     if (eventUploadPeriodMillisInput.text.isNotEmpty && value != null) {
       AppState.of(context)
-        // ..analytics.setEventUploadPeriodMillis(value)
-        .setMessage('Event upload period millis set.');
+          // ..analytics.setEventUploadPeriodMillis(value)
+          .setMessage('Event upload period millis set.');
     }
   }
 
@@ -39,7 +40,8 @@ class _FlushThresholdFormState extends State<FlushThresholdForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text('Flush Intervals', style: Theme.of(context).textTheme.headlineSmall),
+        Text('Flush Intervals',
+            style: Theme.of(context).textTheme.headlineSmall),
         const SizedBox(height: 10),
         TextField(
             decoration: InputDecoration(

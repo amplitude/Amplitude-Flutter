@@ -1,7 +1,7 @@
 import 'package:amplitude_flutter/default_tracking.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-void main(){
+void main() {
   group('DefaultTrackingOptions', () {
     test('should enable all default tracking options', () {
       var defaultTrackingOptions = DefaultTrackingOptions.all();

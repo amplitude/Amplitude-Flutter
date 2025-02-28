@@ -75,8 +75,13 @@ void main() {
       final language = 'en';
       final library = 'amplitude-flutter';
       final ip = '192.168.1.1';
-      final plan = Plan(branch: 'test_branch', source: 'test_source', version: 'test_version', versionId: 'test_user_id');
-      final ingestionMetadata = IngestionMetadata(sourceName: 'source_name', sourceVersion: 'source_version');
+      final plan = Plan(
+          branch: 'test_branch',
+          source: 'test_source',
+          version: 'test_version',
+          versionId: 'test_user_id');
+      final ingestionMetadata = IngestionMetadata(
+          sourceName: 'source_name', sourceVersion: 'source_version');
       final revenue = 9.99;
       final price = 9.99;
       final quantity = 1;
@@ -179,7 +184,8 @@ void main() {
       final deviceId = 'device_id';
       final eventType = 'event_type';
 
-      final originalEvent = BaseEvent(eventType, userId: originalUserId, deviceId: deviceId);
+      final originalEvent =
+          BaseEvent(eventType, userId: originalUserId, deviceId: deviceId);
       final newOptions = EventOptions(userId: newUserId);
 
       originalEvent.mergeEventOptions(newOptions);

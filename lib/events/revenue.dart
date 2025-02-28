@@ -27,11 +27,21 @@ class Revenue {
     final eventProperties = properties ?? {};
     eventProperties[RevenueConstants.revenuePrice] = price ?? 0;
     eventProperties[RevenueConstants.revenueQuantity] = quantity;
-    if (productId != null) {eventProperties[RevenueConstants.revenueProductId] = productId;}
-    if (revenueType != null) {eventProperties[RevenueConstants.revenueType] = revenueType;}
-    if (receipt != null) {eventProperties[RevenueConstants.revenueReceipt] = receipt;}
-    if (receiptSig != null) {eventProperties[RevenueConstants.revenueReceiptSig] = receiptSig;}
-    if (revenue != null) {eventProperties[RevenueConstants.revenue] = revenue;}
+    if (productId != null) {
+      eventProperties[RevenueConstants.revenueProductId] = productId;
+    }
+    if (revenueType != null) {
+      eventProperties[RevenueConstants.revenueType] = revenueType;
+    }
+    if (receipt != null) {
+      eventProperties[RevenueConstants.revenueReceipt] = receipt;
+    }
+    if (receiptSig != null) {
+      eventProperties[RevenueConstants.revenueReceiptSig] = receiptSig;
+    }
+    if (revenue != null) {
+      eventProperties[RevenueConstants.revenue] = revenue;
+    }
     event.eventProperties = eventProperties;
     return event;
   }
@@ -39,5 +49,4 @@ class Revenue {
   bool isValid() {
     return price != null;
   }
-
 }

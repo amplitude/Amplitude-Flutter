@@ -1,7 +1,6 @@
 import 'attribution.dart';
 import 'page_views.dart';
 
-
 /// Autocapture configuration.
 ///
 /// Disable or enable autocapture by using class extensions [AutocaptureDisabled]/[AutocaptureEnabled],
@@ -46,11 +45,13 @@ class AutocaptureOptions extends Autocapture {
   ///
   /// Can be either `AttributionOptions` or `false`.
   final Attribution attribution;
+
   /// Web specific
   ///
   /// Whether to capture session start and end events.
   /// See https://amplitude.com/docs/sdks/analytics/browser/browser-sdk-2#track-sessions
   final bool sessions;
+
   /// Web specific
   ///
   /// Configuration for autocapturing page view events using `PageViewsOptions`. See [docs](https://amplitude.com/docs/sdks/analytics/browser/browser-sdk-2#track-page-views)
@@ -112,11 +113,13 @@ class AutocaptureEnabled extends Autocapture {
   ///
   /// Can be either `AttributionOptions` or `false`.
   final bool attribution = true;
+
   /// Web specific
   ///
   /// Whether to capture session start and end events.
   /// See https://amplitude.com/docs/sdks/analytics/browser/browser-sdk-2#track-sessions
   final bool sessions = true;
+
   /// Web specific
   ///
   /// Configuration for autocapturing page view events using `PageViewsOptions`. See [docs](https://amplitude.com/docs/sdks/analytics/browser/browser-sdk-2#track-page-views)
