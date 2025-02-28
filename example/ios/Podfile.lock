@@ -1,6 +1,6 @@
 PODS:
   - amplitude_flutter (0.0.1):
-    - AmplitudeSwift (~> 1.11.2)
+    - AmplitudeSwift (~> 1.11)
     - Flutter
     - FlutterMacOS
   - AmplitudeSwift (1.11.2):
@@ -24,7 +24,7 @@ EXTERNAL SOURCES:
     :path: Flutter
 
 SPEC CHECKSUMS:
-  amplitude_flutter: 697c784750f50d407c17f7016d794e3c887f3b88
+  amplitude_flutter: fd9bf76a1885fe760055877777da18ca4d087088
   AmplitudeSwift: ec670fe6f0a0b673bde44b6f02359993cc5513b1
   AnalyticsConnector: 3def11199b4ddcad7202c778bde982ec5da0ebb3
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7

@@ -7,6 +7,8 @@ class UserIdForm extends StatefulWidget {
 }
 
 class _UserIdFormState extends State<UserIdForm> {
+  String? _userId;
+
   void Function(String) makeHandler(BuildContext context) {
     return (String userId) {
       AppState
@@ -21,12 +23,29 @@ class _UserIdFormState extends State<UserIdForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text('User Id', style: Theme.of(context).textTheme.headlineSmall),
+        Text('User Id (calls setUserId onChange)', style: Theme.of(context).textTheme.headlineSmall),
         const SizedBox(height: 10),
         TextField(
             autocorrect: false,
             decoration: InputDecoration(labelText: 'User Id'),
-            onChanged: makeHandler(context)),
+            onChanged: makeHandler(context)
+          ),
+        ElevatedButton(
+          onPressed: () async {
+            final newUserId = await AppState.of(context).analytics.getUserId();
+            setState(() {
+              _userId = newUserId;
+            });
+          },
+          child: Text('Get User Id'),
+        ),
+        Row(
+            children: [
+            Text('Fetched User Id: ', style: Theme.of(context).textTheme.bodyMedium),
+            const SizedBox(height: 10),
+            Text(_userId ?? 'No User Id fetched', style: Theme.of(context).textTheme.bodyMedium),
+          ],
+        ),
       ],
     );
   }

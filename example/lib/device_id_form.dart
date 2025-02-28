@@ -8,6 +8,8 @@ class DeviceIdForm extends StatefulWidget {
 }
 
 class _DeviceIdFormState extends State<DeviceIdForm> {
+  String? _deviceId;
+
   void Function(String) makeHandler(BuildContext context) {
     return (String deviceId) {
       AppState
@@ -22,12 +24,28 @@ class _DeviceIdFormState extends State<DeviceIdForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text('Device Id', style: Theme.of(context).textTheme.headlineSmall),
+        Text('Device Id (calls setDeviceId onChange)', style: Theme.of(context).textTheme.headlineSmall),
         const SizedBox(height: 10),
         TextField(
           autocorrect: false,
           decoration: InputDecoration(labelText: 'Device Id'),
           onChanged: makeHandler(context),
+        ),
+        ElevatedButton(
+          onPressed: () async {
+            final newDeviceId = await AppState.of(context).analytics.getDeviceId();
+            setState(() {
+              _deviceId = newDeviceId;
+            });
+          },
+          child: Text('Get Device Id'),
+        ),
+        Row(
+            children: [
+            Text('Fetched Device Id: ', style: Theme.of(context).textTheme.bodyMedium),
+            const SizedBox(height: 10),
+            Text(_deviceId ?? 'No Device Id fetched', style: Theme.of(context).textTheme.bodyMedium),
+          ],
         ),
       ],
     );
