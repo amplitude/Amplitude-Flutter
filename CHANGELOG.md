@@ -1,3 +1,15 @@
+# [4.1.0](https://github.com/amplitude/Amplitude-Flutter/compare/v4.0.1...v4.1.0) (2025-03-03)
+
+
+### Bug Fixes
+
+* update minimum version of Amplitude-Kotlin to 1.20 ([#232](https://github.com/amplitude/Amplitude-Flutter/issues/232)) ([98fb633](https://github.com/amplitude/Amplitude-Flutter/commit/98fb6338b44bb1cb7405c8cbe4350a69e60d1edb))
+
+
+### Features
+
+* add getUserId and getDeviceId functions on web/android/ios ([#230](https://github.com/amplitude/Amplitude-Flutter/issues/230)) ([295cfa6](https://github.com/amplitude/Amplitude-Flutter/commit/295cfa6b36358b1168e589b699f13b3a10c509a7))
+
 ## [4.0.1](https://github.com/amplitude/Amplitude-Flutter/compare/v4.0.0...v4.0.1) (2025-02-21)
 
 
