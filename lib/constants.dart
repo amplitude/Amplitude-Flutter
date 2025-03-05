@@ -9,7 +9,6 @@ class Constants {
   static const flushIntervalMillis = 30 * 1000; // 30 seconds
   static const identifyBatchIntervalMillis = 30 * 1000; // 30 seconds
   static const defaultInstanceName = '\$default_instance';
-  static const logLevel = 'info';
   static const flushMaxRetries = 5;
   static const minTimeBetweenSessionsMillisUnset = -1;
   static const minTimeBetweenSessionsMillisForMobile =
@@ -29,10 +28,4 @@ enum LogLevel {
 enum ServerZone {
   us,
   eu,
-}
-
-enum IdentityStorage {
-  cookie,
-  localStorage,
-  none,
 }
