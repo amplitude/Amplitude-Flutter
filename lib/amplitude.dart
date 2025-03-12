@@ -221,7 +221,7 @@ class Amplitude {
   /// ```
   /// amplitude.setDeviceId('device Id');
   /// ```
-  Future<void> setDeviceId(String deviceId) async {
+  Future<void> setDeviceId(String? deviceId) async {
     Map<String, String?> properties = {};
     properties['setDeviceId'] = deviceId;
 
