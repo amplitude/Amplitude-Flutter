@@ -79,11 +79,19 @@ import AmplitudeSwift
                 return
             }
 
-            let userId = args["setUserId"] as? String
-            amplitude?.setUserId(userId: userId)
-            amplitude?.logger?.debug(message: "Set userId to \(String(describing: userId))")
+            let userId = args["setUserId"]
+            if userId is NSNull {
+                amplitude?.setUserId(userId: nil)
+                amplitude?.logger?.debug(message: "Set userId to nil")
+            } else if let userId = userId as? String {
+                amplitude?.setUserId(userId: userId)
+                amplitude?.logger?.debug(message: "Set userId to \(String(describing: userId))")
+            } else {
+                amplitude?.logger?.warn(message: "setUserId type casting to String failed.")
+                return
+            }
 
-            result("serUserId called..")
+            result("setUserId called..")
 
         case "getDeviceId":
             let deviceId = amplitude?.getDeviceId()
@@ -96,9 +104,17 @@ import AmplitudeSwift
                 print("\(call.method) called but call.arguments type casting failed.")
                 return
             }
-            let deviceId = args["setDeviceId"] as? String
-            amplitude?.setDeviceId(deviceId: deviceId)
-            amplitude?.logger?.debug(message: "Set deviceId to \(String(describing: deviceId))")
+            let deviceId = args["setDeviceId"]
+            if deviceId is NSNull {
+                amplitude?.setDeviceId(deviceId: nil)
+                amplitude?.logger?.debug(message: "Set deviceId to nil")
+            } else if let deviceId = deviceId as? String {
+                amplitude?.setDeviceId(deviceId: deviceId)
+                amplitude?.logger?.debug(message: "Set deviceId to \(String(describing: deviceId))")
+            } else {
+                amplitude?.logger?.warn(message: "setDeviceId type casting to String failed.")
+                return
+            }
 
             result("setDeviceId called..")
 

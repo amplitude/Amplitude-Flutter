@@ -12,7 +12,7 @@ class _DeviceIdFormState extends State<DeviceIdForm> {
 
   void Function(String) makeHandler(BuildContext context) {
     return (String deviceId) {
-      AppState.of(context).analytics.setDeviceId(deviceId);
+      AppState.of(context).analytics.setDeviceId(deviceId.isEmpty ? null : deviceId);
     };
   }
 
