@@ -79,10 +79,7 @@ import AmplitudeSwift
                 return
             }
 
-            guard let userId = args["setUserId"] as? String else {
-                amplitude?.logger?.warn(message: "setUserId type casting to String failed.")
-                return
-            }
+            let userId = args["setUserId"] as? String
             amplitude?.setUserId(userId: userId)
             amplitude?.logger?.debug(message: "Set userId to \(String(describing: userId))")
 
@@ -99,10 +96,7 @@ import AmplitudeSwift
                 print("\(call.method) called but call.arguments type casting failed.")
                 return
             }
-            guard let deviceId = args["setDeviceId"] as? String else {
-                amplitude?.logger?.warn(message: "setDeviceId type casting to String failed.")
-                return
-            }
+            let deviceId = args["setDeviceId"] as? String
             amplitude?.setDeviceId(deviceId: deviceId)
             amplitude?.logger?.debug(message: "Set deviceId to \(String(describing: deviceId))")
 
