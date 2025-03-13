@@ -31,7 +31,7 @@ class _SessionIdFormState extends State<SessionIdForm> {
             Text('Fetched Session Id: ',
                 style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 10),
-            Text(_sessionId.toString() ?? 'No Session Id fetched',
+            Text(_sessionId.toString(),
                 style: Theme.of(context).textTheme.bodyMedium),
           ],
         ),
