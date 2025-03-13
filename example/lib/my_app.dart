@@ -44,7 +44,6 @@ class _MyAppState extends State<MyApp> {
     analytics = Amplitude(Configuration(
         apiKey: widget.apiKey,
         logLevel: LogLevel.debug,
-        flushIntervalMillis: 100,
         defaultTracking: DefaultTrackingOptions.all()));
     initAnalytics();
   }
