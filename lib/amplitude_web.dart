@@ -58,8 +58,8 @@ class AmplitudeFlutterPlugin {
         }
       case "setUserId":
         {
-          String userId = call.arguments['setUserId'];
-          amplitude.setUserId(userId.toJS);
+          String? userId = call.arguments['setUserId'];
+          amplitude.setUserId(userId?.toJS);
         }
       case "getDeviceId":
         {
@@ -67,8 +67,12 @@ class AmplitudeFlutterPlugin {
         }
       case "setDeviceId":
         {
-          String deviceId = call.arguments['setDeviceId'];
-          amplitude.setDeviceId(deviceId.toJS);
+          String? deviceId = call.arguments['setDeviceId'];
+          amplitude.setDeviceId(deviceId?.toJS);
+        }
+      case "getSessionId":
+        {
+          return amplitude.getSessionId()?.toDartInt;
         }
       case "reset":
         {

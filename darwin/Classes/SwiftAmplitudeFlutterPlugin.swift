@@ -118,6 +118,12 @@ import AmplitudeSwift
 
             result("setDeviceId called..")
 
+        case "getSessionId":
+            let sessionId = amplitude?.getSessionId()
+            amplitude?.logger?.debug(message: "Get sessionId: \(String(describing: sessionId))")
+
+            result(sessionId)
+
         case "reset":
             amplitude?.reset()
             amplitude?.logger?.debug(message: "Reset userId and deviceId.")

@@ -122,6 +122,13 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                 result.success("setDeviceId called..")
             }
 
+            "getSessionId" -> {
+                val sessionId = amplitude.sessionId
+                amplitude.logger.debug("Get sessionId: $sessionId")
+
+                result.success(sessionId)
+            }
+
             "reset" -> {
                 amplitude.reset()
                 amplitude.logger.debug("Reset userId and deviceId.")
