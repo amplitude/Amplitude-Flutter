@@ -228,6 +228,15 @@ class Amplitude {
     return await _channel.invokeMethod('setDeviceId', properties);
   }
 
+  /// Get the current session ID.
+  ///
+  /// ```
+  /// final sessionId = await amplitude.getSessionId();
+  /// ```
+  Future<int?> getSessionId() async {
+    return await _channel.invokeMethod('getSessionId');
+  }
+
   /// Web only.
   /// Disables tracking.
   ///

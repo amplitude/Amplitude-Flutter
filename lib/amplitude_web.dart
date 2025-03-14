@@ -70,6 +70,10 @@ class AmplitudeFlutterPlugin {
           String deviceId = call.arguments['setDeviceId'];
           amplitude.setDeviceId(deviceId.toJS);
         }
+      case "getSessionId":
+        {
+          return amplitude.getSessionId()?.toDartInt;
+        }
       case "reset":
         {
           amplitude.reset();

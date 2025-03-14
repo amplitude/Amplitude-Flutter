@@ -15,6 +15,7 @@ import 'group_identify_form.dart';
 import 'identify_form.dart';
 import 'reset.dart';
 import 'revenue_form.dart';
+import 'session_id.dart';
 import 'user_id_form.dart';
 
 class MyApp extends StatefulWidget {
@@ -83,6 +84,8 @@ class _MyAppState extends State<MyApp> {
                 UserIdForm(),
                 divider,
                 ResetForm(),
+                divider,
+                SessionIdForm(),
                 divider,
                 EventForm(),
                 divider,
