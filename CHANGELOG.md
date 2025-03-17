@@ -1,3 +1,16 @@
+# [4.2.0](https://github.com/amplitude/Amplitude-Flutter/compare/v4.1.0...v4.2.0) (2025-03-17)
+
+
+### Bug Fixes
+
+* allow setUserId and setDeviceId to be called with null in swift code ([#236](https://github.com/amplitude/Amplitude-Flutter/issues/236)) ([9197d45](https://github.com/amplitude/Amplitude-Flutter/commit/9197d45e81a4b8f852a7b97e21a71ba18683e7bf))
+* allow userId and deviceId to be set nullable ([#238](https://github.com/amplitude/Amplitude-Flutter/issues/238)) ([af9d225](https://github.com/amplitude/Amplitude-Flutter/commit/af9d225ad50cb2ea9dd6bbf307d14bed8d0d2a29))
+
+
+### Features
+
+* add getSessionId for all platforms ([#237](https://github.com/amplitude/Amplitude-Flutter/issues/237)) ([372eecf](https://github.com/amplitude/Amplitude-Flutter/commit/372eecf84ee3b0d74a0d76768f37abbe30a73b14))
+
 # [4.1.0](https://github.com/amplitude/Amplitude-Flutter/compare/v4.0.1...v4.1.0) (2025-03-03)
 
 
