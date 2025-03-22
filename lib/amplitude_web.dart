@@ -13,6 +13,8 @@ import 'constants.dart';
 external Amplitude get amplitude;
 
 class AmplitudeFlutterPlugin {
+  Map<String, Amplitude> instances = {};
+
   static void registerWith(Registrar registrar) {
     final channel = MethodChannel(
       'amplitude_flutter',
@@ -27,6 +29,30 @@ class AmplitudeFlutterPlugin {
   /// Note: Check the "federated" architecture for a new way of doing this:
   /// https://flutter.dev/go/federated-plugins
   Future<dynamic> handleMethodCall(MethodCall call) async {
+    if (call.method == 'init') {
+      var args = call.arguments;
+      String apiKey = args['apiKey'];
+      JSObject configuration = getConfiguration(call);
+
+      // Set library
+      Amplitude instance = amplitude.createInstance();
+      instance.add(createJSInteropWrapper(FlutterLibraryPlugin(
+          args['library'] ?? 'amplitude_flutter/unknown')));
+      instance.init(apiKey, configuration);
+
+      instances[args['instanceName'] ?? '\$default_instance'] = instance;
+
+      return null;
+    }
+
+    Amplitude? instance =
+        instances[call.arguments['instanceName'] ?? '\$default_instance'];
+
+    if (instance == null) {
+      throw Exception(
+          'instance not found: ${call.arguments['instanceName'] ?? '\$default_instance'}');
+    }
+
     switch (call.method) {
       case "init":
         {
@@ -35,9 +61,9 @@ class AmplitudeFlutterPlugin {
           JSObject configuration = getConfiguration(call);
 
           // Set library
-          amplitude.add(createJSInteropWrapper(FlutterLibraryPlugin(
+          instance.add(createJSInteropWrapper(FlutterLibraryPlugin(
               args['library'] ?? 'amplitude_flutter/unknown')));
-          amplitude.init(apiKey, configuration);
+          instance.init(apiKey, configuration);
         }
       case "track":
       case "identify":
@@ -46,11 +72,11 @@ class AmplitudeFlutterPlugin {
       case "revenue":
         {
           JSObject event = getEvent(call);
-          amplitude.track(event);
+          instance.track(event);
         }
       case "getUserId":
         {
-          JSString? userId = amplitude.getUserId();
+          JSString? userId = instance.getUserId();
           if (userId == null) {
             return null;
           }
@@ -58,34 +84,37 @@ class AmplitudeFlutterPlugin {
         }
       case "setUserId":
         {
-          String? userId = call.arguments['setUserId'];
-          amplitude.setUserId(userId?.toJS);
+          Map<String, dynamic> args = call.arguments['properties'];
+          String? userId = args['setUserId'];
+          instance.setUserId(userId?.toJS);
         }
       case "getDeviceId":
         {
-          return amplitude.getDeviceId()?.toDart;
+          return instance.getDeviceId()?.toDart;
         }
       case "setDeviceId":
         {
-          String? deviceId = call.arguments['setDeviceId'];
-          amplitude.setDeviceId(deviceId?.toJS);
+          Map<String, dynamic> args = call.arguments['properties'];
+          String? deviceId = args['setDeviceId'];
+          instance.setDeviceId(deviceId?.toJS);
         }
       case "getSessionId":
         {
-          return amplitude.getSessionId()?.toDartInt;
+          return instance.getSessionId()?.toDartInt;
         }
       case "reset":
         {
-          amplitude.reset();
+          instance.reset();
         }
       case "flush":
         {
-          amplitude.flush();
+          instance.flush();
         }
       case "setOptOut":
         {
-          bool enabled = call.arguments['setOptOut'];
-          amplitude.setOptOut(enabled);
+          Map<String, dynamic> args = call.arguments['properties'];
+          bool enabled = args['setOptOut'];
+          instance.setOptOut(enabled);
         }
       default:
         throw PlatformException(
@@ -104,7 +133,7 @@ class AmplitudeFlutterPlugin {
   /// Returns:
   /// - `JSObject`: A JavaScript object representing the event.
   JSObject getEvent(MethodCall call) {
-    var eventMap = call.arguments as Map;
+    var eventMap = call.arguments['event'] as Map;
     return eventMap.jsify() as JSObject;
   }
 
