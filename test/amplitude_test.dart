@@ -129,7 +129,10 @@ void main() {
     await amplitude.track(testEvent);
 
     verify(mockChannel.invokeMethod('init', testConfigurationMap)).called(1);
-    verify(mockChannel.invokeMethod('track', testEventMap)).called(1);
+    verify(mockChannel.invokeMethod('track', {
+      'instanceName': Constants.defaultInstanceName,
+      'event': testEventMap
+    })).called(1);
   });
 
   test('Should track with event options calls MethodChannel', () async {
@@ -138,7 +141,10 @@ void main() {
 
     final expectedEventMap = Map.from(testEventMap);
     expectedEventMap['user_id'] = testUserId;
-    verify(mockChannel.invokeMethod('track', expectedEventMap)).called(1);
+    verify(mockChannel.invokeMethod('track', {
+      'instanceName': Constants.defaultInstanceName,
+      'event': expectedEventMap
+    })).called(1);
   });
 
   test('Should identify calls MethodChannel', () async {
@@ -153,7 +159,10 @@ void main() {
     testIdentifyMap['user_properties'] = {
       '\$set': {testProperty: testValue}
     };
-    verify(mockChannel.invokeMethod('identify', testIdentifyMap)).called(1);
+    verify(mockChannel.invokeMethod('identify', {
+      'instanceName': Constants.defaultInstanceName,
+      'event': testIdentifyMap
+    })).called(1);
   });
 
   test('Should identify calls setUserId in MethodChannel', () async {
@@ -171,9 +180,14 @@ void main() {
     testIdentifyMap['user_properties'] = {
       '\$set': {testProperty: testValue}
     };
-    verify(mockChannel.invokeMethod('setUserId', {'setUserId': testUserId}))
-        .called(1);
-    verify(mockChannel.invokeMethod('identify', testIdentifyMap)).called(1);
+    verify(mockChannel.invokeMethod('setUserId', {
+      'instanceName': Constants.defaultInstanceName,
+      'properties': {'setUserId': testUserId}
+    })).called(1);
+    verify(mockChannel.invokeMethod('identify', {
+      'instanceName': Constants.defaultInstanceName,
+      'event': testIdentifyMap
+    })).called(1);
   });
 
   test('Should identify calls setDeviceId in MethodChannel', () async {
@@ -191,9 +205,14 @@ void main() {
     testIdentifyMap['user_properties'] = {
       '\$set': {testProperty: testValue}
     };
-    verify(mockChannel
-        .invokeMethod('setDeviceId', {'setDeviceId': testDeviceId})).called(1);
-    verify(mockChannel.invokeMethod('identify', testIdentifyMap)).called(1);
+    verify(mockChannel.invokeMethod('setDeviceId', {
+      'instanceName': Constants.defaultInstanceName,
+      'properties': {'setDeviceId': testDeviceId}
+    })).called(1);
+    verify(mockChannel.invokeMethod('identify', {
+      'instanceName': Constants.defaultInstanceName,
+      'event': testIdentifyMap
+    })).called(1);
   });
 
   test('Should groupIdentify calls MethodChannel', () async {
@@ -209,8 +228,10 @@ void main() {
     testIdentifyMap['group_properties'] = {
       '\$set': {testProperty: testValue}
     };
-    verify(mockChannel.invokeMethod('groupIdentify', testIdentifyMap))
-        .called(1);
+    verify(mockChannel.invokeMethod('groupIdentify', {
+      'instanceName': Constants.defaultInstanceName,
+      'event': testIdentifyMap
+    })).called(1);
   });
 
   test('Should groupIdentify with event options calls MethodChannel', () async {
@@ -228,8 +249,10 @@ void main() {
     testIdentifyMap['group_properties'] = {
       '\$set': {testProperty: testValue}
     };
-    verify(mockChannel.invokeMethod('groupIdentify', (testIdentifyMap)))
-        .called(1);
+    verify(mockChannel.invokeMethod('groupIdentify', {
+      'instanceName': Constants.defaultInstanceName,
+      'event': testIdentifyMap
+    })).called(1);
   });
 
   test('Should setGroup calls MethodChannel', () async {
@@ -244,7 +267,10 @@ void main() {
       '\$set': {testGroupType: testGroupName}
     };
 
-    verify(mockChannel.invokeMethod('setGroup', testIdentifyMap)).called(1);
+    verify(mockChannel.invokeMethod('setGroup', {
+      'instanceName': Constants.defaultInstanceName,
+      'event': testIdentifyMap
+    })).called(1);
   });
 
   test('Should setGroup with event options calls MethodChannel', () async {
@@ -261,7 +287,10 @@ void main() {
     };
     testIdentifyMap['user_id'] = testUserId;
 
-    verify(mockChannel.invokeMethod('setGroup', testIdentifyMap)).called(1);
+    verify(mockChannel.invokeMethod('setGroup', {
+      'instanceName': Constants.defaultInstanceName,
+      'event': testIdentifyMap
+    })).called(1);
   });
 
   test('Should revenue calls MethodChannel', () async {
@@ -284,7 +313,10 @@ void main() {
     testRevenueMap['event_properties'][RevenueConstants.revenueProductId] =
         testProductId;
 
-    verify(mockChannel.invokeMethod('revenue', testRevenueMap)).called(1);
+    verify(mockChannel.invokeMethod('revenue', {
+      'instanceName': Constants.defaultInstanceName,
+      'event': testRevenueMap
+    })).called(1);
   });
 
   test('Should revenue calls MethodChannel with event options', () async {
@@ -308,17 +340,22 @@ void main() {
     testRevenueMap['event_properties'][RevenueConstants.revenueProductId] =
         testProductId;
 
-    verify(mockChannel.invokeMethod('revenue', testRevenueMap)).called(1);
+    verify(mockChannel.invokeMethod('revenue', {
+      'instanceName': Constants.defaultInstanceName,
+      'event': testRevenueMap
+    })).called(1);
   });
 
   test('Should getUserId calls MethodChannel', () async {
-    when(mockChannel.invokeMethod('getUserId'))
+    when(mockChannel.invokeMethod('getUserId', any))
         .thenAnswer((_) async => testUserId);
 
     final userId = await amplitude.getUserId();
 
     expect(userId, testUserId);
-    verify(mockChannel.invokeMethod('getUserId')).called(1);
+    verify(mockChannel.invokeMethod(
+            'getUserId', {'instanceName': Constants.defaultInstanceName}))
+        .called(1);
   });
 
   test('Should setUserId calls MethodChannel', () async {
@@ -327,18 +364,22 @@ void main() {
 
     amplitude.setUserId(testUserId);
 
-    verify(mockChannel.invokeMethod('setUserId', {'setUserId': testUserId}))
-        .called(1);
+    verify(mockChannel.invokeMethod('setUserId', {
+      'instanceName': Constants.defaultInstanceName,
+      'properties': {'setUserId': testUserId}
+    })).called(1);
   });
 
   test('Should getDeviceId calls MethodChannel', () async {
-    when(mockChannel.invokeMethod('getDeviceId'))
+    when(mockChannel.invokeMethod('getDeviceId', any))
         .thenAnswer((_) async => testDeviceId);
 
     final deviceId = await amplitude.getDeviceId();
 
     expect(deviceId, testDeviceId);
-    verify(mockChannel.invokeMethod('getDeviceId')).called(1);
+    verify(mockChannel.invokeMethod(
+            'getDeviceId', {'instanceName': Constants.defaultInstanceName}))
+        .called(1);
   });
 
   test('Should setDeviceId calls MethodChannel', () async {
@@ -347,8 +388,10 @@ void main() {
 
     amplitude.setDeviceId(testDeviceId);
 
-    verify(mockChannel
-        .invokeMethod('setDeviceId', {'setDeviceId': testDeviceId})).called(1);
+    verify(mockChannel.invokeMethod('setDeviceId', {
+      'instanceName': Constants.defaultInstanceName,
+      'properties': {'setDeviceId': testDeviceId}
+    })).called(1);
   });
 
   test('Should reset calls MethodChannel', () async {
@@ -356,7 +399,8 @@ void main() {
 
     amplitude.reset();
 
-    verify(mockChannel.invokeMethod('reset')).called(1);
+    verify(mockChannel.invokeMethod(
+        'reset', {'instanceName': Constants.defaultInstanceName})).called(1);
   });
 
   test('Should flush calls MethodChannel', () async {
@@ -364,7 +408,8 @@ void main() {
 
     amplitude.flush();
 
-    verify(mockChannel.invokeMethod('flush')).called(1);
+    verify(mockChannel.invokeMethod(
+        'flush', {'instanceName': Constants.defaultInstanceName})).called(1);
   });
 
   // Reset the mock method call handler after each test
