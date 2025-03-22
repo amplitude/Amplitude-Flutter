@@ -154,7 +154,7 @@ class AmplitudeFlutterPluginTest {
         val initMethodCall = MethodCall("init", JSONObject(testConfigurationMap))
         plugin.onMethodCall(initMethodCall, result)
 
-        val methodCall = MethodCall("track", JSONObject(testEventMap))
+        val methodCall = MethodCall("track", JSONObject(mapOf("instanceName" to "\$default_instance", "event" to testEventMap)))
         plugin.onMethodCall(methodCall, result)
 
         verify(exactly = 1) { result.success("track called..") }
@@ -169,7 +169,7 @@ class AmplitudeFlutterPluginTest {
         testEventMap["user_properties"] = mapOf(
             "\$set" to mapOf("testProperty" to "testValue")
         )
-        val methodCall = MethodCall("identify", JSONObject(testEventMap))
+        val methodCall = MethodCall("identify", JSONObject(mapOf("instanceName" to "\$default_instance", "event" to testEventMap)))
         plugin.onMethodCall(methodCall, result)
 
         verify(exactly = 1) { result.success("identify called..") }
@@ -187,7 +187,7 @@ class AmplitudeFlutterPluginTest {
         testEventMap["group_properties"] = mapOf(
             "\$set" to mapOf("testProperty" to "testValue")
         )
-        val methodCall = MethodCall("groupIdentify", JSONObject(testEventMap))
+        val methodCall = MethodCall("groupIdentify", JSONObject(mapOf("instanceName" to "\$default_instance", "event" to testEventMap)))
         plugin.onMethodCall(methodCall, result)
 
         verify(exactly = 1) { result.success("groupIdentify called..") }
@@ -205,7 +205,7 @@ class AmplitudeFlutterPluginTest {
         testEventMap["user_properties"] = mapOf(
             "\$set" to mapOf("testProperty" to "testValue")
         )
-        val methodCall = MethodCall("setGroup", JSONObject(testEventMap))
+        val methodCall = MethodCall("setGroup", JSONObject(mapOf("instanceName" to "\$default_instance", "event" to testEventMap)))
         plugin.onMethodCall(methodCall, result)
 
         verify(exactly = 1) { result.success("setGroup called..") }
@@ -225,7 +225,7 @@ class AmplitudeFlutterPluginTest {
             "\$quantity" to "testQuantity",
             "\$productId" to "testProductId"
         )
-        val methodCall = MethodCall("revenue", JSONObject(testEventMap))
+        val methodCall = MethodCall("revenue", JSONObject(mapOf("instanceName" to "\$default_instance", "event" to testEventMap)))
         plugin.onMethodCall(methodCall, result)
 
         verify(exactly = 1) { result.success("revenue called..") }
@@ -236,9 +236,7 @@ class AmplitudeFlutterPluginTest {
         val initMethodCall = MethodCall("init", JSONObject(testConfigurationMap))
         plugin.onMethodCall(initMethodCall, result)
 
-        val methodCall = MethodCall("setUserId", JSONObject(mapOf(
-            "setUserId" to "testUserId"
-        )))
+        val methodCall = MethodCall("setUserId", JSONObject(mapOf("instanceName" to "\$default_instance", "properties" to mapOf("setUserId" to "testUserId"))))
         plugin.onMethodCall(methodCall, result)
 
         verify(exactly = 1) { result.success("setUserId called..") }
@@ -249,9 +247,7 @@ class AmplitudeFlutterPluginTest {
         val initMethodCall = MethodCall("init", JSONObject(testConfigurationMap))
         plugin.onMethodCall(initMethodCall, result)
 
-        val methodCall = MethodCall("setDeviceId", JSONObject(mapOf(
-            "setDeviceId" to "testDeviceId"
-        )))
+        val methodCall = MethodCall("setDeviceId", JSONObject(mapOf("instanceName" to "\$default_instance", "properties" to mapOf("setDeviceId" to "testDeviceId"))))
         plugin.onMethodCall(methodCall, result)
 
         verify(exactly = 1) { result.success("setDeviceId called..") }
@@ -262,7 +258,7 @@ class AmplitudeFlutterPluginTest {
         val initMethodCall = MethodCall("init", JSONObject(testConfigurationMap))
         plugin.onMethodCall(initMethodCall, result)
 
-        val methodCall = MethodCall("reset", null)
+        val methodCall = MethodCall("reset", JSONObject(mapOf("instanceName" to "\$default_instance")))
         plugin.onMethodCall(methodCall, result)
 
         verify(exactly = 1) { result.success("reset called..") }
@@ -273,7 +269,7 @@ class AmplitudeFlutterPluginTest {
         val initMethodCall = MethodCall("init", JSONObject(testConfigurationMap))
         plugin.onMethodCall(initMethodCall, result)
 
-        val methodCall = MethodCall("flush", null)
+        val methodCall = MethodCall("flush", JSONObject(mapOf("instanceName" to "\$default_instance")))
         plugin.onMethodCall(methodCall, result)
 
         verify(exactly = 1) { result.success("flush called..") }
