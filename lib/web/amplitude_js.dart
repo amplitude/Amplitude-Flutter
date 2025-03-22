@@ -2,6 +2,7 @@ import 'dart:js_interop';
 
 @JS('amplitude')
 extension type Amplitude(JSObject _) implements JSObject {
+  external Amplitude createInstance();
   external JSPromise init(String apiKey, JSObject? configuration);
   external void add(JSObject plugin);
   external void track(JSObject event);
