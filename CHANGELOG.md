@@ -1,3 +1,10 @@
+# [4.3.0](https://github.com/amplitude/Amplitude-Flutter/compare/v4.2.0...v4.3.0) (2025-03-26)
+
+
+### Features
+
+* add multiple instances support ([#241](https://github.com/amplitude/Amplitude-Flutter/issues/241)) ([e223fba](https://github.com/amplitude/Amplitude-Flutter/commit/e223fbafad3444170382412ea6f3f8d18cd99ede))
+
 # [4.2.0](https://github.com/amplitude/Amplitude-Flutter/compare/v4.1.0...v4.2.0) (2025-03-17)
 
 
