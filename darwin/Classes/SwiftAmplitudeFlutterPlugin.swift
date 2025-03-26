@@ -8,7 +8,7 @@ import FlutterMacOS
 import AmplitudeSwift
 
 @objc public class SwiftAmplitudeFlutterPlugin: NSObject, FlutterPlugin {
-    var amplitude: Amplitude?
+    var instances: [String: Amplitude] = [:]
     static let methodChannelName = "amplitude_flutter"
 
     public static func register(with registrar: FlutterPluginRegistrar) {
@@ -23,15 +23,16 @@ import AmplitudeSwift
     }
 
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        switch call.method {
-        case "init":
-            guard let args = call.arguments as? [String: Any] else {
+        if call.method == "init" {
+            guard let configArgs = call.arguments as? [String: Any] else {
                 print("\(call.method) called but call.arguments type casting failed.")
                 return
             }
 
+            var amplitude: Amplitude?
             do {
-                amplitude = Amplitude(configuration: try getConfiguration(args: args))
+                amplitude = Amplitude(configuration: try getConfiguration(args: configArgs))
+                instances[amplitude!.configuration.instanceName] = amplitude
             } catch {
                 print("Initialization failed.")
             }
@@ -39,7 +40,7 @@ import AmplitudeSwift
             // Set library
             amplitude?.add(
                 plugin: FlutterLibraryPlugin(
-                    library: args["library"] as? String ?? "amplitude-flutter/unknown"
+                    library: configArgs["library"] as? String ?? "amplitude-flutter/unknown"
                 )
             )
 
@@ -50,15 +51,22 @@ import AmplitudeSwift
             utils.trackAppUpdatedInstalledEvent()
 
             result("init called..")
+            return
+        }
 
+        let arguments = call.arguments as? [String: Any]
+        let instanceName = arguments?["instanceName"] as? String ?? "$default_instance"
+        var amplitude = instances[instanceName]
+
+        switch call.method {
         case "track", "identify", "groupIdentify", "setGroup", "revenue":
-            guard let args = call.arguments as? [String: Any] else {
+            guard let args = arguments?["event"] as? [String: Any] else {
                 print("\(call.method) called but call.arguments type casting failed.")
                 return
             }
 
             do {
-                let event = try getEvent(args: args)
+                let event = try getEvent(instance: amplitude, args: args)
                 amplitude?.track(event: event)
                 amplitude?.logger?.debug(message: "Track \(call.method) event: \(String(describing: call.arguments))")
 
@@ -74,7 +82,7 @@ import AmplitudeSwift
             result(userId)
 
         case "setUserId":
-            guard let args = call.arguments as? [String: Any] else {
+            guard let args = arguments?["properties"] as? [String: Any] else {
                 print("\(call.method) called but call.arguments type casting failed.")
                 return
             }
@@ -100,7 +108,7 @@ import AmplitudeSwift
             result(deviceId)
 
         case "setDeviceId":
-            guard let args = call.arguments as? [String: Any] else {
+            guard let args = arguments?["properties"] as? [String: Any] else {
                 print("\(call.method) called but call.arguments type casting failed.")
                 return
             }
@@ -284,7 +292,7 @@ import AmplitudeSwift
         return trackingOptions
     }
 
-    private func getEvent(args: [String: Any]) throws -> BaseEvent {
+    private func getEvent(instance amplitude: Amplitude?, args: [String: Any]) throws -> BaseEvent {
         guard let eventType = args["event_type"] as? String else {
             amplitude?.logger?.warn(message: "eventType type casting failed.")
             throw AmplitudeFlutterPluginError.eventTypeNotFound

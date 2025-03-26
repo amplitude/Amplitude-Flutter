@@ -22,7 +22,7 @@ import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import java.lang.ref.WeakReference
 
 class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
-    lateinit var amplitude: Amplitude
+    private var instances: Map<String, Amplitude> = mutableMapOf()
     private var activity: WeakReference<Activity?> = WeakReference(null)
     lateinit var ctxt: Context
 
@@ -59,31 +59,37 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     }
 
     override fun onMethodCall(call: MethodCall, result: Result) {
-        when (call.method) {
-            "init" -> {
-                val configuration = getConfiguration(call)
-                amplitude = Amplitude(configuration)
+        if (call.method == "init") {
+            val configuration = getConfiguration(call)
+            val amplitude = Amplitude(configuration)
+            instances += mapOf(configuration.instanceName to amplitude)
 
-                // Set library
-                amplitude.add(
-                    FlutterLibraryPlugin(
-                        call.argument<String>("library") ?: "amplitude-flutter/unknown"
-                    )
+            // Set library
+            amplitude.add(
+                FlutterLibraryPlugin(
+                    call.argument<String>("library") ?: "amplitude-flutter/unknown"
                 )
+            )
 
-                call.argument<String>("logLevel")?.let {
-                    amplitude.logger.logMode = Logger.LogMode.valueOf(it.uppercase())
-                }
-                amplitude.logger.debug("Amplitude has been successfully initialized.")
-
-                trackAppLifecycleAndDeepLinkEvents(
-                    configuration.defaultTracking.appLifecycles,
-                    configuration.defaultTracking.deepLinks
-                )
-
-                result.success("init called..")
+            call.argument<String>("logLevel")?.let {
+                amplitude.logger.logMode = Logger.LogMode.valueOf(it.uppercase())
             }
+            amplitude.logger.debug("Amplitude has been successfully initialized.")
 
+            trackAppLifecycleAndDeepLinkEvents(
+                amplitude,
+                configuration.defaultTracking.appLifecycles,
+                configuration.defaultTracking.deepLinks
+            )
+
+            result.success("init called..")
+            return
+        }
+
+        val instanceName = call.argument<String>("instanceName") ?: "\$default_instance"
+        val amplitude = instances[instanceName] ?: throw IllegalArgumentException("Amplitude instance $instanceName not found")
+
+        when (call.method) {
             "track", "identify", "groupIdentify", "setGroup", "revenue" -> {
                 val event = getEvent(call)
                 amplitude.track(event)
@@ -100,7 +106,7 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
             }
 
             "setUserId" -> {
-                val userId = call.argument<String?>("setUserId")
+                val userId = call.argument<Map<String, String?>>("properties")!!["setUserId"]
                 amplitude.setUserId(userId)
                 amplitude.logger.debug("Set userId to ${call.arguments}")
 
@@ -115,7 +121,7 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
             }
 
             "setDeviceId" -> {
-                val deviceId = call.argument<String>("setDeviceId")
+                val deviceId = call.argument<Map<String, String>>("properties")!!["setDeviceId"]
                 deviceId?.let { amplitude.setDeviceId(it) }
                 amplitude.logger.debug("Set deviceId to ${call.arguments}")
 
@@ -151,7 +157,7 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         }
     }
 
-    private fun trackAppLifecycleAndDeepLinkEvents(appLifecycles: Boolean, deepLinks: Boolean) {
+    private fun trackAppLifecycleAndDeepLinkEvents(amplitude: Amplitude, appLifecycles: Boolean, deepLinks: Boolean) {
         amplitude.isBuilt.invokeOnCompletion { exception ->
             if (exception != null) {
                 println("isBuilt computation failed with exception: $exception")
@@ -257,50 +263,51 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
      *   Otherwise, it will take the default value of BaseEvent constructor
      */
     private fun getEvent(call: MethodCall): BaseEvent {
+        val args = call.argument<Map<String, Any>>("event")!!
         val event = BaseEvent()
-        event.eventType = call.argument<String>("event_type")!!
-        call.argument<Map<String, Any>>("event_properties")?.let {
+        event.eventType = args["event_type"] as String
+        (args["event_properties"] as? Map<String, Any>)?.let {
             event.eventProperties = it.toMutableMap()
         }
-        call.argument<Map<String, Any>>("user_properties")?.let {
+        (args["user_properties"] as? Map<String, Any>)?.let {
             event.userProperties = it.toMutableMap()
         }
-        call.argument<Map<String, Any>>("groups")?.let {
+        (args["groups"] as? Map<String, Any>)?.let {
             event.groups = it.toMutableMap()
         }
-        call.argument<Map<String, Any>>("group_properties")?.let {
+        (args["group_properties"] as? Map<String, Any>)?.let {
             event.groupProperties = it.toMutableMap()
         }
-        call.argument<String>("user_id")?.let { event.userId = it }
-        call.argument<String>("device_id")?.let { event.deviceId = it }
-        call.argument<Int>("timestamp")?.let { event.timestamp = it.toLong() }
-        call.argument<Int>("event_id")?.let { event.eventId = it.toLong() }
-        call.argument<Int>("session_id")?.let { event.sessionId = it.toLong() }
-        call.argument<String>("insert_id")?.let { event.insertId = it }
-        call.argument<Double>("location_lat")?.let { event.locationLat = it }
-        call.argument<Double>("location_lng")?.let { event.locationLng = it }
-        call.argument<String>("app_version")?.let { event.appVersion = it }
-        call.argument<String>("version_name")?.let { event.versionName = it }
-        call.argument<String>("platform")?.let { event.platform = it }
-        call.argument<String>("os_name")?.let { event.osName = it }
-        call.argument<String>("os_version")?.let { event.osVersion = it }
-        call.argument<String>("device_brand")?.let { event.deviceBrand = it }
-        call.argument<String>("device_manufacturer")?.let { event.deviceManufacturer = it }
-        call.argument<String>("device_model")?.let { event.deviceModel = it }
-        call.argument<String>("carrier")?.let { event.carrier = it }
-        call.argument<String>("country")?.let { event.country = it }
-        call.argument<String>("region")?.let { event.region = it }
-        call.argument<String>("city")?.let { event.city = it }
-        call.argument<String>("dma")?.let { event.dma = it }
-        call.argument<String>("idfa")?.let { event.idfa = it }
-        call.argument<String>("idfv")?.let { event.idfv = it }
-        call.argument<String>("adid")?.let { event.adid = it }
-        call.argument<String>("app_set_id")?.let { event.appSetId = it }
-        call.argument<String>("android_id")?.let { event.androidId = it }
-        call.argument<String>("language")?.let { event.language = it }
-        call.argument<String>("library")?.let { event.library = it }
-        call.argument<String>("ip")?.let { event.ip = it }
-        call.argument<Map<String, Any>>("plan")?.let {
+        (args["user_id"] as? String)?.let { event.userId = it }
+        (args["device_id"] as? String)?.let { event.deviceId = it }
+        (args["timestamp"] as? Int)?.let { event.timestamp = it.toLong() }
+        (args["event_id"] as? Int)?.let { event.eventId = it.toLong() }
+        (args["session_id"] as? Int)?.let { event.sessionId = it.toLong() }
+        (args["insert_id"] as? String)?.let { event.insertId = it }
+        (args["location_lat"] as? Double)?.let { event.locationLat = it }
+        (args["location_lng"] as? Double)?.let { event.locationLng = it }
+        (args["app_version"] as? String)?.let { event.appVersion = it }
+        (args["version_name"] as? String)?.let { event.versionName = it }
+        (args["platform"] as? String)?.let { event.platform = it }
+        (args["os_name"] as? String)?.let { event.osName = it }
+        (args["os_version"] as? String)?.let { event.osVersion = it }
+        (args["device_brand"] as? String)?.let { event.deviceBrand = it }
+        (args["device_manufacturer"] as? String)?.let { event.deviceManufacturer = it }
+        (args["device_model"] as? String)?.let { event.deviceModel = it }
+        (args["carrier"] as? String)?.let { event.carrier = it }
+        (args["country"] as? String)?.let { event.country = it }
+        (args["region"] as? String)?.let { event.region = it }
+        (args["city"] as? String)?.let { event.city = it }
+        (args["dma"] as? String)?.let { event.dma = it }
+        (args["idfa"] as? String)?.let { event.idfa = it }
+        (args["idfv"] as? String)?.let { event.idfv = it }
+        (args["adid"] as? String)?.let { event.adid = it }
+        (args["app_set_id"] as? String)?.let { event.appSetId = it }
+        (args["android_id"] as? String)?.let { event.androidId = it }
+        (args["language"] as? String)?.let { event.language = it }
+        (args["library"] as? String)?.let { event.library = it }
+        (args["ip"] as? String)?.let { event.ip = it }
+        (args["plan"] as? Map<String, Any>)?.let {
             event.plan = Plan(
                 it["branch"] as? String,
                 it["source"] as? String,
@@ -308,21 +315,21 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                 it["versionId"] as? String
             )
         }
-        call.argument<Map<String, Any>>("ingestion_metadata")?.let {
+        (args["ingestion_metadata"] as? Map<String, Any>)?.let {
             event.ingestionMetadata = IngestionMetadata(
                 it["sourceName"] as? String,
                 it["sourceVersion"] as? String
             )
         }
-        call.argument<Double>("revenue")?.let { event.revenue = it }
-        call.argument<Double>("price")?.let { event.price = it }
-        call.argument<Int>("quantity")?.let { event.quantity = it }
-        call.argument<String>("product_id")?.let { event.productId = it }
-        call.argument<String>("revenue_type")?.let { event.revenueType = it }
-        call.argument<Map<String, Any>>("extra")?.let {
+        (args["revenue"] as? Double)?.let { event.revenue = it }
+        (args["price"] as? Double)?.let { event.price = it }
+        (args["quantity"] as? Int)?.let { event.quantity = it }
+        (args["product_id"] as? String)?.let { event.productId = it }
+        (args["revenue_type"] as? String)?.let { event.revenueType = it }
+        (args["extra"] as? Map<String, Any>)?.let {
             event.extra = it
         }
-        call.argument<String>("partner_id")?.let { event.partnerId = it }
+        (args["partner_id"] as? String)?.let { event.partnerId = it }
 
         return event
     }
