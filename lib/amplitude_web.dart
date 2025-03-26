@@ -40,7 +40,8 @@ class AmplitudeFlutterPlugin {
           args['library'] ?? 'amplitude_flutter/unknown')));
       instance.init(apiKey, configuration);
 
-      instances[args['instanceName'] ?? Constants.defaultInstanceName] = instance;
+      instances[args['instanceName'] ?? Constants.defaultInstanceName] =
+          instance;
 
       return null;
     }
