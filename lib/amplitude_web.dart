@@ -74,7 +74,7 @@ class AmplitudeFlutterPlugin {
         }
       case "setUserId":
         {
-          Map<String, dynamic> args = call.arguments['properties'];
+          Map args = call.arguments['properties'];
           String? userId = args['setUserId'];
           instance.setUserId(userId?.toJS);
         }
@@ -84,7 +84,7 @@ class AmplitudeFlutterPlugin {
         }
       case "setDeviceId":
         {
-          Map<String, dynamic> args = call.arguments['properties'];
+          Map args = call.arguments['properties'];
           String? deviceId = args['setDeviceId'];
           instance.setDeviceId(deviceId?.toJS);
         }
