@@ -270,7 +270,7 @@ class Amplitude {
 
   /// Flush events in storage.
   Future<void> flush() async {
-    await await _channel
+    await _channel
         .invokeMethod('flush', {'instanceName': configuration.instanceName});
   }
 }
