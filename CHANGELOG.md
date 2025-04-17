@@ -1,3 +1,11 @@
+## [4.3.1](https://github.com/amplitude/Amplitude-Flutter/compare/v4.3.0...v4.3.1) (2025-04-17)
+
+
+### Bug Fixes
+
+* cast call.arguments to Map rather than Map<String, dynamic> to fix setUserId and setDeviceId ([#251](https://github.com/amplitude/Amplitude-Flutter/issues/251)) ([409ce18](https://github.com/amplitude/Amplitude-Flutter/commit/409ce18bf138a5de852099a324fad75ca4ebf7c3))
+* Unnecessary double await call ([#253](https://github.com/amplitude/Amplitude-Flutter/issues/253)) ([02be47d](https://github.com/amplitude/Amplitude-Flutter/commit/02be47dc918eb5e06add66ae0b0fd5e32f7e11cd))
+
 # [4.3.0](https://github.com/amplitude/Amplitude-Flutter/compare/v4.2.0...v4.3.0) (2025-03-26)
 
 
