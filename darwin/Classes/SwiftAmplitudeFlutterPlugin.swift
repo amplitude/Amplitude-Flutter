@@ -56,7 +56,7 @@ import AmplitudeSwift
 
         let arguments = call.arguments as? [String: Any]
         let instanceName = arguments?["instanceName"] as? String ?? "$default_instance"
-        var amplitude = instances[instanceName]
+        let amplitude = instances[instanceName]
 
         switch call.method {
         case "track", "identify", "groupIdentify", "setGroup", "revenue":
@@ -175,6 +175,7 @@ import AmplitudeSwift
         }
         if let logLevel = args["logLevel"] as? String {
             configuration.logLevel = logLevelFromString(logLevel)
+            configuration.loggerProvider.logLevel = configuration.logLevel.rawValue
         }
         if let minIdLength = args["minIdLength"] as? Int {
             configuration.minIdLength = minIdLength
