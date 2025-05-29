@@ -102,9 +102,9 @@ class AmplitudeFlutterPlugin {
         }
       case "setOptOut":
         {
-          Map<String, dynamic> args = call.arguments['properties'];
+          Map args = call.arguments['properties'];
           bool enabled = args['setOptOut'];
-          instance.setOptOut(enabled);
+          instance.setOptOut(enabled.toJS);
         }
       default:
         throw PlatformException(
