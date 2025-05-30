@@ -11,7 +11,7 @@ extension type Amplitude(JSObject _) implements JSObject {
   external JSString? getDeviceId();
   external void setDeviceId(JSString? devideId);
   external JSNumber? getSessionId();
-  external void setOptOut(bool enabled);
+  external void setOptOut(JSBoolean enabled);
   external void reset();
   external void flush();
 }
