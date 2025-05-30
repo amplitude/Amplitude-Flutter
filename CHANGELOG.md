@@ -1,3 +1,11 @@
+## [4.3.2](https://github.com/amplitude/Amplitude-Flutter/compare/v4.3.1...v4.3.2) (2025-05-30)
+
+
+### Bug Fixes
+
+* (web) make setOptOut grab arguments and pass to TS SDK ([#260](https://github.com/amplitude/Amplitude-Flutter/issues/260)) ([1c1acc2](https://github.com/amplitude/Amplitude-Flutter/commit/1c1acc2443f3ebd46d7d4361298fbf3e029551de))
+* iOS logLevel configuration not being applied correctly ([#256](https://github.com/amplitude/Amplitude-Flutter/issues/256)) ([dcf2a6f](https://github.com/amplitude/Amplitude-Flutter/commit/dcf2a6fb102c2170cc521e50d4a511b71f5d8473))
+
 ## [4.3.1](https://github.com/amplitude/Amplitude-Flutter/compare/v4.3.0...v4.3.1) (2025-04-17)
 
 
