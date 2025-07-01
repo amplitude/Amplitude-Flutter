@@ -11,4 +11,4 @@ PRODUCT_NAME = amplitude_flutter_example
 PRODUCT_BUNDLE_IDENTIFIER = com.amplitude.amplitudeFlutterExample
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2025 com.amplitude. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2025 com.example. All rights reserved.
