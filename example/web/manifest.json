@@ -1,6 +1,6 @@
 {
-    "name": "example2",
-    "short_name": "example2",
+    "name": "amplitude_flutter_example",
+    "short_name": "amplitude_flutter_example",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
