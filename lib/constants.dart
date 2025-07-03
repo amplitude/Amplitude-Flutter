@@ -17,6 +17,17 @@ class Constants {
       30 * 60 * 1000; // 30 minutes
 }
 
+/// Log level enum that maps to platform-specific log levels.
+///
+/// iOS: Uses log level names directly (off, error, warn, log, debug)
+/// Android: Uses log level names directly, but LogLevel.log maps to 'info' instead of 'log' in AmplitudeFlutterPlugin.kt
+/// Web: Uses index-based log levels internally, so string values don't affect behavior
+///      The mapping is:
+///      LogLevel.off -> LogLevel.None
+///      LogLevel.error -> LogLevel.Error
+///      LogLevel.warn -> LogLevel.Warn
+///      LogLevel.log -> LogLevel.Verbose
+///      LogLevel.debug -> LogLevel.Debug
 enum LogLevel {
   off,
   error,

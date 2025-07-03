@@ -72,7 +72,11 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
             )
 
             call.argument<String>("logLevel")?.let {
-                amplitude.logger.logMode = Logger.LogMode.valueOf(it.uppercase())
+                if (it == "log") {
+                    amplitude.logger.logMode = Logger.LogMode.INFO
+                } else {
+                    amplitude.logger.logMode = Logger.LogMode.valueOf(it.uppercase())
+                }
             }
             amplitude.logger.debug("Amplitude has been successfully initialized.")
 
