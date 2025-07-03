@@ -1,5 +1,3 @@
-import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'autocapture/autocapture.dart';
 import 'constants.dart';
 import 'tracking_options.dart';
@@ -228,23 +226,6 @@ class Configuration {
         instanceName.isEmpty ? Constants.defaultInstanceName : instanceName;
   }
 
-  /// Converts LogLevel enum to platform-specific string value
-  ///
-  /// Android expects "INFO" instead of "LOG", while other platforms expect the enum name
-  /// Web uses enum indices, so special handling is done in amplitude_web.dart
-  /// Maps Flutter LogLevel enum to platform-specific log level strings.
-  ///
-  /// iOS: Uses log level names directly (off, error, warn, log, debug)
-  /// Android: Similar to iOS, but LogLevel.log maps to 'info' instead of 'log'
-  ///          to align with Android native SDK naming conventions
-  /// Web: Uses index-based log levels internally, so string values don't affect behavior
-  String _getPlatformLogLevel(LogLevel logLevel) {
-    if (!kIsWeb && Platform.isAndroid && logLevel == LogLevel.log) {
-      return 'info';
-    }
-    return logLevel.name;
-  }
-
   Map<String, dynamic> toMap() {
     return {
       'apiKey': apiKey,
@@ -252,7 +233,7 @@ class Configuration {
       'flushIntervalMillis': flushIntervalMillis,
       'instanceName': instanceName,
       'optOut': optOut,
-      'logLevel': _getPlatformLogLevel(logLevel),
+      'logLevel': logLevel.name,
       'minIdLength': minIdLength,
       'partnerId': partnerId,
       'flushMaxRetries': flushMaxRetries,

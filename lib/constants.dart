@@ -17,13 +17,6 @@ class Constants {
       30 * 60 * 1000; // 30 minutes
 }
 
-
-/// Log level enum that maps to platform-specific log levels.
-///
-/// iOS: Uses log level names directly (off, error, warn, log, debug)
-/// Android: Similar to iOS, but LogLevel.log maps to 'info' instead of 'log'
-///          to align with Android native SDK naming conventions
-/// Web: Uses index-based log levels internally, so string values don't affect behavior
 enum LogLevel {
   off,
   error,
