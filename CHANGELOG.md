@@ -1,3 +1,10 @@
+## [4.3.3](https://github.com/amplitude/Amplitude-Flutter/compare/v4.3.2...v4.3.3) (2025-07-07)
+
+
+### Bug Fixes
+
+* [android] Flutter debug levels now map correctly to Android ([#272](https://github.com/amplitude/Amplitude-Flutter/issues/272)) ([8dc0589](https://github.com/amplitude/Amplitude-Flutter/commit/8dc0589f21e094de5fe00cb618e78522e25a8786))
+
 ## [4.3.2](https://github.com/amplitude/Amplitude-Flutter/compare/v4.3.1...v4.3.2) (2025-05-30)
 
 
