@@ -1,2 +1,8 @@
 #include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"
 #include "Generated.xcconfig"
+
+// Code signing configuration for workspace
+// Replace YOUR_TEAM_ID with your Apple Developer Team ID
+CODE_SIGN_STYLE = Automatic
+DEVELOPMENT_TEAM = 58E7PCQE77
+PRODUCT_BUNDLE_IDENTIFIER = com.amplitude.flutterExample
