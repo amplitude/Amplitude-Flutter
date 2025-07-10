@@ -168,17 +168,6 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
             } else {
                 val utils = DefaultEventUtils(amplitude)
 
-                if (appLifecycles) {
-                    val packageManager = ctxt.packageManager
-                    val packageInfo = try {
-                        packageManager.getPackageInfo(ctxt.packageName, 0)
-                    } catch (ex: PackageManager.NameNotFoundException) {
-                        println("Error occurred in getting package info. " + ex.message)
-                        null
-                    }
-                    packageInfo?.let { utils.trackAppUpdatedInstalledEvent(it) }
-                }
-
                 if (deepLinks) {
                     activity.get()?.let { utils.trackDeepLinkOpenedEvent(it) }
                 }
