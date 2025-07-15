@@ -46,10 +46,6 @@ import AmplitudeSwift
 
             amplitude?.logger?.debug(message: "Amplitude has been successfully initialized.")
 
-            // Track DET app lifecycle: application installed and updated events
-            let utils = DefaultEventUtils(amplitude: amplitude!)
-            utils.trackAppUpdatedInstalledEvent()
-
             result("init called..")
             return
         }
