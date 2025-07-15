@@ -1,3 +1,10 @@
+## [4.3.4](https://github.com/amplitude/Amplitude-Flutter/compare/v4.3.3...v4.3.4) (2025-07-15)
+
+
+### Bug Fixes
+
+* [android] Remove duplicate install event tracking ([#273](https://github.com/amplitude/Amplitude-Flutter/issues/273)) ([da5f2c5](https://github.com/amplitude/Amplitude-Flutter/commit/da5f2c56ab3600750d38acdf137feed701cbdf1f))
+
 ## [4.3.3](https://github.com/amplitude/Amplitude-Flutter/compare/v4.3.2...v4.3.3) (2025-07-07)
 
 
