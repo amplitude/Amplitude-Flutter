@@ -1,3 +1,10 @@
+## [4.3.5](https://github.com/amplitude/Amplitude-Flutter/compare/v4.3.4...v4.3.5) (2025-07-29)
+
+
+### Bug Fixes
+
+* update AmplitudeSwift to 1.14.0 ([#275](https://github.com/amplitude/Amplitude-Flutter/issues/275)) ([b4636f2](https://github.com/amplitude/Amplitude-Flutter/commit/b4636f21c7140435cd663e062058a675ae6bbb5a))
+
 ## [4.3.4](https://github.com/amplitude/Amplitude-Flutter/compare/v4.3.3...v4.3.4) (2025-07-15)
 
 
