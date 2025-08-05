@@ -319,6 +319,7 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         (args["quantity"] as? Int)?.let { event.quantity = it }
         (args["product_id"] as? String)?.let { event.productId = it }
         (args["revenue_type"] as? String)?.let { event.revenueType = it }
+        (args["currency"] as? String)?.let { event.currency = it }
         (args["extra"] as? Map<String, Any>)?.let {
             event.extra = it
         }

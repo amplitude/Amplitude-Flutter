@@ -43,6 +43,7 @@ class EventOptions {
   int? quantity;
   String? productId;
   String? revenueType;
+  String? currency;
   Map<String, dynamic>? extra;
   // TODO(xinyi): callback is currently not supported until method channel returns event callback of each platform
   String? partnerId;
@@ -85,6 +86,7 @@ class EventOptions {
     this.quantity,
     this.productId,
     this.revenueType,
+    this.currency,
     this.extra,
     this.partnerId,
   });

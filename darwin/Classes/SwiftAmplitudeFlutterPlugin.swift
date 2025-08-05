@@ -419,6 +419,9 @@ import AmplitudeSwift
         if let revenueType = args["revenue_type"] as? String {
             event.revenueType = revenueType
         }
+        if let currency = args["currency"] as? String {
+            event.currency = currency
+        }
         if let extra = args["extra"] as? [String: Any] {
             event.extra = extra
         }

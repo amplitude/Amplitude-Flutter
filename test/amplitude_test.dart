@@ -346,6 +346,36 @@ void main() {
     })).called(1);
   });
 
+  test('Should revenue calls MethodChannel with currency', () async {
+    when(mockChannel.invokeMethod('revenue', any))
+        .thenAnswer((_) async => null);
+
+    final revenue = Revenue()
+      ..price = testPrice
+      ..quantity = testQuantity
+      ..productId = testProductId
+      ..revenueCurrency = 'USD';
+    await amplitude.revenue(revenue);
+
+    final testRevenueMap = Map.from(testEventMap);
+    testRevenueMap['event_type'] = Constants.revenueEvent;
+    testRevenueMap['currency'] = 'USD'; // BaseEvent currency field
+    testRevenueMap['event_properties'] = {};
+    testRevenueMap['event_properties'][RevenueConstants.revenuePrice] =
+        testPrice;
+    testRevenueMap['event_properties'][RevenueConstants.revenueQuantity] =
+        testQuantity;
+    testRevenueMap['event_properties'][RevenueConstants.revenueProductId] =
+        testProductId;
+    testRevenueMap['event_properties'][RevenueConstants.revenueCurrency] =
+        'USD'; // Event property currency
+
+    verify(mockChannel.invokeMethod('revenue', {
+      'instanceName': Constants.defaultInstanceName,
+      'event': testRevenueMap
+    })).called(1);
+  });
+
   test('Should getUserId calls MethodChannel', () async {
     when(mockChannel.invokeMethod('getUserId', any))
         .thenAnswer((_) async => testUserId);
