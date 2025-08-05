@@ -1,3 +1,10 @@
+## [4.3.6](https://github.com/amplitude/Amplitude-Flutter/compare/v4.3.5...v4.3.6) (2025-08-05)
+
+
+### Bug Fixes
+
+* adding ability to track revenue currency ([#276](https://github.com/amplitude/Amplitude-Flutter/issues/276)) ([3e79706](https://github.com/amplitude/Amplitude-Flutter/commit/3e797066446d0b4ed9d87a289aa70a66cd7a92fa))
+
 ## [4.3.5](https://github.com/amplitude/Amplitude-Flutter/compare/v4.3.4...v4.3.5) (2025-07-29)
 
 
