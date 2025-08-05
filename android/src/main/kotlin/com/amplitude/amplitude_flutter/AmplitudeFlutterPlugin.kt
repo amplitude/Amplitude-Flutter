@@ -25,6 +25,7 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     private var instances: Map<String, Amplitude> = mutableMapOf()
     private var activity: WeakReference<Activity?> = WeakReference(null)
     lateinit var ctxt: Context
+    private var appOpenedTracked = false
 
     private lateinit var channel: MethodChannel
 
@@ -168,6 +169,15 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
             } else {
                 val utils = DefaultEventUtils(amplitude)
 
+                if (appLifecycles && !appOpenedTracked) {
+                    // Manually trigger Application Opened since automatic tracking doesn't work reliably in Flutter for cold starts
+                    // Warm starts are tracked automatically by the SDK
+                    activity.get()?.let { currentActivity ->
+                        trackApplicationOpenedEvent(utils, currentActivity)
+                        appOpenedTracked = true
+                    }
+                }
+
                 if (deepLinks) {
                     activity.get()?.let { utils.trackDeepLinkOpenedEvent(it) }
                 }
@@ -214,6 +224,22 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         call.argument<Boolean>("useAppSetIdForDeviceId")?.let { configuration.useAppSetIdForDeviceId = it }
 
         return configuration
+    }
+
+    private fun trackApplicationOpenedEvent(utils: DefaultEventUtils, activity: Activity) {
+        try {
+            val packageManager = activity.packageManager
+            val packageInfo = packageManager.getPackageInfo(activity.packageName, 0)
+
+            // Use the SDK's trackAppOpenedEvent method
+            val method = utils.javaClass.getMethod("trackAppOpenedEvent",
+                android.content.pm.PackageInfo::class.java,
+                Boolean::class.javaPrimitiveType)
+            method.invoke(utils, packageInfo, true)
+        } catch (e: Exception) {
+            // Fallback: manually track the event
+            instances.values.firstOrNull()?.track("[Amplitude] Application Opened")
+        }
     }
 
     private fun convertMapToTrackingOptions(map: Map<String, Any>): TrackingOptions {
