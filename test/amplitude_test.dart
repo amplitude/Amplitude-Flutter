@@ -359,7 +359,6 @@ void main() {
 
     final testRevenueMap = Map.from(testEventMap);
     testRevenueMap['event_type'] = Constants.revenueEvent;
-    testRevenueMap['currency'] = 'USD'; // BaseEvent currency field
     testRevenueMap['event_properties'] = {};
     testRevenueMap['event_properties'][RevenueConstants.revenuePrice] =
         testPrice;
