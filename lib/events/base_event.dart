@@ -47,6 +47,7 @@ class BaseEvent extends EventOptions {
     int? quantity,
     String? productId,
     String? revenueType,
+    String? currency,
     Map<String, dynamic>? extra,
     String? partnerId,
     this.eventProperties,
@@ -90,6 +91,7 @@ class BaseEvent extends EventOptions {
           quantity: quantity,
           productId: productId,
           revenueType: revenueType,
+          currency: currency,
           extra: extra,
           partnerId: partnerId,
         );
@@ -138,6 +140,7 @@ class BaseEvent extends EventOptions {
       if (quantity != null) 'quantity': quantity,
       if (productId != null) 'product_id': productId,
       if (revenueType != null) 'revenue_type': revenueType,
+      if (currency != null) 'currency': currency,
       if (extra != null) 'extra': extra,
       if (partnerId != null) 'partner_id': partnerId,
       'attempts': attempts,
@@ -180,6 +183,7 @@ class BaseEvent extends EventOptions {
     quantity = options.quantity ?? quantity;
     productId = options.productId ?? productId;
     revenueType = options.revenueType ?? revenueType;
+    currency = options.currency ?? currency;
     extra = options.extra ?? extra;
     partnerId = options.partnerId ?? partnerId;
     sessionId = options.sessionId ?? sessionId;

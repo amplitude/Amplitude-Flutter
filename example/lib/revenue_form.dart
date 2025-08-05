@@ -15,6 +15,7 @@ class _RevenueFormState extends State<RevenueForm> {
       TextEditingController(text: 'specialProduct');
   final TextEditingController price = TextEditingController(text: '41.23');
   final TextEditingController quantity = TextEditingController(text: '2');
+  final TextEditingController currency = TextEditingController(text: 'USD');
 
   void onPress() {
     if (productId.text.isNotEmpty &&
@@ -23,7 +24,9 @@ class _RevenueFormState extends State<RevenueForm> {
       final revenue = Revenue()
         ..price = double.tryParse(price.text)!
         ..quantity = int.tryParse(quantity.text)!
-        ..productId = productId.text;
+        ..productId = productId.text
+        ..revenueCurrency = currency.text;
+
       AppState.of(context)
         ..analytics.revenue(revenue)
         ..setMessage('Revenue Sent.');
@@ -56,6 +59,10 @@ class _RevenueFormState extends State<RevenueForm> {
             ],
             decoration: dec.copyWith(labelText: 'Quantity'),
             controller: quantity),
+        vertSpace,
+        TextField(
+            decoration: dec.copyWith(labelText: 'Currency (e.g., USD, EUR)'),
+            controller: currency),
         ElevatedButton(child: const Text('Send Revenue'), onPressed: onPress)
       ],
     );

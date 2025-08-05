@@ -2,6 +2,7 @@ import 'revenue_event.dart';
 
 class RevenueConstants {
   static const String revenueProductId = '\$productId';
+  static const String revenueCurrency = '\$currency';
   static const String revenueQuantity = '\$quantity';
   static const String revenuePrice = '\$price';
   static const String revenueType = '\$revenueType';
@@ -15,6 +16,7 @@ class Revenue {
   double? price;
   double? revenue;
   String? productId;
+  String? revenueCurrency;
   String? revenueType;
   String? receipt;
   String? receiptSig;
@@ -29,6 +31,9 @@ class Revenue {
     eventProperties[RevenueConstants.revenueQuantity] = quantity;
     if (productId != null) {
       eventProperties[RevenueConstants.revenueProductId] = productId;
+    }
+    if (revenueCurrency != null) {
+      eventProperties[RevenueConstants.revenueCurrency] = revenueCurrency;
     }
     if (revenueType != null) {
       eventProperties[RevenueConstants.revenueType] = revenueType;
