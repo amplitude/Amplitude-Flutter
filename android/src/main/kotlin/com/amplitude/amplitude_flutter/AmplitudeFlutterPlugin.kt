@@ -173,7 +173,9 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                     // Manually trigger Application Opened since automatic tracking doesn't work reliably in Flutter for cold starts
                     // Warm starts are tracked automatically by the SDK
                     activity.get()?.let { currentActivity ->
-                        trackApplicationOpenedEvent(utils, currentActivity)
+                        val packageManager = currentActivity.packageManager
+                        val packageInfo = packageManager.getPackageInfo(currentActivity.packageName, 0)
+                        utils.trackAppOpenedEvent(packageInfo, true)
                         appOpenedTracked = true
                     }
                 }
@@ -224,22 +226,6 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         call.argument<Boolean>("useAppSetIdForDeviceId")?.let { configuration.useAppSetIdForDeviceId = it }
 
         return configuration
-    }
-
-    private fun trackApplicationOpenedEvent(utils: DefaultEventUtils, activity: Activity) {
-        try {
-            val packageManager = activity.packageManager
-            val packageInfo = packageManager.getPackageInfo(activity.packageName, 0)
-
-            // Use the SDK's trackAppOpenedEvent method
-            val method = utils.javaClass.getMethod("trackAppOpenedEvent",
-                android.content.pm.PackageInfo::class.java,
-                Boolean::class.javaPrimitiveType)
-            method.invoke(utils, packageInfo, true)
-        } catch (e: Exception) {
-            // Fallback: manually track the event
-            instances.values.firstOrNull()?.track("[Amplitude] Application Opened")
-        }
     }
 
     private fun convertMapToTrackingOptions(map: Map<String, Any>): TrackingOptions {
