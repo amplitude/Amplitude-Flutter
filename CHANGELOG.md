@@ -1,3 +1,11 @@
+## [4.3.7](https://github.com/amplitude/Amplitude-Flutter/compare/v4.3.6...v4.3.7) (2025-08-06)
+
+
+### Bug Fixes
+
+* [android] "Application Opened" events now track correctly for cold starts ([#277](https://github.com/amplitude/Amplitude-Flutter/issues/277)) ([dd85de1](https://github.com/amplitude/Amplitude-Flutter/commit/dd85de1284c347fd6a0af05f39b4809707be478d))
+* bump minimum Android-Kotlin version for revenue changes ([#278](https://github.com/amplitude/Amplitude-Flutter/issues/278)) ([5d70531](https://github.com/amplitude/Amplitude-Flutter/commit/5d70531a2ccbbad90d39947c215f63194f72189a))
+
 ## [4.3.6](https://github.com/amplitude/Amplitude-Flutter/compare/v4.3.5...v4.3.6) (2025-08-05)
 
 
