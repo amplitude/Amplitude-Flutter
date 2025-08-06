@@ -25,6 +25,7 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     private var instances: Map<String, Amplitude> = mutableMapOf()
     private var activity: WeakReference<Activity?> = WeakReference(null)
     lateinit var ctxt: Context
+    private var appOpenedTracked = false
 
     private lateinit var channel: MethodChannel
 
@@ -167,6 +168,17 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                 println("isBuilt computation failed with exception: $exception")
             } else {
                 val utils = DefaultEventUtils(amplitude)
+
+                if (appLifecycles && !appOpenedTracked) {
+                    // Manually trigger Application Opened since automatic tracking doesn't work reliably in Flutter for cold starts
+                    // Warm starts are tracked automatically by the SDK
+                    activity.get()?.let { currentActivity ->
+                        val packageManager = currentActivity.packageManager
+                        val packageInfo = packageManager.getPackageInfo(currentActivity.packageName, 0)
+                        utils.trackAppOpenedEvent(packageInfo, true)
+                        appOpenedTracked = true
+                    }
+                }
 
                 if (deepLinks) {
                     activity.get()?.let { utils.trackDeepLinkOpenedEvent(it) }
