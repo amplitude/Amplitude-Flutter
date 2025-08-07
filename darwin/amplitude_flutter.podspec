@@ -5,13 +5,13 @@
 Pod::Spec.new do |s|
   s.name             = 'amplitude_flutter'
   s.version          = '0.0.1'
-  s.summary          = 'A new Flutter plugin project.'
+  s.summary          = 'Official Amplitude Flutter SDK for analytics tracking.'
   s.description      = <<-DESC
-A new Flutter plugin project.
+The official Amplitude Flutter SDK for tracking analytics events in your Flutter applications.
                        DESC
-  s.homepage         = 'http://example.com'
+  s.homepage         = 'https://github.com/amplitude/Amplitude-Flutter'
   s.license          = { :file => '../LICENSE' }
-  s.author           = { 'Your Company' => 'email@example.com' }
+  s.author           = { 'Amplitude' => 'sdk@amplitude.com' }
 
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
@@ -27,7 +27,10 @@ A new Flutter plugin project.
   s.ios.deployment_target = '13.0'
   s.osx.deployment_target = '10.15'
 
-  s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }
+    s.pod_target_xcconfig = {
+    'DEFINES_MODULE' => 'YES',
+    'DEBUG_INFORMATION_FORMAT' => 'dwarf-with-dsym'
+  }
   s.swift_version = '5.9'
   s.dependency 'AmplitudeSwift', '~> 1.14'
 end
