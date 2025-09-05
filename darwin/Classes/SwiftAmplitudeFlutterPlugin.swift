@@ -49,8 +49,6 @@ import AmplitudeSwift
 
             amplitude?.logger?.debug(message: "Amplitude has been successfully initialized.")
 
-
-
             // iOS lifecycle event tracking is unreliable in Flutter, so we manually track the events
             // However, duplicate tracking is possible, so we use a deduplication plugin to prevent it
             let utils = DefaultEventUtils(amplitude: amplitude!)
