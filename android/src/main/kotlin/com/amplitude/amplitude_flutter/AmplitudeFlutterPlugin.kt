@@ -224,6 +224,7 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         call.argument<Boolean>("useAdvertisingIdForDeviceId")
             ?.let { configuration.useAdvertisingIdForDeviceId = it }
         call.argument<Boolean>("useAppSetIdForDeviceId")?.let { configuration.useAppSetIdForDeviceId = it }
+        call.argument<String>("deviceId")?.let { configuration.deviceId = it }
 
         return configuration
     }
