@@ -46,7 +46,10 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation "org.jetbrains.kotlin:kotlin-reflect:1.6.10"
 
-    implementation 'com.amplitude:analytics-android:[1.22,2.0)'
+    // Locked to specific version to prevent binary compatibility issues.
+    // Version range [1.22,2.0) previously caused NoSuchMethodError when Gradle
+    // resolved different versions at compile-time vs runtime (see #283).
+    implementation 'com.amplitude:analytics-android:1.22.4'
     testImplementation 'org.mockito:mockito-core:4.0.0'
     testImplementation "io.mockk:mockk:1.12.4"
     testImplementation "io.mockk:mockk-agent-jvm:1.11.0"
