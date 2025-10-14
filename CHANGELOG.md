@@ -1,3 +1,10 @@
+## [4.3.9](https://github.com/amplitude/Amplitude-Flutter/compare/v4.3.8...v4.3.9) (2025-10-14)
+
+
+### Bug Fixes
+
+* lock iOS and Android SDK dependencies to specific versions ([#284](https://github.com/amplitude/Amplitude-Flutter/issues/284)) ([a4ffb5b](https://github.com/amplitude/Amplitude-Flutter/commit/a4ffb5be190d579ad265ad9a92cddd2b01c4e287))
+
 ## [4.3.8](https://github.com/amplitude/Amplitude-Flutter/compare/v4.3.7...v4.3.8) (2025-10-09)
 
 
