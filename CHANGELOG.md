@@ -1,3 +1,10 @@
+## [4.3.10](https://github.com/amplitude/Amplitude-Flutter/compare/v4.3.9...v4.3.10) (2026-01-16)
+
+
+### Bug Fixes
+
+* update Amplitude-Swift to 1.16.5 iOS missing installed/app opened events ([#287](https://github.com/amplitude/Amplitude-Flutter/issues/287)) ([5857dd7](https://github.com/amplitude/Amplitude-Flutter/commit/5857dd749573371d6bd913100f73c8f94234ac83))
+
 ## [4.3.9](https://github.com/amplitude/Amplitude-Flutter/compare/v4.3.8...v4.3.9) (2025-10-14)
 
 
