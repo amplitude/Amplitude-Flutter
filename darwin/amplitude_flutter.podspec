@@ -32,5 +32,5 @@ The official Amplitude Flutter SDK for tracking analytics events in your Flutter
     'DEBUG_INFORMATION_FORMAT' => 'dwarf-with-dsym'
   }
   s.swift_version = '5.9'
-  s.dependency 'AmplitudeSwift', '1.15.1'
+  s.dependency 'AmplitudeSwift', '1.16.5'
 end
