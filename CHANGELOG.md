@@ -1,3 +1,10 @@
+## [4.3.11](https://github.com/amplitude/Amplitude-Flutter/compare/v4.3.10...v4.3.11) (2026-02-24)
+
+
+### Bug Fixes
+
+* bump Amplitude-Kotlin to 1.25.3 and Amplitude-Swift to 1.17.3 ([#288](https://github.com/amplitude/Amplitude-Flutter/issues/288)) ([e9c6ca4](https://github.com/amplitude/Amplitude-Flutter/commit/e9c6ca462982da920aaec57e66942e415cd877d1))
+
 ## [4.3.10](https://github.com/amplitude/Amplitude-Flutter/compare/v4.3.9...v4.3.10) (2026-01-16)
 
 
