@@ -1,6 +1,6 @@
 {
   "private": true,
-  "dependencies": {
+  "devDependencies": {
     "lodash": "4.17.21",
     "semantic-release": "17.4.7",
     "@semantic-release/changelog": "5.0.1",
