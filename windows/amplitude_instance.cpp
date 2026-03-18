@@ -309,8 +309,10 @@ void AmplitudeInstance::EnrichEvent(nlohmann::json& event) {
     if (!event.contains("device_model") || event["device_model"].is_null())
       event["device_model"] = device_info_.device_model;
   }
-  if (!event.contains("device_brand") || event["device_brand"].is_null())
-    event["device_brand"] = device_info_.device_brand;
+  if (config_.track_device_manufacturer) {
+    if (!event.contains("device_brand") || event["device_brand"].is_null())
+      event["device_brand"] = device_info_.device_brand;
+  }
   if (config_.track_carrier) {
     if (!event.contains("carrier") || event["carrier"].is_null())
       event["carrier"] = device_info_.carrier;
