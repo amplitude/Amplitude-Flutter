@@ -1,6 +1,7 @@
 #ifndef AMPLITUDE_FLUTTER_EVENT_QUEUE_H_
 #define AMPLITUDE_FLUTTER_EVENT_QUEUE_H_
 
+#include <atomic>
 #include <condition_variable>
 #include <functional>
 #include <memory>
@@ -21,13 +22,8 @@ class EventQueue {
              int flush_interval_millis);
   ~EventQueue();
 
-  // Push an event onto the queue. May trigger auto-flush.
   void Push(const nlohmann::json& event);
-
-  // Force flush all queued events now (called from any thread).
   void Flush();
-
-  // Stop the background flush timer.
   void Stop();
 
  private:
@@ -39,14 +35,15 @@ class EventQueue {
   std::vector<nlohmann::json> events_;
   std::mutex mutex_;
 
-  // Background flush timer
   std::thread flush_thread_;
   std::condition_variable cv_;
   bool stop_ = false;
+  bool flush_requested_ = false;
+  std::atomic<bool> flushing_{false};
 
   void FlushTimerLoop();
   void FlushInternal();
-  void Persist();         // Must be called with mutex_ held
+  void Persist();  // Must be called with mutex_ held
 };
 
 }  // namespace amplitude_flutter

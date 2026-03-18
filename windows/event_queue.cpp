@@ -9,14 +9,12 @@ EventQueue::EventQueue(std::shared_ptr<Storage> storage,
       transport_(std::move(transport)),
       flush_queue_size_(flush_queue_size),
       flush_interval_millis_(flush_interval_millis) {
-  // Recover any persisted events from a previous crash
   auto recovered = storage_->LoadEvents();
   if (!recovered.empty()) {
     std::lock_guard<std::mutex> lock(mutex_);
     events_.insert(events_.end(), recovered.begin(), recovered.end());
   }
 
-  // Start background flush timer
   flush_thread_ = std::thread(&EventQueue::FlushTimerLoop, this);
 }
 
@@ -35,12 +33,18 @@ void EventQueue::Push(const nlohmann::json& event) {
   }
 
   if (should_flush) {
-    cv_.notify_one();  // Wake background thread instead of blocking caller
+    std::lock_guard<std::mutex> lock(mutex_);
+    flush_requested_ = true;
+    cv_.notify_one();
   }
 }
 
 void EventQueue::Flush() {
-  FlushInternal();
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    flush_requested_ = true;
+  }
+  cv_.notify_one();
 }
 
 void EventQueue::Stop() {
@@ -53,7 +57,8 @@ void EventQueue::Stop() {
   if (flush_thread_.joinable()) {
     flush_thread_.join();
   }
-  // Final flush
+  // Final flush runs on the calling thread after the background thread exits,
+  // so there's no concurrency concern here.
   FlushInternal();
 }
 
@@ -62,32 +67,42 @@ void EventQueue::FlushTimerLoop() {
     {
       std::unique_lock<std::mutex> lock(mutex_);
       cv_.wait_for(lock, std::chrono::milliseconds(flush_interval_millis_),
-                   [this] { return stop_; });
+                   [this] { return stop_ || flush_requested_; });
       if (stop_) break;
+      flush_requested_ = false;
     }
     FlushInternal();
   }
 }
 
 void EventQueue::FlushInternal() {
+  // Prevent concurrent flushes from reordering events on failure
+  if (flushing_.exchange(true)) return;
+
   std::vector<nlohmann::json> batch;
   {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (events_.empty()) return;
+    if (events_.empty()) {
+      flushing_ = false;
+      return;
+    }
     batch = std::move(events_);
     events_.clear();
-    Persist();  // Write cleared state so concurrent Push+Persist won't lose in-flight events
+    Persist();
   }
 
-  // Send outside the lock so Push() is never blocked by network I/O
   bool success = transport_->Send(batch);
-  std::lock_guard<std::mutex> lock(mutex_);
-  if (success) {
-    Persist();
-  } else {
-    events_.insert(events_.begin(), batch.begin(), batch.end());
-    Persist();
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (success) {
+      Persist();
+    } else {
+      events_.insert(events_.begin(), batch.begin(), batch.end());
+      Persist();
+    }
   }
+
+  flushing_ = false;
 }
 
 void EventQueue::Persist() {
