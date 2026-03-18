@@ -28,6 +28,8 @@ struct Configuration {
   std::string partner_id;
   bool default_tracking_sessions = true;
   bool default_tracking_app_lifecycles = false;
+  bool flush_events_on_close = true;
+  bool enable_coppa_control = false;
 
   // Tracking options (which fields to track). True = track.
   bool track_ip_address = true;
@@ -64,6 +66,10 @@ class AmplitudeInstance {
   void Reset();
   void SetOptOut(bool opt_out);
 
+  // App lifecycle hooks (called from plugin when Flutter notifies)
+  void OnAppLifecycleResumed();
+  void OnAppLifecyclePaused();
+
   static Configuration ParseConfiguration(const nlohmann::json& args);
 
  private:
@@ -77,9 +83,13 @@ class AmplitudeInstance {
   std::string device_id_;
   int64_t session_id_ = -1;
   int64_t last_event_time_ = 0;
+  bool app_opened_tracked_ = false;
 
   void EnrichEvent(nlohmann::json& event);
   void UpdateSession();
+  void TrackSessionStart();
+  void TrackSessionEnd(int64_t timestamp);
+  void TrackInternal(const nlohmann::json& event);
   void PersistIdentity();
   void LoadIdentity();
   int64_t CurrentTimeMillis() const;

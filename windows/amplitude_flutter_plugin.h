@@ -5,6 +5,7 @@
 #include <flutter/plugin_registrar_windows.h>
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 
@@ -27,8 +28,14 @@ class AmplitudeFlutterPlugin : public flutter::Plugin {
       const flutter::MethodCall<flutter::EncodableValue>& method_call,
       std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
 
+  // Window procedure delegate for lifecycle detection
+  std::optional<LRESULT> HandleWindowMessage(HWND hwnd, UINT message,
+                                              WPARAM wparam, LPARAM lparam);
+
   std::unordered_map<std::string, std::shared_ptr<AmplitudeInstance>>
       instances_;
+
+  int window_proc_id_ = -1;
 };
 
 }  // namespace amplitude_flutter

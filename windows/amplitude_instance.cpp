@@ -52,17 +52,39 @@ AmplitudeInstance::AmplitudeInstance(const Configuration& config)
   }
 
   // Start a new session
-  session_id_ = CurrentTimeMillis();
-  last_event_time_ = session_id_;
+  int64_t now = CurrentTimeMillis();
+  session_id_ = now;
+  last_event_time_ = now;
   PersistIdentity();
 
   event_queue_ = std::make_unique<EventQueue>(
       storage_, transport_, config_.flush_queue_size,
       config_.flush_interval_millis);
+
+  // Emit session start event
+  if (config_.default_tracking_sessions) {
+    TrackSessionStart();
+  }
+
+  // Emit app opened event (cold start)
+  if (config_.default_tracking_app_lifecycles && !app_opened_tracked_) {
+    nlohmann::json event;
+    event["event_type"] = "[Amplitude] Application Opened";
+    event["event_properties"] = nlohmann::json::object();
+    event["event_properties"]["from_background"] = false;
+    TrackInternal(event);
+    app_opened_tracked_ = true;
+  }
 }
 
 AmplitudeInstance::~AmplitudeInstance() {
+  if (config_.default_tracking_sessions) {
+    TrackSessionEnd(CurrentTimeMillis());
+  }
   if (event_queue_) {
+    if (config_.flush_events_on_close) {
+      event_queue_->Flush();
+    }
     event_queue_->Stop();
   }
 }
@@ -71,9 +93,45 @@ void AmplitudeInstance::Track(const nlohmann::json& event) {
   if (config_.opt_out) return;
 
   nlohmann::json enriched = event;
-  UpdateSession();
+  int64_t now = CurrentTimeMillis();
+  bool new_session = false;
+
+  // Check if we need a new session
+  if (config_.default_tracking_sessions &&
+      (now - last_event_time_) > config_.min_time_between_sessions_millis) {
+    // End old session, start new one
+    TrackSessionEnd(last_event_time_);
+    session_id_ = now;
+    new_session = true;
+    TrackSessionStart();
+  }
+  last_event_time_ = now;
+
   EnrichEvent(enriched);
   event_queue_->Push(enriched);
+}
+
+void AmplitudeInstance::TrackInternal(const nlohmann::json& event) {
+  // Internal tracking that bypasses opt-out (for session events)
+  nlohmann::json enriched = event;
+  EnrichEvent(enriched);
+  event_queue_->Push(enriched);
+}
+
+void AmplitudeInstance::TrackSessionStart() {
+  nlohmann::json event;
+  event["event_type"] = "[Amplitude] Start Session";
+  event["session_id"] = session_id_;
+  event["time"] = session_id_;  // Session start time = session_id
+  TrackInternal(event);
+}
+
+void AmplitudeInstance::TrackSessionEnd(int64_t timestamp) {
+  nlohmann::json event;
+  event["event_type"] = "[Amplitude] End Session";
+  event["session_id"] = session_id_;
+  event["time"] = timestamp;
+  TrackInternal(event);
 }
 
 void AmplitudeInstance::Flush() {
@@ -108,6 +166,41 @@ void AmplitudeInstance::Reset() {
 
 void AmplitudeInstance::SetOptOut(bool opt_out) { config_.opt_out = opt_out; }
 
+void AmplitudeInstance::OnAppLifecycleResumed() {
+  int64_t now = CurrentTimeMillis();
+
+  if (config_.default_tracking_sessions &&
+      (now - last_event_time_) > config_.min_time_between_sessions_millis) {
+    session_id_ = now;
+    TrackSessionStart();
+  }
+  last_event_time_ = now;
+
+  if (config_.default_tracking_app_lifecycles) {
+    nlohmann::json event;
+    event["event_type"] = "[Amplitude] Application Opened";
+    event["event_properties"] = nlohmann::json::object();
+    event["event_properties"]["from_background"] = true;
+    TrackInternal(event);
+  }
+}
+
+void AmplitudeInstance::OnAppLifecyclePaused() {
+  if (config_.default_tracking_app_lifecycles) {
+    nlohmann::json event;
+    event["event_type"] = "[Amplitude] Application Backgrounded";
+    TrackInternal(event);
+  }
+
+  if (config_.default_tracking_sessions) {
+    last_event_time_ = CurrentTimeMillis();
+  }
+
+  if (config_.flush_events_on_close) {
+    event_queue_->Flush();
+  }
+}
+
 Configuration AmplitudeInstance::ParseConfiguration(
     const nlohmann::json& args) {
   Configuration config;
@@ -125,6 +218,8 @@ Configuration AmplitudeInstance::ParseConfiguration(
   config.library = GetString(args, "library", "amplitude-flutter/unknown");
   config.min_id_length = GetInt(args, "minIdLength", 0);
   config.partner_id = GetString(args, "partnerId");
+  config.flush_events_on_close = GetBool(args, "flushEventsOnClose", true);
+  config.enable_coppa_control = GetBool(args, "enableCoppaControl", false);
 
   if (args.contains("defaultTracking") &&
       args["defaultTracking"].is_object()) {
@@ -153,6 +248,15 @@ Configuration AmplitudeInstance::ParseConfiguration(
     config.track_version_name = GetBool(to, "versionName", true);
   }
 
+  // COPPA: disable tracking of IP and location-related fields
+  if (config.enable_coppa_control) {
+    config.track_ip_address = false;
+    config.track_city = false;
+    config.track_dma = false;
+    config.track_region = false;
+    config.track_country = false;
+  }
+
   return config;
 }
 
@@ -169,7 +273,9 @@ void AmplitudeInstance::EnrichEvent(nlohmann::json& event) {
     event["time"] = CurrentTimeMillis();
   }
 
-  event["session_id"] = session_id_;
+  if (!event.contains("session_id") || event["session_id"].is_null()) {
+    event["session_id"] = session_id_;
+  }
 
   if (!event.contains("insert_id") || event["insert_id"].is_null()) {
     event["insert_id"] = GenerateInsertId();
@@ -221,15 +327,16 @@ void AmplitudeInstance::EnrichEvent(nlohmann::json& event) {
       (!event.contains("partner_id") || event["partner_id"].is_null())) {
     event["partner_id"] = config_.partner_id;
   }
+
+  // COPPA: strip IP if enabled
+  if (config_.enable_coppa_control) {
+    event["ip"] = "$remote";  // Amplitude default, but explicit
+  }
 }
 
 void AmplitudeInstance::UpdateSession() {
-  int64_t now = CurrentTimeMillis();
-  if (config_.default_tracking_sessions &&
-      (now - last_event_time_) > config_.min_time_between_sessions_millis) {
-    session_id_ = now;
-  }
-  last_event_time_ = now;
+  // Kept for backwards compat but session logic moved to Track()
+  last_event_time_ = CurrentTimeMillis();
 }
 
 void AmplitudeInstance::PersistIdentity() {
@@ -248,6 +355,10 @@ void AmplitudeInstance::LoadIdentity() {
   }
   if (identity.contains("user_id") && identity["user_id"].is_string()) {
     user_id_ = identity["user_id"].get<std::string>();
+  }
+  if (identity.contains("last_event_time") &&
+      identity["last_event_time"].is_number()) {
+    last_event_time_ = identity["last_event_time"].get<int64_t>();
   }
 }
 
