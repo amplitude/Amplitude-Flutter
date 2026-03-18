@@ -48,12 +48,17 @@ AmplitudeInstance::AmplitudeInstance(const Configuration& config)
 
   if (device_id_.empty()) {
     device_id_ = GenerateUUID();
-    PersistIdentity();
   }
 
-  // Start a new session
+  // Decide whether to resume the previous session or start a new one
   int64_t now = CurrentTimeMillis();
-  session_id_ = now;
+  bool need_new_session =
+      (session_id_ <= 0) || (last_event_time_ <= 0) ||
+      (now - last_event_time_) > config_.min_time_between_sessions_millis;
+
+  if (need_new_session) {
+    session_id_ = now;
+  }
   last_event_time_ = now;
   PersistIdentity();
 
@@ -61,8 +66,7 @@ AmplitudeInstance::AmplitudeInstance(const Configuration& config)
       storage_, transport_, config_.flush_queue_size,
       config_.flush_interval_millis);
 
-  // Emit session start event
-  if (config_.default_tracking_sessions) {
+  if (config_.default_tracking_sessions && need_new_session) {
     TrackSessionStart();
   }
 
@@ -356,6 +360,9 @@ void AmplitudeInstance::LoadIdentity() {
   }
   if (identity.contains("user_id") && identity["user_id"].is_string()) {
     user_id_ = identity["user_id"].get<std::string>();
+  }
+  if (identity.contains("session_id") && identity["session_id"].is_number()) {
+    session_id_ = identity["session_id"].get<int64_t>();
   }
   if (identity.contains("last_event_time") &&
       identity["last_event_time"].is_number()) {
