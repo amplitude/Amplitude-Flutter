@@ -202,6 +202,7 @@ void AmplitudeInstance::OnAppLifecyclePaused() {
 
   if (config_.default_tracking_sessions) {
     last_event_time_ = CurrentTimeMillis();
+    PersistIdentity();
   }
 
   if (config_.flush_events_on_close) {
