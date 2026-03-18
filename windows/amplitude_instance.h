@@ -83,7 +83,6 @@ class AmplitudeInstance {
   std::string device_id_;
   int64_t session_id_ = -1;
   int64_t last_event_time_ = 0;
-  bool app_opened_tracked_ = false;
 
   void EnrichEvent(nlohmann::json& event);
   void UpdateSession();

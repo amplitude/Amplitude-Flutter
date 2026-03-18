@@ -66,23 +66,23 @@ AmplitudeInstance::AmplitudeInstance(const Configuration& config)
       storage_, transport_, config_.flush_queue_size,
       config_.flush_interval_millis);
 
-  if (config_.default_tracking_sessions && need_new_session) {
-    TrackSessionStart();
-  }
+  if (!config_.opt_out) {
+    if (config_.default_tracking_sessions && need_new_session) {
+      TrackSessionStart();
+    }
 
-  // Emit app opened event (cold start)
-  if (config_.default_tracking_app_lifecycles && !app_opened_tracked_) {
-    nlohmann::json event;
-    event["event_type"] = "[Amplitude] Application Opened";
-    event["event_properties"] = nlohmann::json::object();
-    event["event_properties"]["from_background"] = false;
-    TrackInternal(event);
-    app_opened_tracked_ = true;
+    if (config_.default_tracking_app_lifecycles) {
+      nlohmann::json event;
+      event["event_type"] = "[Amplitude] Application Opened";
+      event["event_properties"] = nlohmann::json::object();
+      event["event_properties"]["from_background"] = false;
+      TrackInternal(event);
+    }
   }
 }
 
 AmplitudeInstance::~AmplitudeInstance() {
-  if (config_.default_tracking_sessions) {
+  if (!config_.opt_out && config_.default_tracking_sessions) {
     TrackSessionEnd(CurrentTimeMillis());
   }
   if (event_queue_) {
@@ -116,7 +116,8 @@ void AmplitudeInstance::Track(const nlohmann::json& event) {
 }
 
 void AmplitudeInstance::TrackInternal(const nlohmann::json& event) {
-  // Internal tracking that bypasses opt-out (for session events)
+  if (config_.opt_out) return;
+
   nlohmann::json enriched = event;
   EnrichEvent(enriched);
   event_queue_->Push(enriched);
