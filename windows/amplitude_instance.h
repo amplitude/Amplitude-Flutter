@@ -77,9 +77,9 @@ class AmplitudeInstance {
   Configuration config_;
   DeviceInfo device_info_;
   std::shared_ptr<Storage> storage_;
+  std::atomic<bool> stopping_{false};
   std::shared_ptr<HttpTransport> transport_;
   std::unique_ptr<EventQueue> event_queue_;
-  std::atomic<bool> stopping_{false};
 
   std::string user_id_;
   std::string device_id_;
