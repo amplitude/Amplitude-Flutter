@@ -28,6 +28,7 @@ list(APPEND PLUGIN_SOURCES
   "storage.cpp"
   "storage.h"
   "uuid.h"
+  "string_utils.h"
 )
 
 add_library(${PLUGIN_NAME} SHARED

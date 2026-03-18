@@ -5,19 +5,11 @@
 
 #include <thread>
 
+#include "string_utils.h"
+
 namespace amplitude_flutter {
 
 namespace {
-
-std::wstring Utf8ToWide(const std::string& utf8) {
-  if (utf8.empty()) return L"";
-  int size = MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(),
-                                  static_cast<int>(utf8.size()), nullptr, 0);
-  std::wstring result(size, 0);
-  MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(),
-                       static_cast<int>(utf8.size()), &result[0], size);
-  return result;
-}
 
 struct UrlParts {
   std::wstring host;

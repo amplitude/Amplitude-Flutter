@@ -5,21 +5,11 @@
 
 #include <string>
 
+#include "string_utils.h"
+
 namespace amplitude_flutter {
 
 namespace {
-
-std::string WideToUtf8(const std::wstring& wide) {
-  if (wide.empty()) return "";
-  int size = WideCharToMultiByte(CP_UTF8, 0, wide.c_str(),
-                                  static_cast<int>(wide.size()), nullptr, 0,
-                                  nullptr, nullptr);
-  std::string result(size, 0);
-  WideCharToMultiByte(CP_UTF8, 0, wide.c_str(),
-                       static_cast<int>(wide.size()), &result[0], size,
-                       nullptr, nullptr);
-  return result;
-}
 
 std::string ReadRegistryString(HKEY root, const std::wstring& path,
                                 const std::wstring& name) {
