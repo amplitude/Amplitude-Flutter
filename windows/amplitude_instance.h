@@ -1,6 +1,7 @@
 #ifndef AMPLITUDE_FLUTTER_AMPLITUDE_INSTANCE_H_
 #define AMPLITUDE_FLUTTER_AMPLITUDE_INSTANCE_H_
 
+#include <atomic>
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <string>
@@ -78,6 +79,7 @@ class AmplitudeInstance {
   std::shared_ptr<Storage> storage_;
   std::shared_ptr<HttpTransport> transport_;
   std::unique_ptr<EventQueue> event_queue_;
+  std::atomic<bool> stopping_{false};
 
   std::string user_id_;
   std::string device_id_;

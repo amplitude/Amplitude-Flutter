@@ -44,10 +44,12 @@ UrlParts ParseUrl(const std::string& url) {
 
 HttpTransport::HttpTransport(const std::string& api_key,
                              const std::string& server_url, bool use_batch,
-                             int max_retries)
+                             int max_retries,
+                             const std::atomic<bool>& stop_flag)
     : api_key_(api_key),
       server_url_(server_url),
-      max_retries_(max_retries) {}
+      max_retries_(max_retries),
+      stop_(stop_flag) {}
 
 std::string HttpTransport::DefaultUrl(const std::string& server_zone,
                                        bool use_batch) {
@@ -68,17 +70,20 @@ bool HttpTransport::Send(const std::vector<nlohmann::json>& events) {
   std::string body = payload.dump();
 
   for (int attempt = 0; attempt <= max_retries_; attempt++) {
+    if (stop_) return false;
     if (attempt > 0) {
       int shift = (attempt - 1 < 20) ? (attempt - 1) : 20;
       int delay_ms = 1000 * (1 << shift);
-      std::this_thread::sleep_for(std::chrono::milliseconds(delay_ms));
+      // Sleep in short intervals so we can check the stop flag
+      for (int slept = 0; slept < delay_ms && !stop_; slept += 100) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      }
+      if (stop_) return false;
     }
 
     int status = Post(server_url_, body);
     if (status == 200) return true;
-    // Don't retry permanent failures
     if (status == 400 || status == 413) return false;
-    // Retry on 429 (throttle), 5xx (server error), or 0 (connection failure)
   }
   return false;
 }

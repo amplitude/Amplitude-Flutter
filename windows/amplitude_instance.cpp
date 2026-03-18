@@ -42,7 +42,8 @@ AmplitudeInstance::AmplitudeInstance(const Configuration& config)
 
   storage_ = std::make_shared<Storage>(config_.instance_name);
   transport_ = std::make_shared<HttpTransport>(
-      config_.api_key, url, config_.use_batch, config_.flush_max_retries);
+      config_.api_key, url, config_.use_batch, config_.flush_max_retries,
+      stopping_);
 
   LoadIdentity();
 
@@ -82,11 +83,12 @@ AmplitudeInstance::AmplitudeInstance(const Configuration& config)
 }
 
 AmplitudeInstance::~AmplitudeInstance() {
+  stopping_ = true;
   if (!config_.opt_out && config_.default_tracking_sessions) {
     TrackSessionEnd(CurrentTimeMillis());
   }
   if (event_queue_) {
-    event_queue_->Stop();  // Stop already does a final FlushInternal
+    event_queue_->Stop();
   }
 }
 
