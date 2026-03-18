@@ -29,6 +29,7 @@ Storage::Storage(const std::string& instance_name) {
   base_path_ = GetLocalAppDataPath() + "\\amplitude\\" + instance_name;
   identity_path_ = base_path_ + "\\identity.json";
   events_path_ = base_path_ + "\\events.json";
+  inflight_path_ = base_path_ + "\\events_inflight.json";
   EnsureDirectory();
 }
 
@@ -68,6 +69,30 @@ std::vector<nlohmann::json> Storage::LoadEvents() {
 
 void Storage::ClearEvents() {
   DeleteFileW(Utf8ToWide(events_path_).c_str());
+}
+
+void Storage::SaveInflight(const std::vector<nlohmann::json>& events) {
+  nlohmann::json arr = nlohmann::json::array();
+  for (const auto& e : events) arr.push_back(e);
+  WriteFile(inflight_path_, arr.dump());
+}
+
+std::vector<nlohmann::json> Storage::LoadInflight() {
+  std::string content = ReadFile(inflight_path_);
+  if (content.empty()) return {};
+  try {
+    auto arr = nlohmann::json::parse(content);
+    if (!arr.is_array()) return {};
+    std::vector<nlohmann::json> result;
+    for (const auto& e : arr) result.push_back(e);
+    return result;
+  } catch (...) {
+    return {};
+  }
+}
+
+void Storage::ClearInflight() {
+  DeleteFileW(Utf8ToWide(inflight_path_).c_str());
 }
 
 void Storage::EnsureDirectory() {

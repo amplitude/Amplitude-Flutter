@@ -20,10 +20,16 @@ class Storage {
   std::vector<nlohmann::json> LoadEvents();
   void ClearEvents();
 
+  // In-flight batch persistence (crash recovery during send)
+  void SaveInflight(const std::vector<nlohmann::json>& events);
+  std::vector<nlohmann::json> LoadInflight();
+  void ClearInflight();
+
  private:
   std::string base_path_;
   std::string identity_path_;
   std::string events_path_;
+  std::string inflight_path_;
 
   void EnsureDirectory();
   void WriteFile(const std::string& path, const std::string& content);

@@ -9,6 +9,15 @@ EventQueue::EventQueue(std::shared_ptr<Storage> storage,
       transport_(std::move(transport)),
       flush_queue_size_(flush_queue_size),
       flush_interval_millis_(flush_interval_millis) {
+  // Recover in-flight events from a crash during send
+  auto inflight = storage_->LoadInflight();
+  if (!inflight.empty()) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    events_.insert(events_.end(), inflight.begin(), inflight.end());
+    storage_->ClearInflight();
+  }
+
+  // Recover queued events from a previous crash
   auto recovered = storage_->LoadEvents();
   if (!recovered.empty()) {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -57,8 +66,6 @@ void EventQueue::Stop() {
   if (flush_thread_.joinable()) {
     flush_thread_.join();
   }
-  // Final flush runs on the calling thread after the background thread exits,
-  // so there's no concurrency concern here.
   FlushInternal();
 }
 
@@ -76,7 +83,6 @@ void EventQueue::FlushTimerLoop() {
 }
 
 void EventQueue::FlushInternal() {
-  // Prevent concurrent flushes from reordering events on failure
   if (flushing_.exchange(true)) return;
 
   std::vector<nlohmann::json> batch;
@@ -91,12 +97,18 @@ void EventQueue::FlushInternal() {
     Persist();
   }
 
+  // Write batch to in-flight file before sending so a crash during
+  // transport doesn't lose them
+  storage_->SaveInflight(batch);
+
   bool success = transport_->Send(batch);
   {
     std::lock_guard<std::mutex> lock(mutex_);
     if (success) {
+      storage_->ClearInflight();
       Persist();
     } else {
+      storage_->ClearInflight();
       events_.insert(events_.begin(), batch.begin(), batch.end());
       Persist();
     }
