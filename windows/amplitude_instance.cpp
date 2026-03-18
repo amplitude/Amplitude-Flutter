@@ -86,10 +86,10 @@ AmplitudeInstance::~AmplitudeInstance() {
   if (!config_.opt_out && config_.default_tracking_sessions) {
     TrackSessionEnd(CurrentTimeMillis());
   }
+  stopping_ = true;
   if (event_queue_) {
     event_queue_->Stop();
   }
-  stopping_ = true;
 }
 
 void AmplitudeInstance::Track(const nlohmann::json& event) {

@@ -70,7 +70,7 @@ bool HttpTransport::Send(const std::vector<nlohmann::json>& events) {
   std::string body = payload.dump();
 
   for (int attempt = 0; attempt <= max_retries_; attempt++) {
-    if (stop_) return false;
+    if (attempt > 0 && stop_) return false;
     if (attempt > 0) {
       int shift = (attempt - 1 < 20) ? (attempt - 1) : 20;
       int delay_ms = 1000 * (1 << shift);
