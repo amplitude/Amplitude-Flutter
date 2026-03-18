@@ -17,7 +17,6 @@ class HttpTransport {
  private:
   std::string api_key_;
   std::string server_url_;
-  bool use_batch_;
   int max_retries_;
 
   // Returns HTTP status code, or 0 on connection failure.

@@ -95,15 +95,11 @@ void AmplitudeInstance::Track(const nlohmann::json& event) {
 
   nlohmann::json enriched = event;
   int64_t now = CurrentTimeMillis();
-  bool new_session = false;
 
-  // Check if we need a new session
   if (config_.default_tracking_sessions &&
       (now - last_event_time_) > config_.min_time_between_sessions_millis) {
-    // End old session, start new one
     TrackSessionEnd(last_event_time_);
     session_id_ = now;
-    new_session = true;
     TrackSessionStart();
   }
   last_event_time_ = now;

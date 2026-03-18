@@ -47,7 +47,6 @@ HttpTransport::HttpTransport(const std::string& api_key,
                              int max_retries)
     : api_key_(api_key),
       server_url_(server_url),
-      use_batch_(use_batch),
       max_retries_(max_retries) {}
 
 std::string HttpTransport::DefaultUrl(const std::string& server_zone,
