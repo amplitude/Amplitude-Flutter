@@ -45,7 +45,7 @@ class EventQueue {
   bool stop_ = false;
 
   void FlushTimerLoop();
-  void FlushInternal();  // Must be called with mutex_ held
+  void FlushInternal();
   void Persist();         // Must be called with mutex_ held
 };
 
