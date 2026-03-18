@@ -80,10 +80,13 @@ void EventQueue::FlushInternal() {
 
   // Send outside the lock so Push() is never blocked by network I/O
   bool success = transport_->Send(batch);
+  std::lock_guard<std::mutex> lock(mutex_);
   if (success) {
-    storage_->ClearEvents();
+    // Re-persist current events_ (which may include new events pushed
+    // while we were sending) rather than clearing the file, to avoid
+    // deleting events that arrived during the send.
+    Persist();
   } else {
-    std::lock_guard<std::mutex> lock(mutex_);
     events_.insert(events_.begin(), batch.begin(), batch.end());
     Persist();
   }
