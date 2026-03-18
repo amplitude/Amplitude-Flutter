@@ -276,7 +276,11 @@ void AmplitudeInstance::EnrichEvent(nlohmann::json& event) {
   }
 
   if (!event.contains("time") || event["time"].is_null()) {
-    event["time"] = CurrentTimeMillis();
+    if (event.contains("timestamp") && event["timestamp"].is_number()) {
+      event["time"] = event["timestamp"];
+    } else {
+      event["time"] = CurrentTimeMillis();
+    }
   }
 
   if (!event.contains("session_id") || event["session_id"].is_null()) {
