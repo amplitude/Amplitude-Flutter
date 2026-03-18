@@ -9,19 +9,20 @@ EventQueue::EventQueue(std::shared_ptr<Storage> storage,
       transport_(std::move(transport)),
       flush_queue_size_(flush_queue_size),
       flush_interval_millis_(flush_interval_millis) {
-  // Recover in-flight events from a crash during send
-  auto inflight = storage_->LoadInflight();
-  if (!inflight.empty()) {
+  {
     std::lock_guard<std::mutex> lock(mutex_);
-    events_.insert(events_.end(), inflight.begin(), inflight.end());
-    storage_->ClearInflight();
-  }
-
-  // Recover queued events from a previous crash
-  auto recovered = storage_->LoadEvents();
-  if (!recovered.empty()) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    events_.insert(events_.end(), recovered.begin(), recovered.end());
+    auto inflight = storage_->LoadInflight();
+    if (!inflight.empty()) {
+      events_.insert(events_.end(), inflight.begin(), inflight.end());
+      storage_->ClearInflight();
+    }
+    auto recovered = storage_->LoadEvents();
+    if (!recovered.empty()) {
+      events_.insert(events_.end(), recovered.begin(), recovered.end());
+    }
+    if (!events_.empty()) {
+      Persist();
+    }
   }
 
   flush_thread_ = std::thread(&EventQueue::FlushTimerLoop, this);
