@@ -85,7 +85,6 @@ class AmplitudeInstance {
   int64_t last_event_time_ = 0;
 
   void EnrichEvent(nlohmann::json& event);
-  void UpdateSession();
   void TrackSessionStart();
   void TrackSessionEnd(int64_t timestamp);
   void TrackInternal(const nlohmann::json& event);

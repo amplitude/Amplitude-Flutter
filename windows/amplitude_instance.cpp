@@ -342,11 +342,6 @@ void AmplitudeInstance::EnrichEvent(nlohmann::json& event) {
   }
 }
 
-void AmplitudeInstance::UpdateSession() {
-  // Kept for backwards compat but session logic moved to Track()
-  last_event_time_ = CurrentTimeMillis();
-}
-
 void AmplitudeInstance::PersistIdentity() {
   nlohmann::json identity;
   identity["device_id"] = device_id_;
