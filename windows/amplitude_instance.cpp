@@ -86,10 +86,7 @@ AmplitudeInstance::~AmplitudeInstance() {
     TrackSessionEnd(CurrentTimeMillis());
   }
   if (event_queue_) {
-    if (config_.flush_events_on_close) {
-      event_queue_->Flush();
-    }
-    event_queue_->Stop();
+    event_queue_->Stop();  // Stop already does a final FlushInternal
   }
 }
 
