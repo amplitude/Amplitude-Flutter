@@ -27,6 +27,11 @@ Open the emulator you want to test on (Android, iOS)
 flutter run
 ```
 
+### Windows
+```shell
+flutter run -d windows
+```
+
 ### Browser
 ```shell
 flutter run -d chrome
