@@ -171,6 +171,7 @@ void AmplitudeInstance::OnAppLifecycleResumed() {
 
   if (config_.default_tracking_sessions &&
       (now - last_event_time_) > config_.min_time_between_sessions_millis) {
+    TrackSessionEnd(last_event_time_);
     session_id_ = now;
     TrackSessionStart();
   }
