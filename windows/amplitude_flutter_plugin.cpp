@@ -7,52 +7,35 @@ namespace amplitude_flutter {
 
 namespace {
 
-// Helper to convert flutter::EncodableValue to nlohmann::json (event map)
+nlohmann::json EncodableValueToJson(const flutter::EncodableValue& v);
+
 nlohmann::json EncodableMapToJson(const flutter::EncodableMap& map) {
   nlohmann::json obj = nlohmann::json::object();
   for (const auto& [k, v] : map) {
     if (!std::holds_alternative<std::string>(k)) continue;
-    const auto& key = std::get<std::string>(k);
-
-    if (std::holds_alternative<std::monostate>(v)) {
-      obj[key] = nullptr;
-    } else if (std::holds_alternative<bool>(v)) {
-      obj[key] = std::get<bool>(v);
-    } else if (std::holds_alternative<int32_t>(v)) {
-      obj[key] = std::get<int32_t>(v);
-    } else if (std::holds_alternative<int64_t>(v)) {
-      obj[key] = std::get<int64_t>(v);
-    } else if (std::holds_alternative<double>(v)) {
-      obj[key] = std::get<double>(v);
-    } else if (std::holds_alternative<std::string>(v)) {
-      obj[key] = std::get<std::string>(v);
-    } else if (std::holds_alternative<flutter::EncodableList>(v)) {
-      // Recurse for lists
-      nlohmann::json arr = nlohmann::json::array();
-      for (const auto& item : std::get<flutter::EncodableList>(v)) {
-        if (std::holds_alternative<flutter::EncodableMap>(item)) {
-          arr.push_back(
-              EncodableMapToJson(std::get<flutter::EncodableMap>(item)));
-        } else if (std::holds_alternative<std::string>(item)) {
-          arr.push_back(std::get<std::string>(item));
-        } else if (std::holds_alternative<int32_t>(item)) {
-          arr.push_back(std::get<int32_t>(item));
-        } else if (std::holds_alternative<int64_t>(item)) {
-          arr.push_back(std::get<int64_t>(item));
-        } else if (std::holds_alternative<double>(item)) {
-          arr.push_back(std::get<double>(item));
-        } else if (std::holds_alternative<bool>(item)) {
-          arr.push_back(std::get<bool>(item));
-        } else {
-          arr.push_back(nullptr);
-        }
-      }
-      obj[key] = arr;
-    } else if (std::holds_alternative<flutter::EncodableMap>(v)) {
-      obj[key] = EncodableMapToJson(std::get<flutter::EncodableMap>(v));
-    }
+    obj[std::get<std::string>(k)] = EncodableValueToJson(v);
   }
   return obj;
+}
+
+nlohmann::json EncodableValueToJson(const flutter::EncodableValue& v) {
+  if (std::holds_alternative<std::monostate>(v)) return nullptr;
+  if (std::holds_alternative<bool>(v)) return std::get<bool>(v);
+  if (std::holds_alternative<int32_t>(v)) return std::get<int32_t>(v);
+  if (std::holds_alternative<int64_t>(v)) return std::get<int64_t>(v);
+  if (std::holds_alternative<double>(v)) return std::get<double>(v);
+  if (std::holds_alternative<std::string>(v)) return std::get<std::string>(v);
+  if (std::holds_alternative<flutter::EncodableList>(v)) {
+    nlohmann::json arr = nlohmann::json::array();
+    for (const auto& item : std::get<flutter::EncodableList>(v)) {
+      arr.push_back(EncodableValueToJson(item));
+    }
+    return arr;
+  }
+  if (std::holds_alternative<flutter::EncodableMap>(v)) {
+    return EncodableMapToJson(std::get<flutter::EncodableMap>(v));
+  }
+  return nullptr;
 }
 
 }  // namespace
