@@ -70,8 +70,8 @@ bool HttpTransport::Send(const std::vector<nlohmann::json>& events) {
 
   for (int attempt = 0; attempt <= max_retries_; attempt++) {
     if (attempt > 0) {
-      // Exponential backoff: 1s, 2s, 4s, 8s, 16s
-      int delay_ms = 1000 * (1 << (attempt - 1));
+      int shift = (attempt - 1 < 20) ? (attempt - 1) : 20;
+      int delay_ms = 1000 * (1 << shift);
       std::this_thread::sleep_for(std::chrono::milliseconds(delay_ms));
     }
 
