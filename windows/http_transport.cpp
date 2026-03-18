@@ -1,0 +1,143 @@
+#include "http_transport.h"
+
+#include <windows.h>
+#include <winhttp.h>
+
+#include <thread>
+
+namespace amplitude_flutter {
+
+namespace {
+
+std::wstring Utf8ToWide(const std::string& utf8) {
+  if (utf8.empty()) return L"";
+  int size = MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(),
+                                  static_cast<int>(utf8.size()), nullptr, 0);
+  std::wstring result(size, 0);
+  MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(),
+                       static_cast<int>(utf8.size()), &result[0], size);
+  return result;
+}
+
+struct UrlParts {
+  std::wstring host;
+  std::wstring path;
+  INTERNET_PORT port;
+  bool use_ssl;
+};
+
+UrlParts ParseUrl(const std::string& url) {
+  UrlParts parts;
+  std::wstring wide_url = Utf8ToWide(url);
+
+  URL_COMPONENTS components = {};
+  components.dwStructSize = sizeof(components);
+  wchar_t host[256] = {};
+  wchar_t path[1024] = {};
+  components.lpszHostName = host;
+  components.dwHostNameLength = 256;
+  components.lpszUrlPath = path;
+  components.dwUrlPathLength = 1024;
+
+  WinHttpCrackUrl(wide_url.c_str(), 0, 0, &components);
+
+  parts.host = host;
+  parts.path = path;
+  parts.port = components.nPort;
+  parts.use_ssl = (components.nScheme == INTERNET_SCHEME_HTTPS);
+  return parts;
+}
+
+}  // namespace
+
+HttpTransport::HttpTransport(const std::string& api_key,
+                             const std::string& server_url, bool use_batch,
+                             int max_retries)
+    : api_key_(api_key),
+      server_url_(server_url),
+      use_batch_(use_batch),
+      max_retries_(max_retries) {}
+
+std::string HttpTransport::DefaultUrl(const std::string& server_zone,
+                                       bool use_batch) {
+  if (server_zone == "EU") {
+    return use_batch ? "https://api.eu.amplitude.com/batch"
+                     : "https://api.eu.amplitude.com/2/httpapi";
+  }
+  return use_batch ? "https://api2.amplitude.com/batch"
+                   : "https://api2.amplitude.com/2/httpapi";
+}
+
+bool HttpTransport::Send(const std::vector<nlohmann::json>& events) {
+  if (events.empty()) return true;
+
+  nlohmann::json payload;
+  payload["api_key"] = api_key_;
+  payload["events"] = events;
+  std::string body = payload.dump();
+
+  for (int attempt = 0; attempt <= max_retries_; attempt++) {
+    if (attempt > 0) {
+      // Exponential backoff: 1s, 2s, 4s, 8s, 16s
+      int delay_ms = 1000 * (1 << (attempt - 1));
+      std::this_thread::sleep_for(std::chrono::milliseconds(delay_ms));
+    }
+
+    if (Post(server_url_, body)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool HttpTransport::Post(const std::string& url, const std::string& body) {
+  auto parts = ParseUrl(url);
+
+  HINTERNET session = WinHttpOpen(L"amplitude-flutter-windows/1.0",
+                                   WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
+                                   WINHTTP_NO_PROXY_NAME,
+                                   WINHTTP_NO_PROXY_BYPASS, 0);
+  if (!session) return false;
+
+  HINTERNET connection =
+      WinHttpConnect(session, parts.host.c_str(), parts.port, 0);
+  if (!connection) {
+    WinHttpCloseHandle(session);
+    return false;
+  }
+
+  DWORD flags = parts.use_ssl ? WINHTTP_FLAG_SECURE : 0;
+  HINTERNET request = WinHttpOpenRequest(
+      connection, L"POST", parts.path.c_str(), nullptr,
+      WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, flags);
+  if (!request) {
+    WinHttpCloseHandle(connection);
+    WinHttpCloseHandle(session);
+    return false;
+  }
+
+  const wchar_t* content_type = L"Content-Type: application/json";
+  BOOL sent = WinHttpSendRequest(
+      request, content_type, static_cast<DWORD>(-1),
+      const_cast<char*>(body.c_str()), static_cast<DWORD>(body.size()),
+      static_cast<DWORD>(body.size()), 0);
+
+  bool success = false;
+  if (sent && WinHttpReceiveResponse(request, nullptr)) {
+    DWORD status_code = 0;
+    DWORD size = sizeof(status_code);
+    WinHttpQueryHeaders(request,
+                         WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
+                         WINHTTP_HEADER_NAME_BY_INDEX, &status_code, &size,
+                         WINHTTP_NO_HEADER_INDEX);
+    // 200 = success, 429 = throttled (retry), anything else = failure
+    success = (status_code == 200);
+  }
+
+  WinHttpCloseHandle(request);
+  WinHttpCloseHandle(connection);
+  WinHttpCloseHandle(session);
+  return success;
+}
+
+}  // namespace amplitude_flutter

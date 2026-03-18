@@ -35,6 +35,8 @@ flutter:
       macos:
         pluginClass: AmplitudeFlutterPlugin
         sharedDarwinSource: true
+      windows:
+        pluginClass: AmplitudeFlutterPluginCApi
       web:
         pluginClass: AmplitudeFlutterPlugin
         fileName: amplitude_web.dart
