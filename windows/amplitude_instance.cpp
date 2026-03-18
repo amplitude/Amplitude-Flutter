@@ -110,6 +110,7 @@ void AmplitudeInstance::Track(const nlohmann::json& event) {
     TrackSessionStart();
   }
   last_event_time_ = now;
+  PersistIdentity();
 
   EnrichEvent(enriched);
   event_queue_->Push(enriched);
@@ -181,6 +182,7 @@ void AmplitudeInstance::OnAppLifecycleResumed() {
     TrackSessionStart();
   }
   last_event_time_ = now;
+  PersistIdentity();
 
   if (config_.default_tracking_app_lifecycles) {
     nlohmann::json event;
