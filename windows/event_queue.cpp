@@ -40,7 +40,6 @@ void EventQueue::Push(const nlohmann::json& event) {
 }
 
 void EventQueue::Flush() {
-  std::lock_guard<std::mutex> lock(mutex_);
   FlushInternal();
 }
 
@@ -55,32 +54,36 @@ void EventQueue::Stop() {
     flush_thread_.join();
   }
   // Final flush
-  std::lock_guard<std::mutex> lock(mutex_);
   FlushInternal();
 }
 
 void EventQueue::FlushTimerLoop() {
   while (true) {
-    std::unique_lock<std::mutex> lock(mutex_);
-    cv_.wait_for(lock, std::chrono::milliseconds(flush_interval_millis_),
-                 [this] { return stop_; });
-    if (stop_) break;
+    {
+      std::unique_lock<std::mutex> lock(mutex_);
+      cv_.wait_for(lock, std::chrono::milliseconds(flush_interval_millis_),
+                   [this] { return stop_; });
+      if (stop_) break;
+    }
     FlushInternal();
   }
 }
 
 void EventQueue::FlushInternal() {
-  if (events_.empty()) return;
+  std::vector<nlohmann::json> batch;
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (events_.empty()) return;
+    batch = std::move(events_);
+    events_.clear();
+  }
 
-  // Move events out for sending
-  std::vector<nlohmann::json> batch = std::move(events_);
-  events_.clear();
-
+  // Send outside the lock so Push() is never blocked by network I/O
   bool success = transport_->Send(batch);
   if (success) {
     storage_->ClearEvents();
   } else {
-    // Put events back on failure
+    std::lock_guard<std::mutex> lock(mutex_);
     events_.insert(events_.begin(), batch.begin(), batch.end());
     Persist();
   }
