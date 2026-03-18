@@ -20,7 +20,8 @@ class HttpTransport {
   bool use_batch_;
   int max_retries_;
 
-  bool Post(const std::string& url, const std::string& body);
+  // Returns HTTP status code, or 0 on connection failure.
+  int Post(const std::string& url, const std::string& body);
   static std::string DefaultUrl(const std::string& server_zone, bool use_batch);
 
   friend class AmplitudeInstance;
