@@ -60,7 +60,7 @@ HttpTransport::HttpTransport(const std::string& api_key,
 
 std::string HttpTransport::DefaultUrl(const std::string& server_zone,
                                        bool use_batch) {
-  if (server_zone == "EU") {
+  if (server_zone == "EU" || server_zone == "eu") {
     return use_batch ? "https://api.eu.amplitude.com/batch"
                      : "https://api.eu.amplitude.com/2/httpapi";
   }
