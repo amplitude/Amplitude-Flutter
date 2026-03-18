@@ -18,7 +18,6 @@ class Storage {
   // Event queue persistence
   void SaveEvents(const std::vector<nlohmann::json>& events);
   std::vector<nlohmann::json> LoadEvents();
-  void ClearEvents();
 
   // In-flight batch persistence (crash recovery during send)
   void SaveInflight(const std::vector<nlohmann::json>& events);

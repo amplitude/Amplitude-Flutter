@@ -67,10 +67,6 @@ std::vector<nlohmann::json> Storage::LoadEvents() {
   }
 }
 
-void Storage::ClearEvents() {
-  DeleteFileW(Utf8ToWide(events_path_).c_str());
-}
-
 void Storage::SaveInflight(const std::vector<nlohmann::json>& events) {
   nlohmann::json arr = nlohmann::json::array();
   for (const auto& e : events) arr.push_back(e);
