@@ -58,6 +58,7 @@ void AmplitudeFlutterPlugin::RegisterWithRegistrar(
   // Register window message handler for lifecycle detection
   auto* windows_registrar =
       static_cast<flutter::PluginRegistrarWindows*>(registrar);
+  plugin->registrar_ = windows_registrar;
   plugin->window_proc_id_ =
       windows_registrar->RegisterTopLevelWindowProcDelegate(
           [plugin_ptr = plugin.get()](HWND hwnd, UINT message, WPARAM wparam,
@@ -70,7 +71,12 @@ void AmplitudeFlutterPlugin::RegisterWithRegistrar(
 }
 
 AmplitudeFlutterPlugin::AmplitudeFlutterPlugin() = default;
-AmplitudeFlutterPlugin::~AmplitudeFlutterPlugin() = default;
+
+AmplitudeFlutterPlugin::~AmplitudeFlutterPlugin() {
+  if (registrar_ && window_proc_id_ >= 0) {
+    registrar_->UnregisterTopLevelWindowProcDelegate(window_proc_id_);
+  }
+}
 
 std::optional<LRESULT> AmplitudeFlutterPlugin::HandleWindowMessage(
     HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam) {

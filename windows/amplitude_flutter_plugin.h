@@ -35,6 +35,7 @@ class AmplitudeFlutterPlugin : public flutter::Plugin {
   std::unordered_map<std::string, std::shared_ptr<AmplitudeInstance>>
       instances_;
 
+  flutter::PluginRegistrarWindows* registrar_ = nullptr;
   int window_proc_id_ = -1;
 };
 
