@@ -112,7 +112,7 @@ void Storage::WriteFile(const std::string& path, const std::string& content) {
     file << content;
     file.close();
     MoveFileExW(wide_temp.c_str(), wide_path.c_str(),
-                MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH);
+                MOVEFILE_REPLACE_EXISTING);
   }
 }
 

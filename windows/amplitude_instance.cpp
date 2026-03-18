@@ -101,9 +101,11 @@ void AmplitudeInstance::Track(const nlohmann::json& event) {
     TrackSessionEnd(last_event_time_);
     session_id_ = now;
     TrackSessionStart();
+    last_event_time_ = now;
+    PersistIdentity();
+  } else {
+    last_event_time_ = now;
   }
-  last_event_time_ = now;
-  PersistIdentity();
 
   EnrichEvent(enriched);
   event_queue_->Push(enriched);
