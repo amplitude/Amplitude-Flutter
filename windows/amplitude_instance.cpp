@@ -336,9 +336,8 @@ void AmplitudeInstance::EnrichEvent(nlohmann::json& event) {
     event["partner_id"] = config_.partner_id;
   }
 
-  // COPPA: strip IP if enabled
   if (config_.enable_coppa_control) {
-    event["ip"] = "$remote";  // Amplitude default, but explicit
+    event["ip"] = "$none";
   }
 }
 
