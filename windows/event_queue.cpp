@@ -35,7 +35,7 @@ void EventQueue::Push(const nlohmann::json& event) {
   }
 
   if (should_flush) {
-    Flush();
+    cv_.notify_one();  // Wake background thread instead of blocking caller
   }
 }
 
