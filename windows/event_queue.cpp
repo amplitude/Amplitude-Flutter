@@ -95,12 +95,9 @@ void EventQueue::FlushInternal() {
     }
     batch = std::move(events_);
     events_.clear();
+    storage_->SaveInflight(batch);
     Persist();
   }
-
-  // Write batch to in-flight file before sending so a crash during
-  // transport doesn't lose them
-  storage_->SaveInflight(batch);
 
   bool success = transport_->Send(batch);
   {
