@@ -8,8 +8,12 @@ import FlutterMacOS
 import AmplitudeSwift
 
 @objc public class SwiftAmplitudeFlutterPlugin: NSObject, FlutterPlugin {
-    var instances: [String: Amplitude] = [:]
+    static var instances: [String: Amplitude] = [:]
     static let methodChannelName = "amplitude_flutter"
+
+    public static func findAmplitudeInstanceById(_ id: String) -> Amplitude? {
+        return instances[id]
+    }
 
     public static func register(with registrar: FlutterPluginRegistrar) {
         #if os(iOS)
@@ -32,7 +36,7 @@ import AmplitudeSwift
             var amplitude: Amplitude?
             do {
                 amplitude = Amplitude(configuration: try getConfiguration(args: configArgs))
-                instances[amplitude!.configuration.instanceName] = amplitude
+                Self.instances[amplitude!.configuration.instanceName] = amplitude
             } catch {
                 print("Initialization failed.")
             }
@@ -52,7 +56,7 @@ import AmplitudeSwift
 
         let arguments = call.arguments as? [String: Any]
         let instanceName = arguments?["instanceName"] as? String ?? "$default_instance"
-        let amplitude = instances[instanceName]
+        let amplitude = Self.instances[instanceName]
 
         switch call.method {
         case "track", "identify", "groupIdentify", "setGroup", "revenue":

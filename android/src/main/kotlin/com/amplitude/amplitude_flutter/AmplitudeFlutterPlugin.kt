@@ -22,7 +22,6 @@ import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import java.lang.ref.WeakReference
 
 class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
-    private var instances: Map<String, Amplitude> = mutableMapOf()
     private var activity: WeakReference<Activity?> = WeakReference(null)
     lateinit var ctxt: Context
     private var appOpenedTracked = false
@@ -31,6 +30,10 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 
     companion object {
         private const val methodChannelName = "amplitude_flutter"
+        private val instances: MutableMap<String, Amplitude> = mutableMapOf()
+
+        @JvmStatic
+        fun findAmplitudeInstanceById(id: String): Amplitude? = instances[id]
     }
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
@@ -63,7 +66,7 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         if (call.method == "init") {
             val configuration = getConfiguration(call)
             val amplitude = Amplitude(configuration)
-            instances += mapOf(configuration.instanceName to amplitude)
+            instances[configuration.instanceName] = amplitude
 
             // Set library
             amplitude.add(
