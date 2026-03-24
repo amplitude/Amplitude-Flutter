@@ -44,7 +44,6 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
          * @param id The instance name of the Amplitude instance.
          * @return The Amplitude instance or null if not found.
          */
-        @InternalAmplitudeApi
         @JvmStatic
         fun getAmplitudeInstanceById(id: String): Amplitude? {
             return pluginInstance?.instances?.get(id)
@@ -361,11 +360,3 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         return event
     }
 }
-
-@RequiresOptIn(
-    message = "This is an internal Amplitude API and is not intended for use outside of Amplitude SDKs.",
-    level = RequiresOptIn.Level.ERROR
-)
-@Retention(AnnotationRetention.BINARY)
-@Target(AnnotationTarget.FUNCTION)
-annotation class InternalAmplitudeApi

@@ -19,7 +19,7 @@ internal var pluginInstance: SwiftAmplitudeFlutterPlugin?
     ///
     /// - parameter id: The instance name of the Amplitude instance.
     /// - returns: The Amplitude instance or `nil` if not found.
-    @_spi(AmplitudeFlutterPlugin) public static func getAmplitudeInstanceById(_ id: String) -> Amplitude? {
+    public static func getAmplitudeInstanceById(_ id: String) -> Amplitude? {
       guard let pluginInstance = pluginInstance else {
           return nil
       }
