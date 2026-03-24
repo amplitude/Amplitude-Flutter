@@ -26,7 +26,7 @@ import java.lang.ref.WeakReference
 private var pluginInstance: AmplitudeFlutterPlugin? = null
 
 class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
-    private val instances: MutableMap<String, Amplitude> = mutableMapOf()
+    private var instances: Map<String, Amplitude> = mutableMapOf()
     private var activity: WeakReference<Activity?> = WeakReference(null)
     lateinit var ctxt: Context
     private var appOpenedTracked = false
