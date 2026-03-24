@@ -7,12 +7,24 @@ import FlutterMacOS
 
 import AmplitudeSwift
 
+internal var pluginInstance: SwiftAmplitudeFlutterPlugin? = nil
+
 @objc public class SwiftAmplitudeFlutterPlugin: NSObject, FlutterPlugin {
-    static var instances: [String: Amplitude] = [:]
+    var instances: [String: Amplitude] = [:]
     static let methodChannelName = "amplitude_flutter"
 
-    public static func findAmplitudeInstanceById(_ id: String) -> Amplitude? {
-        return instances[id]
+    /// Returns an Amplitude instance by its instance name.
+    /// This method is intended to be used by other Amplitude SDKs to be able to
+    /// access the underlying Amplitude instance from a native context.
+    ///
+    /// - parameter id: The instance name of the Amplitude instance.
+    /// - returns: The Amplitude instance or `nil` if not found.
+    @_spi(AmplitudeFlutterPlugin) public static func getAmplitudeInstanceById(_ id: String) -> Amplitude? {
+      guard let pluginInstance = pluginInstance else {
+          return nil
+      }
+
+      return pluginInstance.instances[id]
     }
 
     public static func register(with registrar: FlutterPluginRegistrar) {
@@ -24,6 +36,7 @@ import AmplitudeSwift
         let channel = FlutterMethodChannel(name: methodChannelName, binaryMessenger: messenger)
         let instance = SwiftAmplitudeFlutterPlugin()
         registrar.addMethodCallDelegate(instance, channel: channel)
+        pluginInstance = instance
     }
 
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -36,7 +49,7 @@ import AmplitudeSwift
             var amplitude: Amplitude?
             do {
                 amplitude = Amplitude(configuration: try getConfiguration(args: configArgs))
-                Self.instances[amplitude!.configuration.instanceName] = amplitude
+                instances[amplitude!.configuration.instanceName] = amplitude
             } catch {
                 print("Initialization failed.")
             }
@@ -56,7 +69,7 @@ import AmplitudeSwift
 
         let arguments = call.arguments as? [String: Any]
         let instanceName = arguments?["instanceName"] as? String ?? "$default_instance"
-        let amplitude = Self.instances[instanceName]
+        let amplitude = instances[instanceName]
 
         switch call.method {
         case "track", "identify", "groupIdentify", "setGroup", "revenue":

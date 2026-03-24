@@ -21,7 +21,12 @@ import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import java.lang.ref.WeakReference
 
+// Global variable to store the plugin instance for the duration of the app's lifecycle
+// This is used to access the plugin instance from a native context in other Amplitude SDKs.
+private var pluginInstance: AmplitudeFlutterPlugin? = null
+
 class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
+    private val instances: MutableMap<String, Amplitude> = mutableMapOf()
     private var activity: WeakReference<Activity?> = WeakReference(null)
     lateinit var ctxt: Context
     private var appOpenedTracked = false
@@ -30,10 +35,20 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 
     companion object {
         private const val methodChannelName = "amplitude_flutter"
-        private val instances: MutableMap<String, Amplitude> = mutableMapOf()
 
+        /**
+         * Returns an Amplitude instance by its instance name.
+         * This method is intended to be used by other Amplitude SDKs to be able to
+         * access the underlying Amplitude instance from a native context.
+         *
+         * @param id The instance name of the Amplitude instance.
+         * @return The Amplitude instance or null if not found.
+         */
+        @InternalAmplitudeApi
         @JvmStatic
-        fun findAmplitudeInstanceById(id: String): Amplitude? = instances[id]
+        fun getAmplitudeInstanceById(id: String): Amplitude? {
+            return pluginInstance?.instances?.get(id)
+        }
     }
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
@@ -56,10 +71,12 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         ctxt = binding.applicationContext
         channel = MethodChannel(binding.binaryMessenger, methodChannelName)
         channel.setMethodCallHandler(this)
+        pluginInstance = this
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         channel.setMethodCallHandler(null)
+        pluginInstance = null
     }
 
     override fun onMethodCall(call: MethodCall, result: Result) {
@@ -344,3 +361,11 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         return event
     }
 }
+
+@RequiresOptIn(
+    message = "This is an internal Amplitude API and is not intended for use outside of Amplitude SDKs.",
+    level = RequiresOptIn.Level.ERROR
+)
+@Retention(AnnotationRetention.BINARY)
+@Target(AnnotationTarget.FUNCTION)
+annotation class InternalAmplitudeApi
