@@ -2,6 +2,7 @@ package com.amplitude.amplitude_flutter
 
 import android.app.Activity
 import android.content.Context
+import androidx.annotation.RestrictTo
 import com.amplitude.android.Amplitude
 import com.amplitude.android.Configuration
 import com.amplitude.android.DefaultTrackingOptions
@@ -44,6 +45,7 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
          * @param id The instance name of the Amplitude instance.
          * @return The Amplitude instance or null if not found.
          */
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP_PREFIX)
         @JvmStatic
         fun getAmplitudeInstanceById(id: String): Amplitude? {
             return pluginInstance?.instances?.get(id)
