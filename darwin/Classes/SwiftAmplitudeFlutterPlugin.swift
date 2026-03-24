@@ -7,7 +7,7 @@ import FlutterMacOS
 
 import AmplitudeSwift
 
-internal var pluginInstance: SwiftAmplitudeFlutterPlugin? = nil
+internal var pluginInstance: SwiftAmplitudeFlutterPlugin?
 
 @objc public class SwiftAmplitudeFlutterPlugin: NSObject, FlutterPlugin {
     var instances: [String: Amplitude] = [:]
