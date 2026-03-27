@@ -39,6 +39,10 @@ internal var pluginInstance: SwiftAmplitudeFlutterPlugin?
         pluginInstance = instance
     }
 
+    public func detachFromEngine(for registrar: FlutterPluginRegistrar) {
+        pluginInstance = nil
+    }
+
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         if call.method == "init" {
             guard let configArgs = call.arguments as? [String: Any] else {
