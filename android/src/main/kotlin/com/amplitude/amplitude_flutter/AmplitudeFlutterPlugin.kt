@@ -162,6 +162,19 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                 result.success(sessionId)
             }
 
+            "setOptOut" -> {
+                val enabled = call.argument<Map<String, Boolean>>("properties")?.get("setOptOut")
+                if (enabled != null) {
+                    amplitude.configuration.optOut = enabled
+                    amplitude.logger.debug("Set optOut to $enabled")
+                } else {
+                    amplitude.logger.warn("setOptOut type casting to Bool failed.")
+                    return
+                }
+
+                result.success("setOptOut called..")
+            }
+
             "reset" -> {
                 amplitude.reset()
                 amplitude.logger.debug("Reset userId and deviceId.")

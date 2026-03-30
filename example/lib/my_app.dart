@@ -99,6 +99,30 @@ class _MyAppState extends State<MyApp> {
                 divider,
                 // FlushThresholdForm(),
                 // divider,
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        child: const Text('Opt Out'),
+                        onPressed: () {
+                          analytics.setOptOut(true);
+                          setMessage('Opted out — tracking disabled.');
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: ElevatedButton(
+                        child: const Text('Opt In'),
+                        onPressed: () {
+                          analytics.setOptOut(false);
+                          setMessage('Opted in — tracking enabled.');
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                divider,
                 ElevatedButton(
                   child: const Text('Flush Events'),
                   onPressed: _flushEvents,
