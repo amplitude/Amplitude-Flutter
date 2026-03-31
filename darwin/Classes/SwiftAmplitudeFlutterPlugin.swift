@@ -47,7 +47,7 @@ internal var pluginInstance: SwiftAmplitudeFlutterPlugin?
         if call.method == "init" {
             guard let configArgs = call.arguments as? [String: Any] else {
                 print("\(call.method) called but call.arguments type casting failed.")
-                result(nil)
+                result(FlutterError(code: "INIT_ERROR", message: "call.arguments type casting failed", details: nil))
                 return
             }
 
@@ -56,8 +56,8 @@ internal var pluginInstance: SwiftAmplitudeFlutterPlugin?
                 amplitude = Amplitude(configuration: try getConfiguration(args: configArgs))
                 instances[amplitude!.configuration.instanceName] = amplitude
             } catch {
-                print("Initialization failed.")
-                result(nil)
+                print("Initialization failed: \(error)")
+                result(FlutterError(code: "INIT_ERROR", message: "Initialization failed: \(error.localizedDescription)", details: nil))
                 return
             }
 
