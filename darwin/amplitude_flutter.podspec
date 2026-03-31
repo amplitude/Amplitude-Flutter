@@ -14,7 +14,7 @@ The official Amplitude Flutter SDK for tracking analytics events in your Flutter
   s.author           = { 'Amplitude' => 'sdk@amplitude.com' }
 
   s.source           = { :path => '.' }
-  s.source_files = 'Classes/**/*'
+  s.source_files = 'amplitude_flutter/Sources/amplitude_flutter/**/*.swift'
 
   # If your plugin requires a privacy manifest, for example if it collects user
   # data, update the PrivacyInfo.xcprivacy file to describe your plugin's

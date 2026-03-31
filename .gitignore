@@ -8,6 +8,9 @@ node_modules/
 build/
 doc/
 
+**/.build/
+**/.swiftpm/
+
 **/ios/Flutter/flutter_export_environment.sh
 .flutter-plugins-dependencies
 .last_build_id
