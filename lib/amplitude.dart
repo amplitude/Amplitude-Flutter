@@ -34,6 +34,14 @@ class Amplitude {
     isBuilt = _init();
   }
 
+  Future<bool> _ensureInitialized() async {
+    final initialized = await isBuilt;
+    if (!initialized) {
+      print('Amplitude: SDK not initialized. Call ignored.');
+    }
+    return initialized;
+  }
+
   /// Private method to initialize and return a `Future<bool>`
   Future<bool> _init() async {
     try {
@@ -57,6 +65,7 @@ class Amplitude {
     BaseEvent event, [
     EventOptions? options,
   ]) async {
+    if (!await _ensureInitialized()) return;
     if (options != null) {
       event.mergeEventOptions(options);
     }
@@ -79,6 +88,7 @@ class Amplitude {
   /// amplitude.identify(identify);
   /// ```
   Future<void> identify(Identify identify, [EventOptions? options]) async {
+    if (!await _ensureInitialized()) return;
     final event = IdentifyEvent();
     event.userProperties = identify.properties;
 
@@ -117,6 +127,7 @@ class Amplitude {
   Future<void> groupIdentify(
       String groupType, String groupName, Identify identify,
       [EventOptions? options]) async {
+    if (!await _ensureInitialized()) return;
     final event = GroupIdentifyEvent();
     final group = <String, dynamic>{};
     group[groupType] = groupName;
@@ -145,6 +156,7 @@ class Amplitude {
   /// Note: This will also set groupType: groupName as a user property.
   Future<void> setGroup(String groupType, dynamic groupName,
       [EventOptions? options]) async {
+    if (!await _ensureInitialized()) return;
     if (groupName is! String && groupName is! List<String>) {
       // TODO(xinyi): log warn that groupName should be either a string or an array of string.
       return;
@@ -174,6 +186,7 @@ class Amplitude {
   /// amplitude.revenue(revenue);
   /// ```
   Future<void> revenue(Revenue revenue, [EventOptions? options]) async {
+    if (!await _ensureInitialized()) return;
     if (!revenue.isValid()) {
       // TODO(xinyi): logger.warn('Invalid revenue object, missing required fields')
       return;
@@ -192,6 +205,7 @@ class Amplitude {
   /// final userId = await amplitude.getUserId();
   /// ```
   Future<String?> getUserId() async {
+    if (!await _ensureInitialized()) return null;
     return await _channel.invokeMethod(
         'getUserId', {'instanceName': configuration.instanceName});
   }
@@ -205,6 +219,7 @@ class Amplitude {
   /// amplitude.setUserId('user Id');
   /// ```
   Future<void> setUserId(String? userId) async {
+    if (!await _ensureInitialized()) return;
     Map<String, String?> properties = {};
     properties['setUserId'] = userId;
 
@@ -218,6 +233,7 @@ class Amplitude {
   /// final deviceId = await amplitude.getDeviceId();
   /// ```
   Future<String?> getDeviceId() async {
+    if (!await _ensureInitialized()) return null;
     return await _channel.invokeMethod(
         'getDeviceId', {'instanceName': configuration.instanceName});
   }
@@ -230,6 +246,7 @@ class Amplitude {
   /// amplitude.setDeviceId('device Id');
   /// ```
   Future<void> setDeviceId(String? deviceId) async {
+    if (!await _ensureInitialized()) return;
     Map<String, String?> properties = {};
     properties['setDeviceId'] = deviceId;
 
@@ -243,6 +260,7 @@ class Amplitude {
   /// final sessionId = await amplitude.getSessionId();
   /// ```
   Future<int?> getSessionId() async {
+    if (!await _ensureInitialized()) return null;
     return await _channel.invokeMethod(
         'getSessionId', {'instanceName': configuration.instanceName});
   }
@@ -252,6 +270,7 @@ class Amplitude {
   /// Set setOptOut to true to disable logging for a specific user.
   /// Set setOptOut to false to re-enable logging.
   Future<void> setOptOut(bool enabled) async {
+    if (!await _ensureInitialized()) return;
     Map<String, bool> properties = {};
     properties['setOptOut'] = enabled;
 
@@ -263,12 +282,14 @@ class Amplitude {
   ///
   /// Note different devices on different platforms should have different device Ids.
   Future<void> reset() async {
+    if (!await _ensureInitialized()) return;
     return await _channel
         .invokeMethod('reset', {'instanceName': configuration.instanceName});
   }
 
   /// Flush events in storage.
   Future<void> flush() async {
+    if (!await _ensureInitialized()) return;
     return await _channel
         .invokeMethod('flush', {'instanceName': configuration.instanceName});
   }
