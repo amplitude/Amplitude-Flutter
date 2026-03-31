@@ -1,3 +1,10 @@
+# [4.4.0](https://github.com/amplitude/Amplitude-Flutter/compare/v4.3.11...v4.4.0) (2026-03-31)
+
+
+### Features
+
+* **internal:** improvements to support other Amplitude Flutter SDKs ([#291](https://github.com/amplitude/Amplitude-Flutter/issues/291)) ([0652f47](https://github.com/amplitude/Amplitude-Flutter/commit/0652f47fd5780b00407118b8be2a95c57f2c7108))
+
 ## [4.3.11](https://github.com/amplitude/Amplitude-Flutter/compare/v4.3.10...v4.3.11) (2026-02-24)
 
 
