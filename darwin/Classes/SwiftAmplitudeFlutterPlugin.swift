@@ -155,7 +155,7 @@ internal var pluginInstance: SwiftAmplitudeFlutterPlugin?
                 return
             }
             if let enabled = args["setOptOut"] as? Bool {
-                amplitude?.configuration.optOut = enabled
+                amplitude?.optOut = enabled
                 amplitude?.logger?.debug(message: "Set optOut to \(enabled)")
             } else {
                 amplitude?.logger?.warn(message: "setOptOut type casting to Bool failed.")
