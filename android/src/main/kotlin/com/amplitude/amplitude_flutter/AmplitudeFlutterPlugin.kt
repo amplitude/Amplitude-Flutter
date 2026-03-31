@@ -4,8 +4,9 @@ import android.app.Activity
 import android.content.Context
 import androidx.annotation.RestrictTo
 import com.amplitude.android.Amplitude
+import com.amplitude.android.AutocaptureOption
 import com.amplitude.android.Configuration
-import com.amplitude.android.DefaultTrackingOptions
+import com.amplitude.android.ConfigurationBuilder
 import com.amplitude.android.TrackingOptions
 import com.amplitude.android.events.IngestionMetadata
 import com.amplitude.android.events.Plan
@@ -104,8 +105,8 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 
             trackAppLifecycleAndDeepLinkEvents(
                 amplitude,
-                configuration.defaultTracking.appLifecycles,
-                configuration.defaultTracking.deepLinks
+                AutocaptureOption.APP_LIFECYCLES in configuration.autocapture,
+                AutocaptureOption.DEEP_LINKS in configuration.autocapture
             )
 
             result.success("init called..")
@@ -209,45 +210,46 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     }
 
     private fun getConfiguration(call: MethodCall): Configuration {
-        val configuration = Configuration(call.argument<String>("apiKey")!!, context = ctxt)
-        call.argument<Int>("flushQueueSize")?.let { configuration.flushQueueSize = it }
-        call.argument<Int>("flushIntervalMillis")?.let { configuration.flushIntervalMillis = it }
-        call.argument<String>("instanceName")?.let { configuration.instanceName = it }
-        call.argument<Boolean>("optOut")?.let { configuration.optOut = it }
-        call.argument<Int>("minIdLength")?.let { configuration.minIdLength = it }
-        call.argument<String>("partnerId")?.let { configuration.partnerId = it }
-        call.argument<Int>("flushMaxRetries")?.let { configuration.flushMaxRetries = it }
-        call.argument<Boolean>("useBatch")?.let { configuration.useBatch = it }
+        val builder = ConfigurationBuilder(call.argument<String>("apiKey")!!, context = ctxt)
+        call.argument<Int>("flushQueueSize")?.let { builder.flushQueueSize = it }
+        call.argument<Int>("flushIntervalMillis")?.let { builder.flushIntervalMillis = it }
+        call.argument<String>("instanceName")?.let { builder.instanceName = it }
+        call.argument<Boolean>("optOut")?.let { builder.optOut = it }
+        call.argument<Int>("minIdLength")?.let { builder.minIdLength = it }
+        call.argument<String>("partnerId")?.let { builder.partnerId = it }
+        call.argument<Int>("flushMaxRetries")?.let { builder.flushMaxRetries = it }
+        call.argument<Boolean>("useBatch")?.let { builder.useBatch = it }
         call.argument<String>("serverZone")
-            ?.let { configuration.serverZone = com.amplitude.core.ServerZone.valueOf(it.uppercase()) }
-        call.argument<String>("serverUrl")?.let { configuration.serverUrl = it }
+            ?.let { builder.serverZone = com.amplitude.core.ServerZone.valueOf(it.uppercase()) }
+        call.argument<String>("serverUrl")?.let { builder.serverUrl = it }
         call.argument<Int>("minTimeBetweenSessionsMillis")
-            ?.let { configuration.minTimeBetweenSessionsMillis = it.toLong() }
+            ?.let { builder.minTimeBetweenSessionsMillis = it.toLong() }
         call.argument<Map<String, Any>>("defaultTracking")?.let { map ->
-            configuration.defaultTracking = DefaultTrackingOptions(
-                sessions = (map["sessions"] as? Boolean) ?: true,
-                appLifecycles = (map["appLifecycles"] as? Boolean) ?: false,
-                deepLinks = (map["deepLinks"] as? Boolean) ?: false,
-                // Set false to disable screenViews on Android
-                // screenViews is implemented in Flutter
-                screenViews = false
-            )
+            val sessions = (map["sessions"] as? Boolean) ?: true
+            val appLifecycles = (map["appLifecycles"] as? Boolean) ?: false
+            val deepLinks = (map["deepLinks"] as? Boolean) ?: false
+            // screenViews is always disabled on Android — implemented in Flutter
+            builder.autocapture = buildSet {
+                if (sessions) add(AutocaptureOption.SESSIONS)
+                if (appLifecycles) add(AutocaptureOption.APP_LIFECYCLES)
+                if (deepLinks) add(AutocaptureOption.DEEP_LINKS)
+            }
         }
         call.argument<Map<String, Any>>("trackingOptions")?.let { map ->
-            configuration.trackingOptions = convertMapToTrackingOptions(map)
+            builder.trackingOptions = convertMapToTrackingOptions(map)
         }
-        call.argument<Boolean>("enableCoppaControl")?.let { configuration.enableCoppaControl = it }
-        call.argument<Boolean>("flushEventsOnClose")?.let { configuration.flushEventsOnClose = it }
+        call.argument<Boolean>("enableCoppaControl")?.let { builder.enableCoppaControl = it }
+        call.argument<Boolean>("flushEventsOnClose")?.let { builder.flushEventsOnClose = it }
         call.argument<Int>("identifyBatchIntervalMillis")
-            ?.let { configuration.identifyBatchIntervalMillis = it.toLong() }
-        call.argument<Boolean>("migrateLegacyData")?.let { configuration.migrateLegacyData = it }
-        call.argument<Boolean>("locationListening")?.let { configuration.locationListening = it }
+            ?.let { builder.identifyBatchIntervalMillis = it.toLong() }
+        call.argument<Boolean>("migrateLegacyData")?.let { builder.migrateLegacyData = it }
+        call.argument<Boolean>("locationListening")?.let { builder.locationListening = it }
         call.argument<Boolean>("useAdvertisingIdForDeviceId")
-            ?.let { configuration.useAdvertisingIdForDeviceId = it }
-        call.argument<Boolean>("useAppSetIdForDeviceId")?.let { configuration.useAppSetIdForDeviceId = it }
-        call.argument<String>("deviceId")?.let { configuration.deviceId = it }
+            ?.let { builder.useAdvertisingIdForDeviceId = it }
+        call.argument<Boolean>("useAppSetIdForDeviceId")?.let { builder.useAppSetIdForDeviceId = it }
+        call.argument<String>("deviceId")?.let { builder.deviceId = it }
 
-        return configuration
+        return builder.build()
     }
 
     private fun convertMapToTrackingOptions(map: Map<String, Any>): TrackingOptions {
