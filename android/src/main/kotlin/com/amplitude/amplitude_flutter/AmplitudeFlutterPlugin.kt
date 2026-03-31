@@ -169,6 +169,7 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                     amplitude.logger.debug("Set optOut to $enabled")
                 } else {
                     amplitude.logger.warn("setOptOut type casting to Bool failed.")
+                    result.success(null)
                     return
                 }
 

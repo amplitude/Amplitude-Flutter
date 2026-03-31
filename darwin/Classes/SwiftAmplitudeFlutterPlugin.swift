@@ -47,6 +47,7 @@ internal var pluginInstance: SwiftAmplitudeFlutterPlugin?
         if call.method == "init" {
             guard let configArgs = call.arguments as? [String: Any] else {
                 print("\(call.method) called but call.arguments type casting failed.")
+                result(nil)
                 return
             }
 
@@ -56,6 +57,8 @@ internal var pluginInstance: SwiftAmplitudeFlutterPlugin?
                 instances[amplitude!.configuration.instanceName] = amplitude
             } catch {
                 print("Initialization failed.")
+                result(nil)
+                return
             }
 
             // Set library
@@ -79,6 +82,7 @@ internal var pluginInstance: SwiftAmplitudeFlutterPlugin?
         case "track", "identify", "groupIdentify", "setGroup", "revenue":
             guard let args = arguments?["event"] as? [String: Any] else {
                 print("\(call.method) called but call.arguments type casting failed.")
+                result(nil)
                 return
             }
 
@@ -90,6 +94,7 @@ internal var pluginInstance: SwiftAmplitudeFlutterPlugin?
                 result("\(call.method) called..")
             } catch {
                 amplitude?.logger?.warn(message: "\(call.method) called but failed.")
+                result(nil)
             }
 
         case "getUserId":
@@ -101,6 +106,7 @@ internal var pluginInstance: SwiftAmplitudeFlutterPlugin?
         case "setUserId":
             guard let args = arguments?["properties"] as? [String: Any] else {
                 print("\(call.method) called but call.arguments type casting failed.")
+                result(nil)
                 return
             }
 
@@ -113,6 +119,7 @@ internal var pluginInstance: SwiftAmplitudeFlutterPlugin?
                 amplitude?.logger?.debug(message: "Set userId to \(String(describing: userId))")
             } else {
                 amplitude?.logger?.warn(message: "setUserId type casting to String failed.")
+                result(nil)
                 return
             }
 
@@ -127,6 +134,7 @@ internal var pluginInstance: SwiftAmplitudeFlutterPlugin?
         case "setDeviceId":
             guard let args = arguments?["properties"] as? [String: Any] else {
                 print("\(call.method) called but call.arguments type casting failed.")
+                result(nil)
                 return
             }
             let deviceId = args["setDeviceId"]
@@ -138,6 +146,7 @@ internal var pluginInstance: SwiftAmplitudeFlutterPlugin?
                 amplitude?.logger?.debug(message: "Set deviceId to \(String(describing: deviceId))")
             } else {
                 amplitude?.logger?.warn(message: "setDeviceId type casting to String failed.")
+                result(nil)
                 return
             }
 
@@ -152,6 +161,7 @@ internal var pluginInstance: SwiftAmplitudeFlutterPlugin?
         case "setOptOut":
             guard let args = arguments?["properties"] as? [String: Any] else {
                 print("\(call.method) called but call.arguments type casting failed.")
+                result(nil)
                 return
             }
             if let enabled = args["setOptOut"] as? Bool {
@@ -159,6 +169,7 @@ internal var pluginInstance: SwiftAmplitudeFlutterPlugin?
                 amplitude?.logger?.debug(message: "Set optOut to \(enabled)")
             } else {
                 amplitude?.logger?.warn(message: "setOptOut type casting to Bool failed.")
+                result(nil)
                 return
             }
 
