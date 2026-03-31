@@ -7,9 +7,25 @@ import FlutterMacOS
 
 import AmplitudeSwift
 
+internal var pluginInstance: SwiftAmplitudeFlutterPlugin?
+
 @objc public class SwiftAmplitudeFlutterPlugin: NSObject, FlutterPlugin {
     var instances: [String: Amplitude] = [:]
     static let methodChannelName = "amplitude_flutter"
+
+    /// Returns an Amplitude instance by its instance name.
+    /// This method is intended to be used by other Amplitude SDKs to be able to
+    /// access the underlying Amplitude instance from a native context.
+    ///
+    /// - parameter id: The instance name of the Amplitude instance.
+    /// - returns: The Amplitude instance or `nil` if not found.
+    @_spi(AmplitudeFlutterPlugin) public static func getAmplitudeInstanceById(_ id: String) -> Amplitude? {
+      guard let pluginInstance = pluginInstance else {
+          return nil
+      }
+
+      return pluginInstance.instances[id]
+    }
 
     public static func register(with registrar: FlutterPluginRegistrar) {
         #if os(iOS)
@@ -20,6 +36,11 @@ import AmplitudeSwift
         let channel = FlutterMethodChannel(name: methodChannelName, binaryMessenger: messenger)
         let instance = SwiftAmplitudeFlutterPlugin()
         registrar.addMethodCallDelegate(instance, channel: channel)
+        pluginInstance = instance
+    }
+
+    public func detachFromEngine(for registrar: FlutterPluginRegistrar) {
+        pluginInstance = nil
     }
 
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {

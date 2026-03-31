@@ -2,6 +2,7 @@ package com.amplitude.amplitude_flutter
 
 import android.app.Activity
 import android.content.Context
+import androidx.annotation.RestrictTo
 import com.amplitude.android.Amplitude
 import com.amplitude.android.Configuration
 import com.amplitude.android.DefaultTrackingOptions
@@ -21,6 +22,10 @@ import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import java.lang.ref.WeakReference
 
+// Global variable to store the plugin instance for the duration of the app's lifecycle
+// This is used to access the plugin instance from a native context in other Amplitude SDKs.
+private var pluginInstance: AmplitudeFlutterPlugin? = null
+
 class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     private var instances: Map<String, Amplitude> = mutableMapOf()
     private var activity: WeakReference<Activity?> = WeakReference(null)
@@ -31,6 +36,20 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 
     companion object {
         private const val methodChannelName = "amplitude_flutter"
+
+        /**
+         * Returns an Amplitude instance by its instance name.
+         * This method is intended to be used by other Amplitude SDKs to be able to
+         * access the underlying Amplitude instance from a native context.
+         *
+         * @param id The instance name of the Amplitude instance.
+         * @return The Amplitude instance or null if not found.
+         */
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP_PREFIX)
+        @JvmStatic
+        fun getAmplitudeInstanceById(id: String): Amplitude? {
+            return pluginInstance?.instances?.get(id)
+        }
     }
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
@@ -53,10 +72,12 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         ctxt = binding.applicationContext
         channel = MethodChannel(binding.binaryMessenger, methodChannelName)
         channel.setMethodCallHandler(this)
+        pluginInstance = this
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         channel.setMethodCallHandler(null)
+        pluginInstance = null
     }
 
     override fun onMethodCall(call: MethodCall, result: Result) {
