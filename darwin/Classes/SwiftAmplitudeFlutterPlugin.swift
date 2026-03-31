@@ -149,6 +149,21 @@ internal var pluginInstance: SwiftAmplitudeFlutterPlugin?
 
             result(sessionId)
 
+        case "setOptOut":
+            guard let args = arguments?["properties"] as? [String: Any] else {
+                print("\(call.method) called but call.arguments type casting failed.")
+                return
+            }
+            if let enabled = args["setOptOut"] as? Bool {
+                amplitude?.optOut = enabled
+                amplitude?.logger?.debug(message: "Set optOut to \(enabled)")
+            } else {
+                amplitude?.logger?.warn(message: "setOptOut type casting to Bool failed.")
+                return
+            }
+
+            result("setOptOut called..")
+
         case "reset":
             amplitude?.reset()
             amplitude?.logger?.debug(message: "Reset userId and deviceId.")

@@ -247,7 +247,6 @@ class Amplitude {
         'getSessionId', {'instanceName': configuration.instanceName});
   }
 
-  /// Web only.
   /// Disables tracking.
   ///
   /// Set setOptOut to true to disable logging for a specific user.
