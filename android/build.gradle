@@ -47,8 +47,8 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-reflect:1.6.10"
 
     // Locked to specific minor version to prevent binary compatibility issues.
-    // Version range [1.22,2.0) previously caused NoSuchMethodError when Gradle
-    // resolved different versions at compile-time vs runtime (see #283).
+    // Allowing newer minor versions previously caused NoSuchMethodError due to
+    // compile-time vs runtime version mismatches (see #283).
     implementation 'com.amplitude:analytics-android:1.27.+'
     testImplementation 'org.mockito:mockito-core:4.0.0'
     testImplementation "io.mockk:mockk:1.12.4"
