@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'amplitude_flutter'
-  s.version          = '0.0.1'
+  s.version          = '4.4.0'
   s.summary          = 'Official Amplitude Flutter SDK for analytics tracking.'
   s.description      = <<-DESC
 The official Amplitude Flutter SDK for tracking analytics events in your Flutter applications.
