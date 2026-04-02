@@ -11,7 +11,7 @@ on:
 
 jobs:
   call-workflow-passing-data:
-    uses: amplitude/Amplitude-TypeScript/.github/workflows/jira-issue-create-template.yml@main
+    uses: amplitude/Amplitude-TypeScript/.github/workflows/jira-issue-create-template.yml@c832303a64c05b9911b6b1ad3dd8f69099f71179 # @amplitude/analytics-browser@2.36.9
     with:
       label: "Flutter"
       subcomponent: "dx_flutter_sdk"
