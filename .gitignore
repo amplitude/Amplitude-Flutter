@@ -22,3 +22,7 @@ example/pubspec.lock
 example/ios/Podfile.lock
 
 coverage/
+
+# test-sdk skill local config
+example/.env
+example/amplitude-project.local.yaml

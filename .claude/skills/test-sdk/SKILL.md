@@ -15,7 +15,7 @@ compatibility:
 allowed-tools: >-
   Read Write StrReplace Task AskQuestion CallMcpTool Shell Glob Grep
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
   created: "2026-03-31"
 ---
 
@@ -36,7 +36,7 @@ Appium/WebdriverIO E2E harness for interactive pre-PR validation.
 Read these from this skill directory before starting:
 
 - `platform-flutter.md` -- build commands, paths, app IDs, known issues
-- `amplitude-project.md` -- Amplitude project config, API key, org, token clearing
+- `amplitude-project.md` -- Amplitude project config template, token clearing instructions
 - `test-flows.md` -- structured test scenarios with UI elements and expected events
 
 Subagent prompts live in `agents/`. Read the relevant file and fill its
@@ -44,13 +44,18 @@ Subagent prompts live in `agents/`. Read the relevant file and fill its
 
 ## Phase 1: Pre-flight
 
-Read `agents/preflight.md`. Fill variables from `amplitude-project.md`.
-Launch as a `fast` generalPurpose subagent.
+Read `agents/preflight.md`. Fill `{REPO_ROOT}` with the absolute repo path and
+`{TOKEN_CLEARING_INSTRUCTIONS}` from `amplitude-project.md`. Launch as a `fast`
+generalPurpose subagent.
 
 **Result handling:**
 - `preflight_status: fail` -- stop, report failures. Do not proceed.
+- `config_needed: true` -- the local project config is missing. Ask the user
+  in chat for their Amplitude project ID, org name, and org ID. Create
+  `example/amplitude-project.local.yaml` with those values. Then proceed.
 - Any `warn` -- show warnings, ask user to continue via AskQuestion.
-- All `pass` -- proceed to Phase 2.
+- All `pass` -- proceed to Phase 2. Save `project_config` from output for
+  use in Phase 5.
 
 ## Phase 2: Interactive Planning
 
@@ -75,7 +80,8 @@ Read `agents/build.md`. Fill `{REPO_ROOT}`, `{PLATFORMS}`, and `{PLATFORM_FLUTTE
 (paste the full contents of `platform-flutter.md`). Launch as a `fast` shell
 subagent.
 
-Before launching, set the API key in `example/lib/main.dart` using StrReplace.
+The API key is injected at compile time via `--dart-define-from-file=.env`
+(already configured in the build commands). No file modification needed.
 
 **Result handling:**
 - All built: proceed to Phase 4 with all platforms.
@@ -92,7 +98,7 @@ Web). Fill variables from build results and the selected test flow from
 
 ## Phase 5: Verify
 
-Read `agents/verify.md`. Fill `{PROJECT_ID}` from `amplitude-project.md` and
+Read `agents/verify.md`. Fill `{PROJECT_ID}` from `example/amplitude-project.local.yaml` and
 `{EXPECTED_EVENTS_YAML}` from Phase 4 results. Launch as a `fast`
 generalPurpose subagent.
 
@@ -102,9 +108,8 @@ generalPurpose subagent.
 
 ## Phase 6: Cleanup
 
-Read `agents/cleanup.md`. Fill `{API_KEY_PLACEHOLDER}` with `API_KEY` (the
-literal placeholder string from `example/lib/main.dart`). Launch as a `fast`
-shell subagent.
+Read `agents/cleanup.md`. No variables to fill. Launch as a `fast` shell
+subagent.
 
 ## Final Report
 

@@ -16,8 +16,8 @@ skill to a different platform (React Native, Swift, Kotlin, etc.).
 ## Project Structure
 
 - **Example app root**: `example/`
-- **API key location**: `example/lib/main.dart`, line containing `MyApp(`
-- **API key pattern**: `void main() => runApp(const MyApp('API_KEY'));`
+- **API key source**: `example/.env` (injected via `--dart-define-from-file`)
+- **API key in code**: `example/lib/main.dart` uses `String.fromEnvironment('AMPLITUDE_API_KEY')`
 - **Plugin source (Darwin)**: `darwin/`
 - **Plugin source (Android)**: `android/`
 
@@ -31,7 +31,7 @@ All commands run from the `example/` directory unless noted otherwise.
 flutter config --enable-swift-package-manager
 flutter clean
 flutter pub get
-flutter build ios --debug --simulator --no-codesign 2>&1 | tee /tmp/test-sdk-build-ios-spm.log
+flutter build ios --debug --simulator --no-codesign --dart-define-from-file=.env 2>&1 | tee /tmp/test-sdk-build-ios-spm.log
 ```
 
 ### ios-cocoapods
@@ -41,19 +41,19 @@ flutter config --no-enable-swift-package-manager
 flutter clean
 flutter pub get
 cd ios && pod repo update && cd ..
-flutter build ios --debug --simulator --no-codesign 2>&1 | tee /tmp/test-sdk-build-ios-cocoapods.log
+flutter build ios --debug --simulator --no-codesign --dart-define-from-file=.env 2>&1 | tee /tmp/test-sdk-build-ios-cocoapods.log
 ```
 
 ### android
 
 ```bash
-flutter build apk --debug 2>&1 | tee /tmp/test-sdk-build-android.log
+flutter build apk --debug --dart-define-from-file=.env 2>&1 | tee /tmp/test-sdk-build-android.log
 ```
 
 ### web
 
 ```bash
-flutter build web --debug 2>&1 | tee /tmp/test-sdk-build-web.log
+flutter build web --dart-define-from-file=.env 2>&1 | tee /tmp/test-sdk-build-web.log
 ```
 
 To serve after build:

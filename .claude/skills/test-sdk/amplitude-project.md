@@ -1,27 +1,39 @@
 # Amplitude Project Configuration
 
-Project-specific Amplitude settings for event verification. Swap this file to
-test against a different Amplitude project.
+Project-specific Amplitude settings for event verification. This file is a
+**template** -- the skill reads actual values from
+`example/amplitude-project.local.yaml` (gitignored).
 
 ## Project Details
 
-| Field          | Value                                     |
-|----------------|-------------------------------------------|
-| Project Name   | `<YOUR_PROJECT_NAME>`                     |
-| Project ID     | `<YOUR_PROJECT_ID>`                       |
-| API Key        | `<YOUR_API_KEY>`                          |
-| Expected Org   | `<YOUR_ORG_NAME>`                         |
-| Org ID         | `<YOUR_ORG_ID>`                           |
+Non-secret project identifiers. On first run, the skill asks for these values
+and creates `example/amplitude-project.local.yaml` automatically.
 
-> **Setup**: Copy this file to `amplitude-project.local.md`, fill in your
-> values, and add `amplitude-project.local.md` to `.gitignore`. The skill
-> will check for the `.local` variant first, falling back to this template.
+Expected YAML format:
+
+```yaml
+project_id: 697899
+project_name: "My Test Project"
+org_name: "My Org"
+org_id: 255821
+```
+
+## API Key
+
+The API key lives in `example/.env` (gitignored, never read by the agent).
+It is injected at compile time via `--dart-define-from-file=.env`.
+
+Expected format:
+
+```
+AMPLITUDE_API_KEY=<32-char-hex-key>
+```
 
 ## MCP Server
 
 - **Server name**: `plugin-amplitude-amplitude`
 - **Auth tool**: `mcp_auth` (call if `get_context` fails)
-- **Verification tool**: `search` with `projectId: <YOUR_PROJECT_ID>`
+- **Verification tool**: `search` with `projectId` from local YAML
 
 ## Default Tracking
 
@@ -34,16 +46,6 @@ The example app uses `DefaultTrackingOptions.all()`, which automatically sends:
 
 These events appear in Amplitude without any user interaction. They can be used
 as a baseline to confirm the SDK is initialized and sending data.
-
-## API Key Validation
-
-During pre-flight, check `example/lib/main.dart` for the API key:
-
-- **Pass**: Contains the real API key (matches `<YOUR_API_KEY>` from this file)
-- **Warn (placeholder)**: Contains `API_KEY` literal -- events will not reach
-  Amplitude. The agent should offer to set the real key.
-- **Warn (different key)**: Contains a different key -- events will go to a
-  different project. Alert the user but do not block.
 
 ## Token Clearing Instructions
 
@@ -66,7 +68,7 @@ sqlite3 ~/Library/Application\ Support/Cursor/User/globalStorage/state.vscdb \
 
 4. **Before triggering `mcp_auth`**, log into the correct Amplitude org in
    your browser at https://app.amplitude.com -- the org selector is in the
-   top-left dropdown. Select the org matching `<YOUR_ORG_NAME>`.
+   top-left dropdown. Select the org matching your expected org.
 
 5. **Trigger `mcp_auth`** by calling:
 
@@ -75,4 +77,4 @@ CallMcpTool server="plugin-amplitude-amplitude" toolName="mcp_auth"
 ```
 
 6. **Verify** by calling `get_context` and checking that the org matches
-   `<YOUR_ORG_NAME>` (ID `<YOUR_ORG_ID>`).
+   the expected org name and ID from your local YAML.

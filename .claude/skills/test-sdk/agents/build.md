@@ -27,6 +27,10 @@ IMPORTANT: Cap your response to 3000 characters. Save build logs to
 
 Selected platforms: {PLATFORMS}
 
+All flutter build commands MUST include --dart-define-from-file=.env to inject
+the Amplitude API key at compile time. The .env file is in the working directory.
+Do NOT read, echo, or log the contents of the .env file.
+
 For each platform, follow the build commands from the platform reference below.
 Key rules:
 - iOS SPM and iOS CocoaPods builds MUST be sequential (flutter config is global)

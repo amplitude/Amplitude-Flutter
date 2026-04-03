@@ -12,9 +12,7 @@ Task tool:
 
 ## Input Variables
 
-- `{API_KEY}` -- expected API key from `amplitude-project.md`
-- `{EXPECTED_ORG}` -- expected Amplitude org name
-- `{EXPECTED_ORG_ID}` -- expected Amplitude org ID
+- `{REPO_ROOT}` -- absolute path to the repository root
 - `{TOKEN_CLEARING_INSTRUCTIONS}` -- steps to clear cached MCP tokens
 
 ## Prompt
@@ -33,25 +31,41 @@ Checks (run all, report pass/fail/warn for each):
    Fail if no iOS simulators or Android emulators are available.
    Return the list of device IDs and names.
 
-3. AMPLITUDE MCP
+3. AMPLITUDE API KEY (.env file)
+   Run via Shell:
+   grep -cq '^AMPLITUDE_API_KEY=[0-9a-f]\{32\}$' {REPO_ROOT}/example/.env
+   Do NOT read or echo the file contents.
+   - Exit 0: PASS
+   - File missing: FAIL -- "Create example/.env with AMPLITUDE_API_KEY=<your-32-char-hex-key>"
+   - Format invalid: FAIL -- "example/.env must contain exactly: AMPLITUDE_API_KEY=<32-char-lowercase-hex>"
+
+4. PROJECT CONFIG (amplitude-project.local.yaml)
+   Check if {REPO_ROOT}/example/amplitude-project.local.yaml exists.
+   - If missing: return config_needed: true (not a FAIL -- main agent handles
+     this interactively by asking the user for project ID, org name, org ID).
+   - If present: read it, extract project_id, org_name, org_id. Include these
+     values in your output under project_config.
+
+5. AMPLITUDE MCP
    Call `get_context` on MCP server `plugin-amplitude-amplitude`.
-   Expected org: {EXPECTED_ORG} (ID {EXPECTED_ORG_ID}).
+   If config from check 4 is available, verify the org matches.
    If not authenticated or wrong org, FAIL and include these token-clearing
    instructions in your response:
    {TOKEN_CLEARING_INSTRUCTIONS}
+   If check 4 returned config_needed, skip org verification but still confirm
+   the MCP is authenticated.
 
-4. API KEY
-   Read `example/lib/main.dart`. Check line containing `MyApp(`.
-   - If it contains '{API_KEY}' (the real key): PASS
-   - If it contains 'API_KEY' (placeholder): WARN -- "API key is placeholder,
-     events won't reach Amplitude. Set it to {API_KEY} before testing."
-   - If it contains a different key: WARN -- "API key is {found_key}, expected
-     {API_KEY}. Events will go to a different project."
+6. API KEY IN MAIN.DART
+   Read {REPO_ROOT}/example/lib/main.dart. Check for the pattern
+   String.fromEnvironment('AMPLITUDE_API_KEY'.
+   - If found: PASS
+   - If not found (hardcoded key or old pattern): WARN -- "main.dart should
+     use String.fromEnvironment('AMPLITUDE_API_KEY') for dart-define injection"
 
-5. GIT BRANCH
+7. GIT BRANCH
    Run `git branch --show-current`. If on `main` or `master`: WARN.
 
-6. MCP SCHEMA SPOT-CHECK
+8. MCP SCHEMA SPOT-CHECK
    Call `mobile_list_available_devices` and `get_context` -- if either tool
    name is not found on the respective server, FAIL with
    "MCP server missing expected tools -- server may have changed."
@@ -61,6 +75,7 @@ Checks (run all, report pass/fail/warn for each):
 
 ```yaml
 preflight_status: pass | fail
+config_needed: true | false
 checks:
   - name: flutter_sdk
     status: pass | fail
@@ -75,12 +90,21 @@ checks:
       - id: "DEVICE_ID"
         name: "Pixel 8 API 34"
         platform: android
+  - name: api_key_env
+    status: pass | fail
+    detail: "example/.env present and valid"
+  - name: project_config
+    status: pass | config_needed
+    detail: "..."
+    project_id: 697899
+    org_name: "My Org"
+    org_id: 255821
   - name: amplitude_mcp
     status: pass | fail
     detail: "Authenticated to {org_name}"
-  - name: api_key
+  - name: api_key_main_dart
     status: pass | warn
-    detail: "..."
+    detail: "Uses String.fromEnvironment"
   - name: git_branch
     status: pass | warn
     detail: "On branch feature/xyz"
