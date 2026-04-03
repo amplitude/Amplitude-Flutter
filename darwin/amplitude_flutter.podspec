@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'amplitude_flutter'
-  s.version          = '0.0.1'
+  s.version          = '4.4.0'
   s.summary          = 'Official Amplitude Flutter SDK for analytics tracking.'
   s.description      = <<-DESC
 The official Amplitude Flutter SDK for tracking analytics events in your Flutter applications.
@@ -14,7 +14,7 @@ The official Amplitude Flutter SDK for tracking analytics events in your Flutter
   s.author           = { 'Amplitude' => 'sdk@amplitude.com' }
 
   s.source           = { :path => '.' }
-  s.source_files = 'Classes/**/*'
+  s.source_files = 'amplitude_flutter/Sources/amplitude_flutter/**/*.swift'
 
   # If your plugin requires a privacy manifest, for example if it collects user
   # data, update the PrivacyInfo.xcprivacy file to describe your plugin's
