@@ -102,7 +102,9 @@ generalPurpose subagent.
 
 ## Phase 6: Cleanup
 
-Read `agents/cleanup.md`. Launch as a `fast` shell subagent.
+Read `agents/cleanup.md`. Fill `{API_KEY_PLACEHOLDER}` with `API_KEY` (the
+literal placeholder string from `example/lib/main.dart`). Launch as a `fast`
+shell subagent.
 
 ## Final Report
 
