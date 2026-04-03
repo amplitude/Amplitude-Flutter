@@ -13,7 +13,7 @@ compatibility:
   - claude-code
   - codex
 allowed-tools: >-
-  Read Task AskQuestion CallMcpTool Shell Glob Grep
+  Read Write StrReplace Task AskQuestion CallMcpTool Shell Glob Grep
 metadata:
   version: "1.1.0"
   created: "2026-03-31"
@@ -57,8 +57,8 @@ Launch as a `fast` generalPurpose subagent.
 Run on the **main agent** (not a subagent). Use AskQuestion.
 
 **Question 1 -- run mode:**
-- "Default smoke test (iOS + Android + Web)" -- sets platforms to all, flow
-  to `basic-event`, skips to Phase 3 with zero follow-ups.
+- "Default smoke test (iOS SPM, iOS CocoaPods, Android, Web)" -- sets all 4
+  platforms, flow to `basic-event`, skips to Phase 3 with zero follow-ups.
 - "Customize" -- ask Questions 2 and 3.
 
 **Question 2 -- platforms** (only if custom, multi-select):
@@ -71,7 +71,7 @@ modification.
 
 ## Phase 3: Build
 
-Read `agents/build.md`. Fill `{PLATFORMS}` and `{PLATFORM_FLUTTER_MD_CONTENTS}`
+Read `agents/build.md`. Fill `{REPO_ROOT}`, `{PLATFORMS}`, and `{PLATFORM_FLUTTER_MD_CONTENTS}`
 (paste the full contents of `platform-flutter.md`). Launch as a `fast` shell
 subagent.
 

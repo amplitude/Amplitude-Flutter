@@ -30,8 +30,8 @@ Instructions:
 2. Call `search` on MCP server `plugin-amplitude-amplitude` with
    args: { query: "{event_type}", projectId: {PROJECT_ID} }
    for each expected event type.
-3. If events not found, wait 30 more seconds and retry.
-4. Use exponential backoff: 30s, 60s, 120s. Give up after 5 minutes total.
+3. If events not found, retry with exponential backoff: wait 60s, then 120s.
+4. Give up after 5 minutes total (30s initial + 60s + 120s + final 90s attempt).
 5. For each expected event type, record whether it was found and approximate
    count.
 ```
