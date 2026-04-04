@@ -18,7 +18,13 @@ Launch one instance per mobile platform. All instances run in parallel.
 - `{DEVICE_ID}` -- simulator/emulator device ID from pre-flight
 - `{ARTIFACT_PATH}` -- path to built app (.app or .apk)
 - `{APP_ID}` -- bundle ID or package name
-- `{TEST_FLOW_STEPS}` -- steps from the selected test flow in `test-flows.md`
+- `{TEST_FLOW_NAME}` -- name of the test flow to execute from test-flows.md
+- `{SKILL_ROOT}` -- absolute path to the skill directory
+
+## Self-Read References
+
+Read this file before testing:
+- `{SKILL_ROOT}/test-flows.md` -- find the flow matching `{TEST_FLOW_NAME}`
 
 ## Prompt
 
@@ -31,8 +37,8 @@ Device ID: {DEVICE_ID}
 App path: {ARTIFACT_PATH}
 Package/Bundle ID: {APP_ID}
 
-Test flow to execute:
-{TEST_FLOW_STEPS}
+Step 1: Read `{SKILL_ROOT}/test-flows.md` and find the test flow named
+`{TEST_FLOW_NAME}`. Extract its steps and expected events.
 
 Instructions:
 1. Install the app: CallMcpTool server="user-mobile-mcp" tool="mobile_install_app"
@@ -48,7 +54,7 @@ Instructions:
    appropriate button. Use mobile_list_elements_on_screen to find the
    dialog buttons.
 
-5. Execute each step in the test flow:
+5. Execute each step from the test flow:
    a. Use mobile_list_elements_on_screen to find the target element
    b. Tap it using mobile_click_on_screen_at_coordinates
    c. If the action fails, RETRY ONCE (take a fresh element list, re-locate,

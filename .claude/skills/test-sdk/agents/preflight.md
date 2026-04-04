@@ -13,7 +13,12 @@ Task tool:
 ## Input Variables
 
 - `{REPO_ROOT}` -- absolute path to the repository root
-- `{TOKEN_CLEARING_INSTRUCTIONS}` -- steps to clear cached MCP tokens
+- `{SKILL_ROOT}` -- absolute path to `.claude/skills/test-sdk`
+
+## Self-Read References
+
+Read these files before executing checks:
+- `{SKILL_ROOT}/amplitude-project.md` -- for token-clearing instructions
 
 ## Prompt
 
@@ -49,9 +54,9 @@ Checks (run all, report pass/fail/warn for each):
 5. AMPLITUDE MCP
    Call `get_context` on MCP server `plugin-amplitude-amplitude`.
    If config from check 4 is available, verify the org matches.
-   If not authenticated or wrong org, FAIL and include these token-clearing
-   instructions in your response:
-   {TOKEN_CLEARING_INSTRUCTIONS}
+   If not authenticated or wrong org, FAIL and include the token-clearing
+   instructions from the "Token Clearing Instructions" section of
+   `{SKILL_ROOT}/amplitude-project.md` in your response.
    If check 4 returned config_needed, skip org verification but still confirm
    the MCP is authenticated.
 

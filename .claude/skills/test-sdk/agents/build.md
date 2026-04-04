@@ -14,7 +14,12 @@ Task tool:
 
 - `{REPO_ROOT}` -- absolute path to the repository root
 - `{PLATFORMS}` -- comma-separated list of selected platform IDs
-- `{PLATFORM_FLUTTER_MD_CONTENTS}` -- full contents of `platform-flutter.md`
+- `{SKILL_ROOT}` -- absolute path to the skill directory
+
+## Self-Read References
+
+Read this file before building:
+- `{SKILL_ROOT}/platform-flutter.md` -- platform build commands, paths, known issues
 
 ## Prompt
 
@@ -27,18 +32,18 @@ IMPORTANT: Cap your response to 3000 characters. Save build logs to
 
 Selected platforms: {PLATFORMS}
 
+Step 1: Read `{SKILL_ROOT}/platform-flutter.md` for platform-specific build
+commands, output paths, and known issues.
+
 All flutter build commands MUST include --dart-define-from-file=.env to inject
 the Amplitude API key at compile time. The .env file is in the working directory.
 Do NOT read, echo, or log the contents of the .env file.
 
-For each platform, follow the build commands from the platform reference below.
 Key rules:
 - iOS SPM and iOS CocoaPods builds MUST be sequential (flutter config is global)
 - Run `flutter clean && flutter pub get` between iOS build variants
 - Android and Web builds can run alongside iOS
 - If a build fails, log the error and continue with remaining platforms
-
-{PLATFORM_FLUTTER_MD_CONTENTS}
 ```
 
 ## Expected Output

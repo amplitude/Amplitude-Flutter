@@ -15,7 +15,7 @@ compatibility:
 allowed-tools: >-
   Read Write StrReplace Task AskQuestion CallMcpTool Shell Glob Grep
 metadata:
-  version: "1.2.0"
+  version: "1.3.0"
   created: "2026-03-31"
 ---
 
@@ -31,22 +31,41 @@ This skill is a **conversation-local smoke check** -- no external test runner
 dependencies (no Appium, no WDIO, no Node). It complements the CI-grade
 Appium/WebdriverIO E2E harness for interactive pre-PR validation.
 
-## Reference Files
+## Architecture: Self-Reading Subagents
 
-Read these from this skill directory before starting:
+Subagent instruction files live in `agents/`. The main agent does NOT read
+these files. Instead, each phase launches a subagent with a compact delegation
+prompt that tells it to read its own instruction file. This keeps the main
+agent's context lean (~130 lines vs ~930 lines).
+
+Reference files (read by subagents, not the main agent):
 
 - `platform-flutter.md` -- build commands, paths, app IDs, known issues
-- `amplitude-project.md` -- Amplitude project config template, token clearing instructions
+- `amplitude-project.md` -- Amplitude project config template, token clearing
 - `test-flows.md` -- structured test scenarios with UI elements and expected events
 
-Subagent prompts live in `agents/`. Read the relevant file and fill its
-`{VARIABLES}` before passing as the subagent prompt.
+### Delegation prompt contract
+
+Every subagent delegation prompt follows this structure:
+
+1. "Step 1: Read `{SKILL_ROOT}/agents/<file>.md` for your full instructions."
+2. Additional reference files to read.
+3. Variable values (short runtime strings only).
+4. "Return the expected YAML output format defined in the instruction file."
+5. "If any file is not found, return: status: fail, error: 'File not found: <path>'."
+
+`SKILL_ROOT` is the absolute path to `.claude/skills/test-sdk` in the current
+workspace. Determine it once at the start of the run.
 
 ## Phase 1: Pre-flight
 
-Read `agents/preflight.md`. Fill `{REPO_ROOT}` with the absolute repo path and
-`{TOKEN_CLEARING_INSTRUCTIONS}` from `amplitude-project.md`. Launch as a `fast`
-generalPurpose subagent.
+Launch a `fast` generalPurpose subagent with this prompt:
+
+  "Step 1: Read `{SKILL_ROOT}/agents/preflight.md` for your full instructions.
+   Step 2: Read `{SKILL_ROOT}/amplitude-project.md` for token-clearing instructions.
+   Variable values: REPO_ROOT={absolute repo path}, SKILL_ROOT={skill root path}.
+   Follow the instructions, fill variables, and return the expected YAML output.
+   If any file is not found, return: status: fail, error: 'File not found: <path>'."
 
 **Result handling:**
 - `preflight_status: fail` -- stop, report failures. Do not proceed.
@@ -76,9 +95,14 @@ modification.
 
 ## Phase 3: Build
 
-Read `agents/build.md`. Fill `{REPO_ROOT}`, `{PLATFORMS}`, and `{PLATFORM_FLUTTER_MD_CONTENTS}`
-(paste the full contents of `platform-flutter.md`). Launch as a `fast` shell
-subagent.
+Launch a `fast` shell subagent with this prompt:
+
+  "Step 1: Read `{SKILL_ROOT}/agents/build.md` for your full instructions.
+   Step 2: Read `{SKILL_ROOT}/platform-flutter.md` for platform build commands.
+   Variable values: REPO_ROOT={absolute repo path}, PLATFORMS={selected platforms},
+   SKILL_ROOT={skill root path}.
+   Follow the instructions and return the expected YAML output.
+   If any file is not found, return: status: fail, error: 'File not found: <path>'."
 
 The API key is injected at compile time via `--dart-define-from-file=.env`
 (already configured in the build commands). No file modification needed.
@@ -90,17 +114,39 @@ The API key is injected at compile time via `--dart-define-from-file=.env`
 
 ## Phase 4: Test
 
-Read `agents/test-mobile.md` (for iOS/Android) and `agents/test-web.md` (for
-Web). Fill variables from build results and the selected test flow from
-`test-flows.md`. Launch **all in parallel** as `fast` generalPurpose subagents.
+Launch subagents **in parallel** for each platform:
+
+**For each mobile platform** (iOS/Android), launch a `fast` generalPurpose subagent:
+
+  "Step 1: Read `{SKILL_ROOT}/agents/test-mobile.md` for your full instructions.
+   Step 2: Read `{SKILL_ROOT}/test-flows.md` for test scenarios.
+   Variable values: PLATFORM={platform id}, DEVICE_ID={device id},
+   ARTIFACT_PATH={built app path}, APP_ID={bundle/package id},
+   TEST_FLOW_NAME={selected flow name}, SKILL_ROOT={skill root path}.
+   Follow the instructions and return the expected YAML output.
+   If any file is not found, return: status: fail, error: 'File not found: <path>'."
+
+**For Web**, launch a `fast` generalPurpose subagent:
+
+  "Step 1: Read `{SKILL_ROOT}/agents/test-web.md` for your full instructions.
+   Step 2: Read `{SKILL_ROOT}/test-flows.md` for test scenarios.
+   Variable values: REPO_ROOT={absolute repo path},
+   TEST_FLOW_NAME={selected flow name}, SKILL_ROOT={skill root path}.
+   Follow the instructions and return the expected YAML output.
+   If any file is not found, return: status: fail, error: 'File not found: <path>'."
 
 **Result handling:** Collect all subagent results. Merge `expected_events`.
 
 ## Phase 5: Verify
 
-Read `agents/verify.md`. Fill `{PROJECT_ID}` from `example/amplitude-project.local.yaml` and
-`{EXPECTED_EVENTS_YAML}` from Phase 4 results. Launch as a `fast`
-generalPurpose subagent.
+Launch a `fast` generalPurpose subagent with this prompt:
+
+  "Step 1: Read `{SKILL_ROOT}/agents/verify.md` for your full instructions.
+   Variable values: PROJECT_ID={id from local yaml},
+   EXPECTED_EVENTS_YAML={merged events yaml from Phase 4},
+   SKILL_ROOT={skill root path}.
+   Follow the instructions and return the expected YAML output.
+   If any file is not found, return: status: fail, error: 'File not found: <path>'."
 
 **Result handling:**
 - All found: report success.
@@ -108,8 +154,13 @@ generalPurpose subagent.
 
 ## Phase 6: Cleanup
 
-Read `agents/cleanup.md`. No variables to fill. Launch as a `fast` shell
-subagent.
+Launch a `fast` shell subagent with this prompt:
+
+  "Step 1: Read `{SKILL_ROOT}/agents/cleanup.md` for your full instructions.
+   Variable values: PLATFORMS_TESTED={comma-separated platforms from Phase 2},
+   SKILL_ROOT={skill root path}.
+   Follow the instructions and return the expected YAML output.
+   If any file is not found, return: status: fail, error: 'File not found: <path>'."
 
 ## Final Report
 
@@ -129,6 +180,7 @@ with screenshot paths.
 ## Error Handling
 
 - **Subagent timeout**: include partial results, note in report.
+- **Instruction file not found**: treat as phase failure, report the missing path.
 - **MCP connection loss**: retry once, then skip with explanation.
 - **Build failure**: skip that platform's test, continue others.
 - **Device crash**: capture last screenshot, report partial.
