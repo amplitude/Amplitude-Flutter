@@ -1,3 +1,15 @@
+# [4.5.0](https://github.com/amplitude/Amplitude-Flutter/compare/v4.4.0...v4.5.0) (2026-04-06)
+
+
+### Bug Fixes
+
+* update kotlin SDK to 1.27 ([#295](https://github.com/amplitude/Amplitude-Flutter/issues/295)) ([93abc29](https://github.com/amplitude/Amplitude-Flutter/commit/93abc29f8a5e072ed028767a191458805b66fb52))
+
+
+### Features
+
+* add setOptOut support for iOS and Android ([#294](https://github.com/amplitude/Amplitude-Flutter/issues/294)) ([17ba516](https://github.com/amplitude/Amplitude-Flutter/commit/17ba516cd8071120322705121f47291328c569e9))
+
 # [4.4.0](https://github.com/amplitude/Amplitude-Flutter/compare/v4.3.11...v4.4.0) (2026-03-31)
 
 
