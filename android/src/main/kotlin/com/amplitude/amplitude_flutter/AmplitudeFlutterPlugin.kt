@@ -237,15 +237,15 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         call.argument<String>("serverUrl")?.let { builder.serverUrl = it }
         call.argument<Int>("minTimeBetweenSessionsMillis")
             ?.let { builder.minTimeBetweenSessionsMillis = it.toLong() }
-        call.argument<Map<String, Any>>("defaultTracking")?.let { map ->
-            val sessions = (map["sessions"] as? Boolean) ?: true
-            val appLifecycles = (map["appLifecycles"] as? Boolean) ?: false
-            val deepLinks = (map["deepLinks"] as? Boolean) ?: false
-            // screenViews is always disabled on Android — implemented in Flutter
+        call.argument<Map<String, Any>>("autocapture")?.let { map ->
+            // The Dart Configuration constructor already resolved the effective
+            // autocapture map (deriving it from defaultTracking when not set
+            // explicitly), so we just translate the map to a native
+            // AutocaptureOption set.
             builder.autocapture = buildSet {
-                if (sessions) add(AutocaptureOption.SESSIONS)
-                if (appLifecycles) add(AutocaptureOption.APP_LIFECYCLES)
-                if (deepLinks) add(AutocaptureOption.DEEP_LINKS)
+                if (map["sessions"] == true) add(AutocaptureOption.SESSIONS)
+                if (map["appLifecycles"] == true) add(AutocaptureOption.APP_LIFECYCLES)
+                if (map["deepLinks"] == true) add(AutocaptureOption.DEEP_LINKS)
             }
         }
         call.argument<Map<String, Any>>("trackingOptions")?.let { map ->
