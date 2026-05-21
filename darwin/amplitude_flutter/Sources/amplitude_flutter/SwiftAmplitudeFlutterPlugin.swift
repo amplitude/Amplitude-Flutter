@@ -191,9 +191,24 @@ internal var pluginInstance: SwiftAmplitudeFlutterPlugin?
         let instanceName = args["instanceName"] as? String ?? Constants.Configuration.DEFAULT_INSTANCE
         let migrateLegacyData = args["migrateLegacyData"] as? Bool ?? true
 
+        // The Dart Configuration constructor already resolved the effective
+        // autocapture map (deriving it from defaultTracking when not set
+        // explicitly), so we just translate the map to a native
+        // AutocaptureOptions option set.
+        let autocaptureOptions: AutocaptureOptions = {
+            guard let map = args["autocapture"] as? [String: Any] else {
+                return Configuration.Defaults.autocaptureOptions
+            }
+            var opts: AutocaptureOptions = []
+            if (map["sessions"] as? Bool) == true { opts.insert(.sessions) }
+            if (map["appLifecycles"] as? Bool) == true { opts.insert(.appLifecycles) }
+            return opts
+        }()
+
         let configuration = Configuration(
             apiKey: apiKey,
             instanceName: instanceName,
+            autocapture: autocaptureOptions,
             migrateLegacyData: migrateLegacyData)
 
         if let flushQueueSize = args["flushQueueSize"] as? Int {
@@ -242,18 +257,6 @@ internal var pluginInstance: SwiftAmplitudeFlutterPlugin?
         }
         if let identifyBatchIntervalMillis = args["identifyBatchIntervalMillis"] as? Int {
             configuration.identifyBatchIntervalMillis = identifyBatchIntervalMillis
-        }
-        if let defaultTrackingDict = args["defaultTracking"] as? [String: Bool] {
-            let sessions = defaultTrackingDict["sessions"] ?? true
-            let appLifecycles = defaultTrackingDict["appLifecycles"] ?? false
-            // Set false to disable screenViews on iOS
-            // screenViews is implemented in Flutter
-            let screenViews = false
-            configuration.defaultTracking = DefaultTrackingOptions(
-                sessions: sessions,
-                appLifecycles: appLifecycles,
-                screenViews: screenViews
-            )
         }
 
         return configuration
