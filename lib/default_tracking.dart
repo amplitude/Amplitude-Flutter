@@ -6,6 +6,7 @@
 /// * [iOS](https://www.docs.developers.amplitude.com/data/sdks/ios-swift/#tracking-default-events)
 /// * [Android](https://www.docs.developers.amplitude.com/data/sdks/android-kotlin/#tracking-default-events)
 /// * [Web](https://www.docs.developers.amplitude.com/data/sdks/browser-2/#tracking-default-events)
+@Deprecated('Use AutocaptureOptions instead. See Configuration.autocapture.')
 class DefaultTrackingOptions {
   final bool sessions;
 
@@ -23,10 +24,10 @@ class DefaultTrackingOptions {
   /// Web specific
   final bool pageViews;
 
-  /// Web specific
+  /// Web specific not actually supported in Flutter
   final bool formInteractions;
 
-  /// Web specific
+  /// Web specific not actually supported in Flutter
   final bool fileDownloads;
 
   const DefaultTrackingOptions({

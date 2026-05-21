@@ -1,3 +1,8 @@
+// This file exercises both the new `autocapture` API and the deprecated
+// `defaultTracking` API to verify the backward-compatibility bridge in
+// Configuration._resolveAutocapture.
+// ignore_for_file: deprecated_member_use_from_same_package
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:amplitude_flutter/autocapture/attribution.dart';
 import 'package:amplitude_flutter/autocapture/autocapture.dart';

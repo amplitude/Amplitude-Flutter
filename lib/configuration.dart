@@ -1,3 +1,9 @@
+// This file maintains the deprecation bridge from `defaultTracking` to
+// `autocapture` (see Configuration._resolveAutocapture). Reading and
+// re-emitting the deprecated DefaultTrackingOptions in this single file is
+// intentional and required for backward compatibility.
+// ignore_for_file: deprecated_member_use_from_same_package
+
 import 'autocapture/attribution.dart';
 import 'autocapture/autocapture.dart';
 import 'autocapture/page_views.dart';
@@ -90,7 +96,13 @@ class Configuration {
 
   /// Mobile (iOS and Android) specific
   ///
-  /// Deprecated. Enable tracking of default events for sessions, app lifecycles, screen views, and deep links.
+  /// Enable tracking of default events for sessions, app lifecycles, screen
+  /// views, and deep links.
+  ///
+  /// Prefer [autocapture] instead. When `defaultTracking` is set and
+  /// [autocapture] is omitted, its values flow into the derived
+  /// [AutocaptureOptions] so existing callers continue to work.
+  @Deprecated('Use autocapture instead. See Configuration.autocapture.')
   DefaultTrackingOptions defaultTracking;
 
   /// Mobile (iOS and Android) specific
@@ -214,6 +226,7 @@ class Configuration {
     this.serverUrl,
     this.minTimeBetweenSessionsMillis =
         Constants.minTimeBetweenSessionsMillisUnset,
+    @Deprecated('Use autocapture instead. See Configuration.autocapture.')
     DefaultTrackingOptions? defaultTracking,
     TrackingOptions? trackingOptions,
     this.enableCoppaControl = false,
@@ -240,7 +253,7 @@ class Configuration {
   }
 
   /// Returns the [Autocapture] to use, deriving an [AutocaptureOptions] from
-  /// the deprecated [DefaultTrackingOptions] when `autocapture` was not passed.
+  /// the deprecated `DefaultTrackingOptions` when `autocapture` was not passed.
   ///
   /// This is the single place where the `defaultTracking → autocapture` bridge
   /// lives. Native plugins read only the resolved `autocapture` map.
@@ -279,6 +292,8 @@ class Configuration {
               Constants.minTimeBetweenSessionsMillisUnset
           ? minTimeBetweenSessionsMillis
           : Constants.minTimeBetweenSessionsMillisForMobile,
+      // Still serialized for backward compatibility; native plugins now read
+      // 'autocapture' instead. See Configuration.autocapture.
       'defaultTracking': defaultTracking.toMap(),
       'trackingOptions': trackingOptions.toMap(),
       'enableCoppaControl': enableCoppaControl,
