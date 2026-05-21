@@ -40,6 +40,13 @@ void main() {
       expect(options.pageViews, isA<PageViewsOptions>());
     });
 
+    test('appLifecycles and deepLinks default to false', () {
+      const options = AutocaptureOptions();
+
+      expect(options.appLifecycles, false);
+      expect(options.deepLinks, false);
+    });
+
     test('toMap converts options to a map', () {
       const options = AutocaptureOptions();
       final map = options.toMap();
@@ -47,6 +54,8 @@ void main() {
       expect(map['sessions'], true);
       expect(map['attribution'], isA<Map<String, dynamic>>());
       expect(map['pageViews'], isA<Map<String, dynamic>>());
+      expect(map['appLifecycles'], false);
+      expect(map['deepLinks'], false);
     });
 
     test('toMap handles custom values', () {
@@ -54,12 +63,16 @@ void main() {
         sessions: false,
         attribution: AttributionDisabled(),
         pageViews: PageViewsDisabled(),
+        appLifecycles: true,
+        deepLinks: true,
       );
       final map = options.toMap();
 
       expect(map['sessions'], false);
       expect(map['attribution'], false);
       expect(map['pageViews'], false);
+      expect(map['appLifecycles'], true);
+      expect(map['deepLinks'], true);
     });
   });
 
@@ -80,6 +93,19 @@ void main() {
       expect(options.attribution, true);
       expect(options.sessions, true);
       expect(options.pageViews, true);
+      expect(options.appLifecycles, true);
+      expect(options.deepLinks, true);
+    });
+
+    test('toMap includes all enabled values', () {
+      const options = AutocaptureEnabled();
+      final map = options.toMap();
+
+      expect(map['sessions'], true);
+      expect(map['attribution'], true);
+      expect(map['pageViews'], true);
+      expect(map['appLifecycles'], true);
+      expect(map['deepLinks'], true);
     });
   });
 }

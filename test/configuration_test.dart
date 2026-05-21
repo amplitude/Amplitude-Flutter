@@ -81,6 +81,22 @@ void main() {
       expect(map.containsKey('autocapture'), true);
     });
 
+    test('serializes autocapture mobile options', () {
+      final config = Configuration(
+        apiKey: 'test_api_key',
+        autocapture: const AutocaptureOptions(
+          appLifecycles: true,
+          deepLinks: true,
+        ),
+      );
+
+      final autocapture = config.toMap()['autocapture'] as Map<String, dynamic>;
+
+      expect(autocapture['sessions'], true);
+      expect(autocapture['appLifecycles'], true);
+      expect(autocapture['deepLinks'], true);
+    });
+
     test('custom values should be set correctly', () {
       var customConfig = Configuration(
         apiKey: 'custom_api_key',
