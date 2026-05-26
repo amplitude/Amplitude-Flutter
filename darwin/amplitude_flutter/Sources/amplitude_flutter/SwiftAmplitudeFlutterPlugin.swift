@@ -191,18 +191,24 @@ internal var pluginInstance: SwiftAmplitudeFlutterPlugin?
         let instanceName = args["instanceName"] as? String ?? Constants.Configuration.DEFAULT_INSTANCE
         let migrateLegacyData = args["migrateLegacyData"] as? Bool ?? true
 
-        // The Dart Configuration constructor already resolved the effective
-        // autocapture map (deriving it from defaultTracking when not set
-        // explicitly), so we just translate the map to a native
-        // AutocaptureOptions option set.
+        // The Dart Configuration constructor resolves the effective autocapture
+        // value: a map for AutocaptureOptions/AutocaptureEnabled (derived from
+        // defaultTracking when not set explicitly), or `false` for
+        // AutocaptureDisabled. Translate either shape into an AutocaptureOptions
+        // option set; if neither is present (e.g. a direct channel caller),
+        // fall back to the native SDK defaults.
         let autocaptureOptions: AutocaptureOptions = {
-            guard let map = args["autocapture"] as? [String: Any] else {
+            switch args["autocapture"] {
+            case let disabled as Bool where disabled == false:
+                return []
+            case let map as [String: Any]:
+                var opts: AutocaptureOptions = []
+                if (map["sessions"] as? Bool) == true { opts.insert(.sessions) }
+                if (map["appLifecycles"] as? Bool) == true { opts.insert(.appLifecycles) }
+                return opts
+            default:
                 return Configuration.Defaults.autocaptureOptions
             }
-            var opts: AutocaptureOptions = []
-            if (map["sessions"] as? Bool) == true { opts.insert(.sessions) }
-            if (map["appLifecycles"] as? Bool) == true { opts.insert(.appLifecycles) }
-            return opts
         }()
 
         let configuration = Configuration(
