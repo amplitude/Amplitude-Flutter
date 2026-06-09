@@ -245,7 +245,10 @@ class Configuration {
     this.fetchRemoteConfig = false,
     Autocapture? autocapture,
   })  : defaultTracking = defaultTracking ?? const DefaultTrackingOptions(),
-        autocapture = _resolveAutocapture(autocapture, defaultTracking),
+        autocapture = _resolveAutocapture(
+          autocapture,
+          defaultTracking ?? const DefaultTrackingOptions(),
+        ),
         trackingOptions = trackingOptions ?? TrackingOptions(),
         cookieOptions = cookieOptions ?? CookieOptions() {
     this.instanceName =
@@ -259,18 +262,19 @@ class Configuration {
   /// lives. Native plugins read only the resolved `autocapture` map.
   static Autocapture _resolveAutocapture(
     Autocapture? autocapture,
-    DefaultTrackingOptions? defaultTracking,
+    DefaultTrackingOptions defaultTracking,
   ) {
     if (autocapture != null) return autocapture;
-    final dt = defaultTracking ?? const DefaultTrackingOptions();
     return AutocaptureOptions(
-      sessions: dt.sessions,
-      appLifecycles: dt.appLifecycles,
-      deepLinks: dt.deepLinks,
-      attribution:
-          dt.attribution ? const AttributionOptions() : const AttributionDisabled(),
-      pageViews:
-          dt.pageViews ? const PageViewsOptions() : const PageViewsDisabled(),
+      sessions: defaultTracking.sessions,
+      appLifecycles: defaultTracking.appLifecycles,
+      deepLinks: defaultTracking.deepLinks,
+      attribution: defaultTracking.attribution
+          ? const AttributionOptions()
+          : const AttributionDisabled(),
+      pageViews: defaultTracking.pageViews
+          ? const PageViewsOptions()
+          : const PageViewsDisabled(),
     );
   }
 
