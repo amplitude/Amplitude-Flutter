@@ -1,3 +1,8 @@
+// This file tests the deprecated DefaultTrackingOptions API. The bridge
+// remains in place for backward compatibility; verifying it still works
+// here is intentional.
+// ignore_for_file: deprecated_member_use_from_same_package
+
 import 'package:amplitude_flutter/default_tracking.dart';
 import 'package:flutter_test/flutter_test.dart';
 

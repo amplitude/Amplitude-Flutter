@@ -237,15 +237,18 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         call.argument<String>("serverUrl")?.let { builder.serverUrl = it }
         call.argument<Int>("minTimeBetweenSessionsMillis")
             ?.let { builder.minTimeBetweenSessionsMillis = it.toLong() }
-        call.argument<Map<String, Any>>("defaultTracking")?.let { map ->
-            val sessions = (map["sessions"] as? Boolean) ?: true
-            val appLifecycles = (map["appLifecycles"] as? Boolean) ?: false
-            val deepLinks = (map["deepLinks"] as? Boolean) ?: false
-            // screenViews is always disabled on Android — implemented in Flutter
-            builder.autocapture = buildSet {
-                if (sessions) add(AutocaptureOption.SESSIONS)
-                if (appLifecycles) add(AutocaptureOption.APP_LIFECYCLES)
-                if (deepLinks) add(AutocaptureOption.DEEP_LINKS)
+        // The Dart Configuration constructor resolves the effective autocapture
+        // value: a map for AutocaptureOptions/AutocaptureEnabled (derived from
+        // defaultTracking when not set explicitly), or `false` for
+        // AutocaptureDisabled. Translate either shape into an AutocaptureOption
+        // set; if neither is present (e.g. a direct channel caller), leave the
+        // native SDK defaults in place.
+        when (val autocaptureArg = call.argument<Any>("autocapture")) {
+            false -> builder.autocapture = emptySet()
+            is Map<*, *> -> builder.autocapture = buildSet {
+                if (autocaptureArg["sessions"] == true) add(AutocaptureOption.SESSIONS)
+                if (autocaptureArg["appLifecycles"] == true) add(AutocaptureOption.APP_LIFECYCLES)
+                if (autocaptureArg["deepLinks"] == true) add(AutocaptureOption.DEEP_LINKS)
             }
         }
         call.argument<Map<String, Any>>("trackingOptions")?.let { map ->

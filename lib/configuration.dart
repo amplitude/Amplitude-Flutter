@@ -1,4 +1,12 @@
+// This file maintains the deprecation bridge from `defaultTracking` to
+// `autocapture` (see Configuration._resolveAutocapture). Reading and
+// re-emitting the deprecated DefaultTrackingOptions in this single file is
+// intentional and required for backward compatibility.
+// ignore_for_file: deprecated_member_use_from_same_package
+
+import 'autocapture/attribution.dart';
 import 'autocapture/autocapture.dart';
+import 'autocapture/page_views.dart';
 import 'constants.dart';
 import 'tracking_options.dart';
 import 'default_tracking.dart';
@@ -88,7 +96,13 @@ class Configuration {
 
   /// Mobile (iOS and Android) specific
   ///
-  /// Deprecated. Enable tracking of default events for sessions, app lifecycles, screen views, and deep links.
+  /// Enable tracking of default events for sessions, app lifecycles, screen
+  /// views, and deep links.
+  ///
+  /// Prefer [autocapture] instead. When `defaultTracking` is set and
+  /// [autocapture] is omitted, its values flow into the derived
+  /// [AutocaptureOptions] so existing callers continue to work.
+  @Deprecated('Use autocapture instead. See Configuration.autocapture.')
   DefaultTrackingOptions defaultTracking;
 
   /// Mobile (iOS and Android) specific
@@ -170,10 +184,19 @@ class Configuration {
   /// See https://amplitude.com/docs/sdks/analytics/browser/browser-sdk-2#remote-configuration for more information.
   bool fetchRemoteConfig;
 
-  /// Web specific
+  /// Cross-platform
   ///
-  /// Disable or enable autocapture by using class extensions AutoCaptureDisabled/AutocaptureEnabled, or use AutocaptureOptions
-  /// for more granular control. See [docs](https://amplitude.com/docs/sdks/analytics/browser/browser-sdk-2#autocapture) for more information.
+  /// Configures autocapture. Use [AutocaptureEnabled] or [AutocaptureDisabled]
+  /// for the common cases, or [AutocaptureOptions] for granular control.
+  ///
+  /// For backward compatibility, if [autocapture] is not set, values from the
+  /// deprecated [defaultTracking] field are used instead. Prefer [autocapture]
+  /// for new code.
+  ///
+  /// See [Web](https://amplitude.com/docs/sdks/analytics/browser/browser-sdk-2#autocapture),
+  /// [iOS](https://amplitude.com/docs/sdks/analytics/ios/ios-swift-sdk#autocapture),
+  /// [Android](https://amplitude.com/docs/sdks/analytics/android/android-kotlin-sdk#autocapture)
+  /// for platform-specific behavior.
   Autocapture autocapture;
 
   /// Configuration for Amplitude instance.
@@ -203,7 +226,8 @@ class Configuration {
     this.serverUrl,
     this.minTimeBetweenSessionsMillis =
         Constants.minTimeBetweenSessionsMillisUnset,
-    this.defaultTracking = const DefaultTrackingOptions(),
+    @Deprecated('Use autocapture instead. See Configuration.autocapture.')
+    DefaultTrackingOptions? defaultTracking,
     TrackingOptions? trackingOptions,
     this.enableCoppaControl = false,
     this.flushEventsOnClose = true,
@@ -219,11 +243,39 @@ class Configuration {
     this.userId,
     this.transport = 'fetch',
     this.fetchRemoteConfig = false,
-    this.autocapture = const AutocaptureOptions(),
-  })  : trackingOptions = trackingOptions ?? TrackingOptions(),
+    Autocapture? autocapture,
+  })  : defaultTracking = defaultTracking ?? const DefaultTrackingOptions(),
+        autocapture = _resolveAutocapture(
+          autocapture,
+          defaultTracking ?? const DefaultTrackingOptions(),
+        ),
+        trackingOptions = trackingOptions ?? TrackingOptions(),
         cookieOptions = cookieOptions ?? CookieOptions() {
     this.instanceName =
         instanceName.isEmpty ? Constants.defaultInstanceName : instanceName;
+  }
+
+  /// Returns the [Autocapture] to use, deriving an [AutocaptureOptions] from
+  /// the deprecated `DefaultTrackingOptions` when `autocapture` was not passed.
+  ///
+  /// This is the single place where the `defaultTracking → autocapture` bridge
+  /// lives. Native plugins read only the resolved `autocapture` map.
+  static Autocapture _resolveAutocapture(
+    Autocapture? autocapture,
+    DefaultTrackingOptions defaultTracking,
+  ) {
+    if (autocapture != null) return autocapture;
+    return AutocaptureOptions(
+      sessions: defaultTracking.sessions,
+      appLifecycles: defaultTracking.appLifecycles,
+      deepLinks: defaultTracking.deepLinks,
+      attribution: defaultTracking.attribution
+          ? const AttributionOptions()
+          : const AttributionDisabled(),
+      pageViews: defaultTracking.pageViews
+          ? const PageViewsOptions()
+          : const PageViewsDisabled(),
+    );
   }
 
   Map<String, dynamic> toMap() {
@@ -244,6 +296,8 @@ class Configuration {
               Constants.minTimeBetweenSessionsMillisUnset
           ? minTimeBetweenSessionsMillis
           : Constants.minTimeBetweenSessionsMillisForMobile,
+      // Still serialized for backward compatibility; native plugins now read
+      // 'autocapture' instead. See Configuration.autocapture.
       'defaultTracking': defaultTracking.toMap(),
       'trackingOptions': trackingOptions.toMap(),
       'enableCoppaControl': enableCoppaControl,

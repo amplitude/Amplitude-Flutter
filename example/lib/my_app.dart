@@ -2,9 +2,9 @@ import 'dart:async';
 
 // ignore_for_file: depend_on_referenced_packages
 import 'package:amplitude_flutter/amplitude.dart';
+import 'package:amplitude_flutter/autocapture/autocapture.dart';
 import 'package:amplitude_flutter/configuration.dart';
 import 'package:amplitude_flutter/constants.dart';
-import 'package:amplitude_flutter/default_tracking.dart';
 import 'package:flutter/material.dart';
 
 import 'app_state.dart';
@@ -44,7 +44,7 @@ class _MyAppState extends State<MyApp> {
     analytics = Amplitude(Configuration(
         apiKey: widget.apiKey,
         logLevel: LogLevel.debug,
-        defaultTracking: DefaultTrackingOptions.all()));
+        autocapture: const AutocaptureEnabled()));
     initAnalytics();
   }
 

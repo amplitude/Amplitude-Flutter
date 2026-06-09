@@ -191,9 +191,30 @@ internal var pluginInstance: SwiftAmplitudeFlutterPlugin?
         let instanceName = args["instanceName"] as? String ?? Constants.Configuration.DEFAULT_INSTANCE
         let migrateLegacyData = args["migrateLegacyData"] as? Bool ?? true
 
+        // The Dart Configuration constructor resolves the effective autocapture
+        // value: a map for AutocaptureOptions/AutocaptureEnabled (derived from
+        // defaultTracking when not set explicitly), or `false` for
+        // AutocaptureDisabled. Translate either shape into an AutocaptureOptions
+        // option set; if neither is present (e.g. a direct channel caller),
+        // fall back to the native SDK defaults.
+        let autocaptureOptions: AutocaptureOptions = {
+            switch args["autocapture"] {
+            case let disabled as Bool where disabled == false:
+                return []
+            case let map as [String: Any]:
+                var opts: AutocaptureOptions = []
+                if (map["sessions"] as? Bool) == true { opts.insert(.sessions) }
+                if (map["appLifecycles"] as? Bool) == true { opts.insert(.appLifecycles) }
+                return opts
+            default:
+                return Configuration.Defaults.autocaptureOptions
+            }
+        }()
+
         let configuration = Configuration(
             apiKey: apiKey,
             instanceName: instanceName,
+            autocapture: autocaptureOptions,
             migrateLegacyData: migrateLegacyData)
 
         if let flushQueueSize = args["flushQueueSize"] as? Int {
@@ -242,18 +263,6 @@ internal var pluginInstance: SwiftAmplitudeFlutterPlugin?
         }
         if let identifyBatchIntervalMillis = args["identifyBatchIntervalMillis"] as? Int {
             configuration.identifyBatchIntervalMillis = identifyBatchIntervalMillis
-        }
-        if let defaultTrackingDict = args["defaultTracking"] as? [String: Bool] {
-            let sessions = defaultTrackingDict["sessions"] ?? true
-            let appLifecycles = defaultTrackingDict["appLifecycles"] ?? false
-            // Set false to disable screenViews on iOS
-            // screenViews is implemented in Flutter
-            let screenViews = false
-            configuration.defaultTracking = DefaultTrackingOptions(
-                sessions: sessions,
-                appLifecycles: appLifecycles,
-                screenViews: screenViews
-            )
         }
 
         return configuration

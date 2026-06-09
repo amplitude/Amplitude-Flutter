@@ -101,7 +101,9 @@ void main() {
         'initialEmptyValue': 'EMPTY',
         'resetSessionOnNewCampaign': false
       },
-      'pageViews': {'trackHistoryChanges': 'all', 'eventType': ''}
+      'pageViews': {'trackHistoryChanges': 'all', 'eventType': ''},
+      'appLifecycles': false,
+      'deepLinks': false,
     },
     // This field doesn't belong to Configuration
     // Pass it for FlutterLibraryPlugin

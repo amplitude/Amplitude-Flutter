@@ -3,8 +3,9 @@ import 'page_views.dart';
 
 /// Autocapture configuration.
 ///
-/// Disable or enable autocapture by using class extensions [AutocaptureDisabled]/[AutocaptureEnabled],
-/// or use [AutocaptureOptions] for more granular control.
+/// Disable or enable Flutter-supported autocapture options by using
+/// [AutocaptureDisabled]/[AutocaptureEnabled], or use [AutocaptureOptions] for
+/// more granular control.
 sealed class Autocapture {
   const Autocapture();
 
@@ -20,8 +21,14 @@ sealed class Autocapture {
 
 /// Options for the autocapture feature.
 ///
-/// Currently configuring autocapture is only supported on Web.
-/// Refer to [docs](https://amplitude.com/docs/sdks/analytics/browser/browser-sdk-2#autocapture) for more details.
+/// Flutter supports the autocapture options exposed by this class. The
+/// underlying Web, iOS, and Android SDKs may support additional autocapture
+/// options that are not exposed by this Flutter SDK.
+///
+/// For platform behavior details, see:
+/// [Web](https://amplitude.com/docs/sdks/analytics/browser/browser-sdk-2#autocapture-replaces-defaulttracking),
+/// [iOS](https://amplitude.com/docs/sdks/analytics/ios/ios-swift-sdk#autocapture),
+/// [Android](https://amplitude.com/docs/sdks/analytics/android/android-kotlin-sdk#autocapture).
 ///
 /// Example usage:
 ///
@@ -33,6 +40,8 @@ sealed class Autocapture {
 ///             attribution: AttributionOptions(),
 ///             sessions: true,
 ///             pageViews: PageViewsOptions(),
+///             appLifecycles: true,
+///             deepLinks: true,
 ///         ),
 ///     )
 /// );
@@ -46,10 +55,12 @@ class AutocaptureOptions extends Autocapture {
   /// Can be either `AttributionOptions` or `false`.
   final Attribution attribution;
 
-  /// Web specific
+  /// Cross-platform
   ///
   /// Whether to capture session start and end events.
-  /// See https://amplitude.com/docs/sdks/analytics/browser/browser-sdk-2#track-sessions
+  /// See [Web docs](https://amplitude.com/docs/sdks/analytics/browser/browser-sdk-2#track-sessions).
+  /// See [iOS docs](https://amplitude.com/docs/sdks/analytics/ios/ios-swift-sdk#track-sessions).
+  /// See [Android docs](https://amplitude.com/docs/sdks/analytics/android/android-kotlin-sdk#track-sessions).
   final bool sessions;
 
   /// Web specific
@@ -60,10 +71,23 @@ class AutocaptureOptions extends Autocapture {
   /// Can be either `PageViewsOptions` or `false`.
   final dynamic pageViews;
 
+  /// Mobile (iOS and Android) specific
+  ///
+  /// Whether to capture app lifecycle events (e.g., `[Amplitude] Application Started`,
+  /// `[Amplitude] Application Installed`, `[Amplitude] Application Updated`).
+  final bool appLifecycles;
+
+  /// Mobile (Android) specific
+  ///
+  /// Whether to capture deep link events (`[Amplitude] Deep Link Opened`).
+  final bool deepLinks;
+
   const AutocaptureOptions({
     this.attribution = const AttributionOptions(),
     this.sessions = true,
     this.pageViews = const PageViewsOptions(),
+    this.appLifecycles = false,
+    this.deepLinks = false,
   });
 
   Map<String, dynamic> toMap() {
@@ -71,6 +95,8 @@ class AutocaptureOptions extends Autocapture {
       'sessions': sessions,
       'attribution': Attribution.toMapOrBool(attribution),
       'pageViews': PageViews.toMapOrBool(pageViews),
+      'appLifecycles': appLifecycles,
+      'deepLinks': deepLinks,
     };
   }
 }
@@ -91,9 +117,11 @@ class AutocaptureDisabled extends Autocapture {
   const AutocaptureDisabled();
 }
 
-/// Enable autocapture.
+/// Enable all Flutter-supported autocapture options.
 ///
-/// Note: While the underlying Browser SDK takes in true, we opt to rather use a map as not all options are supported in Flutter.
+/// The underlying platform SDKs may support additional autocapture options that
+/// are not exposed by this Flutter SDK. Each platform adapter translates only
+/// the options it supports.
 ///
 /// Example usage:
 ///
@@ -114,10 +142,9 @@ class AutocaptureEnabled extends Autocapture {
   /// Can be either `AttributionOptions` or `false`.
   final bool attribution = true;
 
-  /// Web specific
+  /// Cross-platform
   ///
   /// Whether to capture session start and end events.
-  /// See https://amplitude.com/docs/sdks/analytics/browser/browser-sdk-2#track-sessions
   final bool sessions = true;
 
   /// Web specific
@@ -128,6 +155,17 @@ class AutocaptureEnabled extends Autocapture {
   /// Can be either `PageViewsOptions` or `false`.
   final bool pageViews = true;
 
+  /// Mobile (iOS and Android) specific
+  ///
+  /// Whether to capture app lifecycle events (e.g., `[Amplitude] Application Started`,
+  /// `[Amplitude] Application Installed`, `[Amplitude] Application Updated`).
+  final bool appLifecycles = true;
+
+  /// Mobile (Android) specific
+  ///
+  /// Whether to capture deep link events (`[Amplitude] Deep Link Opened`).
+  final bool deepLinks = true;
+
   const AutocaptureEnabled();
 
   Map<String, dynamic> toMap() {
@@ -135,6 +173,8 @@ class AutocaptureEnabled extends Autocapture {
       'sessions': sessions,
       'attribution': attribution,
       'pageViews': pageViews,
+      'appLifecycles': appLifecycles,
+      'deepLinks': deepLinks,
     };
   }
 }
