@@ -1,3 +1,15 @@
+# [4.6.0](https://github.com/amplitude/Amplitude-Flutter/compare/v4.5.0...v4.6.0) (2026-06-16)
+
+
+### Bug Fixes
+
+* correct Flutter min version in pubspec to match Dart SDK ([#302](https://github.com/amplitude/Amplitude-Flutter/issues/302)) ([40d197b](https://github.com/amplitude/Amplitude-Flutter/commit/40d197b353782e1a7b881da2317f9d71abcc1b2f))
+
+
+### Features
+
+* **config:** prefer autocapture over defaultTracking for mobile ([#305](https://github.com/amplitude/Amplitude-Flutter/issues/305)) ([ff33eab](https://github.com/amplitude/Amplitude-Flutter/commit/ff33eab1d02b768b671dedb9853228dfd392caa0))
+
 # [4.5.0](https://github.com/amplitude/Amplitude-Flutter/compare/v4.4.0...v4.5.0) (2026-04-06)
 
 
