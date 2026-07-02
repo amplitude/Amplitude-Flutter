@@ -47,10 +47,14 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-reflect:1.6.10"
     implementation "androidx.annotation:annotation:1.7.0"
 
-    // Locked to specific minor version to prevent binary compatibility issues.
-    // Allowing newer minor versions previously caused NoSuchMethodError due to
-    // compile-time vs runtime version mismatches (see #283).
-    implementation 'com.amplitude:analytics-android:1.27.+'
+    // Pinned to the 1.29.x line for binary compatibility. amplitude_session_replay's
+    // session-replay-android (>= 0.26.4) requires the shared transitive
+    // com.amplitude:analytics-core in [1.29.0, 2.0.0); older analytics-android (1.27.x)
+    // was compiled against the enum RemoteConfigClient.Key and crashes with
+    // NoSuchFieldError (ANALYTICS_SDK) once core resolves to 1.29.x (see #307).
+    // Staying within a single minor line avoids the compile-time vs runtime mismatch
+    // that previously caused NoSuchMethodError on newer minors (see #283).
+    implementation 'com.amplitude:analytics-android:1.29.+'
     testImplementation 'org.mockito:mockito-core:4.0.0'
     testImplementation "io.mockk:mockk:1.12.4"
     testImplementation "io.mockk:mockk-agent-jvm:1.11.0"
