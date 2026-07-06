@@ -1,3 +1,10 @@
+## [4.6.1](https://github.com/amplitude/Amplitude-Flutter/compare/v4.6.0...v4.6.1) (2026-07-06)
+
+
+### Bug Fixes
+
+* **android:** bump analytics-android pin to 1.29.x for session-replay compat ([#308](https://github.com/amplitude/Amplitude-Flutter/issues/308)) ([bb72fc9](https://github.com/amplitude/Amplitude-Flutter/commit/bb72fc9b63cc7f845a373d74d035af568f9c6acd)), closes [#307](https://github.com/amplitude/Amplitude-Flutter/issues/307)
+
 # [4.6.0](https://github.com/amplitude/Amplitude-Flutter/compare/v4.5.0...v4.6.0) (2026-06-16)
 
 
