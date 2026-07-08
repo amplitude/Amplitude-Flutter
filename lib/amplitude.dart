@@ -10,7 +10,6 @@ import 'events/base_event.dart';
 import 'events/group_identify_event.dart';
 
 class Amplitude {
-  Configuration configuration;
   MethodChannel _channel = const MethodChannel('amplitude_flutter');
 
   /// Whether the Amplitude instance has been successfully initialized
@@ -20,7 +19,7 @@ class Amplitude {
   /// // If care about init complete
   /// await amplitude.isBuilt;
   /// ```
-  late Future<bool> isBuilt;
+  late final Future<bool> isBuilt;
 
   /// Returns an Amplitude instance
   ///
@@ -29,13 +28,13 @@ class Amplitude {
   /// // If care about init complete
   /// await amplitude.isBuilt;
   /// ```
-  Amplitude(this.configuration, [MethodChannel? methodChannel]) {
+  Amplitude(Configuration configuration, [MethodChannel? methodChannel]) {
     _channel = methodChannel ?? _channel;
-    isBuilt = _init();
+    isBuilt = _init(configuration);
   }
 
   /// Private method to initialize and return a `Future<bool>`
-  Future<bool> _init() async {
+  Future<bool> _init(Configuration configuration) async {
     try {
       await _channel.invokeMethod('init', configuration.toMap());
       return true; // Initialization successful
