@@ -104,6 +104,11 @@ void main() {
       'pageViews': {'trackHistoryChanges': 'all', 'eventType': ''},
       'appLifecycles': false,
       'deepLinks': false,
+      'screenViews': false,
+      'formInteractions': true,
+      'fileDownloads': true,
+      'elementInteractions': false,
+      'pageUrlEnrichment': true,
     },
     // This field doesn't belong to Configuration
     // Pass it for FlutterLibraryPlugin

@@ -275,6 +275,8 @@ class Configuration {
       pageViews: defaultTracking.pageViews
           ? const PageViewsOptions()
           : const PageViewsDisabled(),
+      formInteractions: defaultTracking.formInteractions,
+      fileDownloads: defaultTracking.fileDownloads,
     );
   }
 

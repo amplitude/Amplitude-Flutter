@@ -16,6 +16,84 @@ This is the official Amplitude Flutter SDK developed and maintained by Amplitude
 - Please visit our :100:[Developer Center](https://developers.amplitude.com/docs/flutter-setup) for instructions on installing and using our the SDK.
 - For developing the SDK, please visit our [CONTRIBUTING.md](https://github.com/amplitude/Amplitude-Flutter/blob/main/CONTRIBUTING.md) to get started.
 
+## Autocapture
+
+Configure autocapture through the `autocapture` field of `Configuration`. Use
+`AutocaptureEnabled()` to turn on every supported option, `AutocaptureDisabled()`
+to turn them all off, or `AutocaptureOptions(...)` for granular control:
+
+```dart
+final analytics = Amplitude(Configuration(
+  apiKey: 'API_KEY',
+  autocapture: AutocaptureOptions(
+    sessions: true,
+    // Web
+    attribution: AttributionOptions(),
+    pageViews: PageViewsOptions(),
+    formInteractions: true,
+    fileDownloads: true,
+    elementInteractions: ElementInteractionsOptions(), // clicks; off by default
+    pageUrlEnrichment: true,
+    // Mobile (iOS/Android)
+    appLifecycles: true, // installs, upgrades, opens
+    deepLinks: true,     // Android
+    screenViews: true,   // see "Screen views" below
+  ),
+));
+```
+
+Each platform ignores the options that don't apply to it.
+
+> **Upgrading:** on web, `formInteractions` and `fileDownloads` are now captured
+> by default (this SDK previously disabled them). After upgrading, web apps begin
+> emitting `[Amplitude] Form Started`/`Submitted` and `[Amplitude] File Downloaded`
+> events — set those options to `false` to opt out. `elementInteractions` (click
+> tracking) remains opt-in.
+
+### Web setup
+
+The web plugin does **not** inject the Amplitude Browser SDK — your app's page
+must load it. Add the Amplitude loader snippet to your `web/index.html` (see
+[`example/web/index.html`](https://github.com/amplitude/Amplitude-Flutter/blob/main/example/web/index.html)).
+Full autocapture requires **Browser SDK >= 2.10.0** (for `elementInteractions`).
+If you change the snippet's SDK version, update the snippet's `integrity` (SRI)
+hash to match that exact file, otherwise the browser will refuse to load it.
+
+### Screen views
+
+A Flutter app runs inside a single native surface (one `FlutterViewController`
+on iOS, one `FlutterActivity` on Android), so the native SDK's screen view
+autocapture cannot observe Flutter route navigation. Instead, enable
+`screenViews` and attach an `AmplitudeNavigatorObserver` to your app's
+`navigatorObservers`:
+
+```dart
+import 'package:amplitude_flutter/observers/amplitude_navigator_observer.dart';
+
+MaterialApp(
+  navigatorObservers: [AmplitudeNavigatorObserver(analytics)],
+  // ...
+);
+```
+
+The observer emits an `[Amplitude] Screen Viewed` event (with an
+`[Amplitude] Screen Name` property from the route name) on each navigation, on
+every platform including web. Both enabling `screenViews` and attaching the
+observer are required.
+
+Screen names come from `RouteSettings.name`, so **give your routes names** (named
+routes, `RouteSettings(name: ...)`, or a router such as go_router) — routes with
+no name are skipped, and in debug builds a log explains why. Pass a custom
+`nameExtractor` to derive names differently.
+
+On web, `pageViews` and the observer are independent. A Flutter route change does
+not necessarily change the browser URL, so the observer (route-based) captures
+navigations the Browser SDK's URL-based `pageViews` would miss. If you enable
+both, a URL-changing navigation is recorded as both `[Amplitude] Page Viewed` and
+`[Amplitude] Screen Viewed`; to record a single event, disable the one you don't
+want — typically `pageViews: PageViewsDisabled()`, keeping `pageUrlEnrichment`
+enabled to retain page-URL properties.
+
 ## Compatibility
 
 From Amplitude Flutter v4, we bump up the kotlin version to v1.9.22 to support latest Gradle.
