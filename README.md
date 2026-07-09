@@ -55,9 +55,23 @@ Each platform ignores the options that don't apply to it.
 The web plugin does **not** inject the Amplitude Browser SDK — your app's page
 must load it. Add the Amplitude loader snippet to your `web/index.html` (see
 [`example/web/index.html`](https://github.com/amplitude/Amplitude-Flutter/blob/main/example/web/index.html)).
-Full autocapture requires **Browser SDK >= 2.10.0** (for `elementInteractions`).
-If you change the snippet's SDK version, update the snippet's `integrity` (SRI)
-hash to match that exact file, otherwise the browser will refuse to load it.
+Autocapture features gate on the Browser SDK version the page loads:
+`elementInteractions` needs **>= 2.10.0** and `pageUrlEnrichment` needs
+**>= 2.29.0** (older SDKs silently ignore the option) — the example snippet
+loads 2.44.4, which covers everything. If you change the snippet's SDK version,
+update the snippet's `integrity` (SRI) hash to match that exact file, otherwise
+the browser will refuse to load it. The SRI hash is the base64 sha384 of the
+*decoded* JS (the CDN serves it gzip-encoded):
+`curl -s https://cdn.amplitude.com/libs/analytics-browser-<version>-min.js.gz | gzcat | openssl dgst -sha384 -binary | openssl base64 -A`
+
+On Flutter web, the Browser SDK's DOM-based capture (`elementInteractions`,
+`formInteractions`, `fileDownloads`) only sees real DOM elements. With the
+default CanvasKit renderer the UI is painted to a canvas, so these events fire
+only for DOM the app actually creates — e.g. the accessibility semantics tree
+(when enabled by the user or via `SemanticsBinding.ensureSemantics()`), where
+text fields render as real `<input>`/`<form>` elements and are captured.
+Route/screen tracking is unaffected (use the `AmplitudeNavigatorObserver`
+below).
 
 ### Screen views
 
