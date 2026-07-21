@@ -98,8 +98,14 @@ jobs:
       - name: Run plugin unit tests
         working-directory: example/ios
         run: |
+          # Pick any available iPhone simulator so we don't pin a device
+          # name/OS that a future runner image may not ship.
+          UDID=$(xcrun simctl list devices available --json \
+            | python3 -c "import json,sys; devs=json.load(sys.stdin)['devices']; print(next(d['udid'] for rt in devs for d in devs[rt] if d.get('isAvailable') and d['name'].startswith('iPhone')))")
+          echo "Using simulator $UDID"
           xcodebuild test \
             -workspace Runner.xcworkspace \
             -scheme Runner \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -destination "id=$UDID" \
+            -parallel-testing-enabled NO \
             CODE_SIGNING_ALLOWED=NO
