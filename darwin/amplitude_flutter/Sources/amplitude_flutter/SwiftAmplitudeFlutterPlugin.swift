@@ -47,25 +47,46 @@ internal var pluginInstance: SwiftAmplitudeFlutterPlugin?
         if call.method == "init" {
             guard let configArgs = call.arguments as? [String: Any] else {
                 print("\(call.method) called but call.arguments type casting failed.")
+                result(FlutterError(
+                    code: "init_failed",
+                    message: "init called but call.arguments type casting failed.",
+                    details: nil))
                 return
             }
 
-            var amplitude: Amplitude?
+            // Surface initialization failures back to Dart so `_init()` can resolve
+            // `isBuilt` to false. Reporting success here regardless would make
+            // `isBuilt` always true even when the instance was never created.
+            let amplitude: Amplitude
             do {
                 amplitude = Amplitude(configuration: try getConfiguration(args: configArgs))
-                instances[amplitude!.configuration.instanceName] = amplitude
             } catch {
-                print("Initialization failed.")
+                print("Amplitude initialization failed: \(error)")
+                result(FlutterError(
+                    code: "init_failed",
+                    message: "Amplitude initialization failed: \(error.localizedDescription)",
+                    details: nil))
+                return
+            }
+
+            instances[amplitude.configuration.instanceName] = amplitude
+
+            // AmplitudeSwift's Configuration has no deviceId field, so apply the
+            // deviceId passed from Dart Configuration right after construction.
+            // This mirrors Android (ConfigurationBuilder.deviceId) so a configured
+            // deviceId is honored on iOS/macOS as well.
+            if let deviceId = configArgs["deviceId"] as? String {
+                amplitude.setDeviceId(deviceId: deviceId)
             }
 
             // Set library
-            amplitude?.add(
+            amplitude.add(
                 plugin: FlutterLibraryPlugin(
                     library: configArgs["library"] as? String ?? "amplitude-flutter/unknown"
                 )
             )
 
-            amplitude?.logger?.debug(message: "Amplitude has been successfully initialized.")
+            amplitude.logger?.debug(message: "Amplitude has been successfully initialized.")
 
             result("init called..")
             return
