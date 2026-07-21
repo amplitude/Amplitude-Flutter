@@ -71,6 +71,12 @@ jobs:
         with:
           channel: 'stable'
 
+      # The plugin integrates via CocoaPods (podspec + Podfile). Newer Flutter
+      # enables Swift Package Manager by default, which fails on this project
+      # with a package-identity mismatch. Force the CocoaPods path.
+      - name: Use CocoaPods (disable Swift Package Manager)
+        run: flutter config --no-enable-swift-package-manager
+
       - name: Install packages
         working-directory: example
         run: flutter pub get
