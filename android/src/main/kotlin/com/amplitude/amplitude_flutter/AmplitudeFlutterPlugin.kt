@@ -2,6 +2,8 @@ package com.amplitude.amplitude_flutter
 
 import android.app.Activity
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import androidx.annotation.RestrictTo
 import com.amplitude.android.Amplitude
 import com.amplitude.android.AutocaptureOption
@@ -34,6 +36,8 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     private var appOpenedTracked = false
 
     private lateinit var channel: MethodChannel
+
+    private val mainHandler = Handler(Looper.getMainLooper())
 
     companion object {
         private const val methodChannelName = "amplitude_flutter"
@@ -141,10 +145,23 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
             }
 
             "getDeviceId" -> {
-                val deviceId = amplitude.getDeviceId()
-                amplitude.logger.debug("Get deviceId: $deviceId")
-
-                result.success(deviceId)
+                // The native SDK assigns the device ID on a background coroutine
+                // (amplitude.isBuilt). Reading getDeviceId() before that completes
+                // returns null, so wait for the build to finish before replying.
+                // getDeviceId() is nullable by contract, so a failed build resolves
+                // to null rather than surfacing a PlatformException to Dart callers.
+                amplitude.isBuilt.invokeOnCompletion { exception ->
+                    mainHandler.post {
+                        if (exception != null) {
+                            amplitude.logger.warn("getDeviceId: Amplitude build did not complete: ${exception.message}")
+                            result.success(null)
+                        } else {
+                            val deviceId = amplitude.getDeviceId()
+                            amplitude.logger.debug("Get deviceId: $deviceId")
+                            result.success(deviceId)
+                        }
+                    }
+                }
             }
 
             "setDeviceId" -> {
