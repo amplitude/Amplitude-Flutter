@@ -58,3 +58,54 @@ jobs:
       - name: Run plugin unit tests
         working-directory: example/android
         run: ./gradlew :amplitude_flutter:testDebugUnitTest
+
+  ios-unit-test:
+    name: iOS plugin unit tests
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: 'stable'
+
+      # The plugin integrates via CocoaPods (podspec + Podfile). Newer Flutter
+      # enables Swift Package Manager by default, which fails on this project
+      # with a package-identity mismatch. Force the CocoaPods path.
+      - name: Use CocoaPods (disable Swift Package Manager)
+        run: flutter config --no-enable-swift-package-manager
+
+      - name: Install packages
+        working-directory: example
+        run: flutter pub get
+
+      # Download the iOS engine artifacts (Flutter.xcframework) that the Runner
+      # project links against via $(FLUTTER_ROOT).
+      - name: Precache iOS artifacts
+        run: flutter precache --ios
+
+      # Generates ios/Flutter/Generated.xcconfig (defines FLUTTER_ROOT) without a build.
+      - name: Generate iOS build config
+        working-directory: example
+        run: flutter build ios --config-only --no-codesign
+
+      - name: Install CocoaPods
+        working-directory: example/ios
+        run: pod install
+
+      - name: Run plugin unit tests
+        working-directory: example/ios
+        run: |
+          # Pick any available iPhone simulator so we don't pin a device
+          # name/OS that a future runner image may not ship.
+          UDID=$(xcrun simctl list devices available --json \
+            | python3 -c "import json,sys; devs=json.load(sys.stdin)['devices']; print(next(d['udid'] for rt in devs for d in devs[rt] if d.get('isAvailable') and d['name'].startswith('iPhone')))")
+          echo "Using simulator $UDID"
+          xcodebuild test \
+            -workspace Runner.xcworkspace \
+            -scheme Runner \
+            -destination "id=$UDID" \
+            -parallel-testing-enabled NO \
+            CODE_SIGNING_ALLOWED=NO
