@@ -173,6 +173,23 @@ class AmplitudeFlutterPluginTest {
     }
 
     @Test
+    fun getSessionIdReturnsValueAfterInit() {
+        plugin.onMethodCall(MethodCall("init", JSONObject(testConfigurationMap)), result)
+        awaitInitialized()
+
+        val sessionIdResult = spyk<MethodChannel.Result>()
+        plugin.onMethodCall(
+            MethodCall("getSessionId", JSONObject(mapOf("instanceName" to "\$default_instance"))),
+            sessionIdResult
+        )
+        awaitInitialized()
+        // The reply is delivered (not left pending) with a non-null session ID
+        // once the native build completes. The concrete value may be the -1
+        // sentinel on a brand-new install until a session starts.
+        verify(exactly = 1) { sessionIdResult.success(any<Long>()) }
+    }
+
+    @Test
     fun shouldTrack() {
         val initMethodCall = MethodCall("init", JSONObject(testConfigurationMap))
         plugin.onMethodCall(initMethodCall, result)
