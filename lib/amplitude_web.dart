@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:js_interop';
-import 'dart:js_interop_unsafe';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
 import 'web/amplitude_js.dart';
+import 'web/configuration_transform.dart';
 import 'web/flutter_library_plugin.dart';
 import 'constants.dart';
 
@@ -132,34 +132,13 @@ class AmplitudeFlutterPlugin {
   /// For more details on configuring the SDK, refer to the official documentation:
   /// https://amplitude.com/docs/sdks/analytics/browser/browser-sdk-2#configure-the-sdk
   ///
-  /// Returns a map containing the configuration settings.
+  /// The pure-Dart shaping (autocapture, logLevel, serverZone, defaultTracking)
+  /// lives in [transformWebConfiguration] so it can be unit tested without the
+  /// `chrome` platform; this method only handles the `jsify()` conversion.
+  ///
+  /// Returns a JavaScript object containing the configuration settings.
   JSObject getConfiguration(MethodCall call) {
-    var configuration = call.arguments as Map;
-    if (configuration['autocapture'] is Map) {
-      // formInteractions, fileDownloads, elementInteractions are not supported in flutter web
-      configuration['autocapture']['formInteractions'] = false;
-      configuration['autocapture']['fileDownloads'] = false;
-      configuration['autocapture']['elementInteractions'] = false;
-    }
-    JSObject configurationJS = configuration.jsify() as JSObject;
-
-    // defaultTracking is not supported in flutter web
-    if (configuration.containsKey('defaultTracking')) {
-      configurationJS.delete('defaultTracking'.toJS);
-    }
-
-    if (configuration.containsKey('logLevel')) {
-      var logLevelString = configuration['logLevel'] as String;
-      configurationJS['logLevel'] =
-          LogLevel.values.byName(logLevelString).index.toJS;
-    }
-
-    if (configuration.containsKey('serverZone')) {
-      var serverZoneString = configuration['serverZone'] as String;
-      serverZoneString.toUpperCase();
-      configurationJS['serverZone'] = serverZoneString.toUpperCase().toJS;
-    }
-
-    return configurationJS;
+    final configuration = Map<String, dynamic>.from(call.arguments as Map);
+    return transformWebConfiguration(configuration).jsify() as JSObject;
   }
 }

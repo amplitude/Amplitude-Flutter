@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:amplitude_flutter/autocapture/autocapture.dart';
 import 'package:amplitude_flutter/autocapture/attribution.dart';
+import 'package:amplitude_flutter/autocapture/element_interactions.dart';
 import 'package:amplitude_flutter/autocapture/page_views.dart';
 
 void main() {
@@ -38,13 +39,18 @@ void main() {
       expect(options.attribution, isA<AttributionOptions>());
       expect(options.sessions, true);
       expect(options.pageViews, isA<PageViewsOptions>());
+      expect(options.formInteractions, true);
+      expect(options.fileDownloads, true);
+      expect(options.elementInteractions, isA<ElementInteractionsDisabled>());
+      expect(options.pageUrlEnrichment, true);
     });
 
-    test('appLifecycles and deepLinks default to false', () {
+    test('appLifecycles, deepLinks, and screenViews default to false', () {
       const options = AutocaptureOptions();
 
       expect(options.appLifecycles, false);
       expect(options.deepLinks, false);
+      expect(options.screenViews, false);
     });
 
     test('toMap converts options to a map', () {
@@ -56,6 +62,11 @@ void main() {
       expect(map['pageViews'], isA<Map<String, dynamic>>());
       expect(map['appLifecycles'], false);
       expect(map['deepLinks'], false);
+      expect(map['screenViews'], false);
+      expect(map['formInteractions'], true);
+      expect(map['fileDownloads'], true);
+      expect(map['elementInteractions'], false);
+      expect(map['pageUrlEnrichment'], true);
     });
 
     test('toMap handles custom values', () {
@@ -65,6 +76,13 @@ void main() {
         pageViews: PageViewsDisabled(),
         appLifecycles: true,
         deepLinks: true,
+        screenViews: true,
+        formInteractions: false,
+        fileDownloads: false,
+        elementInteractions: ElementInteractionsOptions(
+          cssSelectorAllowlist: ['a', 'button'],
+        ),
+        pageUrlEnrichment: false,
       );
       final map = options.toMap();
 
@@ -73,6 +91,13 @@ void main() {
       expect(map['pageViews'], false);
       expect(map['appLifecycles'], true);
       expect(map['deepLinks'], true);
+      expect(map['screenViews'], true);
+      expect(map['formInteractions'], false);
+      expect(map['fileDownloads'], false);
+      expect(map['elementInteractions'], {
+        'cssSelectorAllowlist': ['a', 'button'],
+      });
+      expect(map['pageUrlEnrichment'], false);
     });
   });
 
@@ -95,6 +120,11 @@ void main() {
       expect(options.pageViews, true);
       expect(options.appLifecycles, true);
       expect(options.deepLinks, true);
+      expect(options.screenViews, true);
+      expect(options.formInteractions, true);
+      expect(options.fileDownloads, true);
+      expect(options.elementInteractions, true);
+      expect(options.pageUrlEnrichment, true);
     });
 
     test('toMap includes all enabled values', () {
@@ -106,6 +136,11 @@ void main() {
       expect(map['pageViews'], true);
       expect(map['appLifecycles'], true);
       expect(map['deepLinks'], true);
+      expect(map['screenViews'], true);
+      expect(map['formInteractions'], true);
+      expect(map['fileDownloads'], true);
+      expect(map['elementInteractions'], true);
+      expect(map['pageUrlEnrichment'], true);
     });
   });
 }

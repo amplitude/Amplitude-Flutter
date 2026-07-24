@@ -155,6 +155,24 @@ void main() {
             reason: 'pageViews=false on DTO should disable on derived AutocaptureOptions');
       });
 
+      test('autocapture derived from defaultTracking honors formInteractions/fileDownloads', () {
+        final config = Configuration(
+          apiKey: 'k',
+          defaultTracking: const DefaultTrackingOptions(
+            formInteractions: false,
+            fileDownloads: false,
+          ),
+        );
+
+        final ac = config.autocapture as AutocaptureOptions;
+        expect(ac.formInteractions, false);
+        expect(ac.fileDownloads, false);
+
+        final serialized = config.toMap()['autocapture'] as Map<String, dynamic>;
+        expect(serialized['formInteractions'], false);
+        expect(serialized['fileDownloads'], false);
+      });
+
       test('defaults: no autocapture, no defaultTracking → minimal autocapture', () {
         final config = Configuration(apiKey: 'k');
 
