@@ -1,6 +1,7 @@
 package com.amplitude.amplitude_flutter
 
 import android.content.Context
+import android.os.Looper
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -8,11 +9,13 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
+import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
 @Config(manifest=Config.NONE)
@@ -141,12 +144,49 @@ class AmplitudeFlutterPluginTest {
         plugin.onAttachedToEngine(binding)
     }
 
+    private fun awaitInitialized() {
+        val amp = AmplitudeFlutterPlugin.getAmplitudeInstanceById("\$default_instance")!!
+        runBlocking { amp.isBuilt.await() }
+        shadowOf(Looper.getMainLooper()).idle()
+    }
+
     @Test
     fun shouldInit() {
         val methodCall = MethodCall("init", JSONObject(testConfigurationMap))
         plugin.onMethodCall(methodCall, result)
 
         verify(exactly = 1) { result.success("init called..") }
+    }
+
+    @Test
+    fun getDeviceIdReturnsNonNullAfterInit() {
+        plugin.onMethodCall(MethodCall("init", JSONObject(testConfigurationMap)), result)
+        awaitInitialized()
+
+        val deviceIdResult = spyk<MethodChannel.Result>()
+        plugin.onMethodCall(
+            MethodCall("getDeviceId", JSONObject(mapOf("instanceName" to "\$default_instance"))),
+            deviceIdResult
+        )
+        awaitInitialized()
+        verify(exactly = 1) { deviceIdResult.success(match<String> { it.isNotEmpty() }) }
+    }
+
+    @Test
+    fun getSessionIdReturnsValueAfterInit() {
+        plugin.onMethodCall(MethodCall("init", JSONObject(testConfigurationMap)), result)
+        awaitInitialized()
+
+        val sessionIdResult = spyk<MethodChannel.Result>()
+        plugin.onMethodCall(
+            MethodCall("getSessionId", JSONObject(mapOf("instanceName" to "\$default_instance"))),
+            sessionIdResult
+        )
+        awaitInitialized()
+        // The reply is delivered (not left pending) with a non-null session ID
+        // once the native build completes. The concrete value may be the -1
+        // sentinel on a brand-new install until a session starts.
+        verify(exactly = 1) { sessionIdResult.success(any<Long>()) }
     }
 
     @Test
