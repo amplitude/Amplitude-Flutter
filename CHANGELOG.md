@@ -1,3 +1,10 @@
+## [4.6.2](https://github.com/amplitude/Amplitude-Flutter/compare/v4.6.1...v4.6.2) (2026-07-24)
+
+
+### Bug Fixes
+
+* **android:** return device ID only after native SDK build completes ([#310](https://github.com/amplitude/Amplitude-Flutter/issues/310)) ([cf5d15f](https://github.com/amplitude/Amplitude-Flutter/commit/cf5d15f1720d38e2ea544fc64d32ef714f356762))
+
 ## [4.6.1](https://github.com/amplitude/Amplitude-Flutter/compare/v4.6.0...v4.6.1) (2026-07-06)
 
 
