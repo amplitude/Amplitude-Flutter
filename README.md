@@ -18,16 +18,9 @@ This is the official Amplitude Flutter SDK developed and maintained by Amplitude
 
 ## Compatibility
 
-From Amplitude Flutter v4, we bump up the kotlin version to v1.9.22 to support latest Gradle.
+Requires Dart 3.3+ and Flutter 3.19+.
 
-The following matrix lists the minimum support for Amplitude Flutter SDK version.
-
-| Amplitude Flutter |  Dart   | Flutter | Gradle | Android Gradle Plugin | Kotlin Gradle Plugin |
-|-------------------|---------|---------|--------|-----------------------|-----------------------|
-| >= 4.0.0          | >=3.3   | >=3.7   | 8.2    | 8.2.2                 | 1.9.22                |
-
-
-Learn more about the Android [Gradle Plugin compatibility](https://developer.android.com/studio/releases/gradle-plugin#updating-gradle), [Gradle compatibility](https://docs.gradle.org/current/userguide/compatibility.html#kotlin), and [Kotlin compatibility](https://kotlinlang.org/docs/whatsnew17.html#bumping-minimum-supported-versions).
+For the upcoming Android API 36 release, use JDK 17, `compileSdk` 36 or later, and the tested build configuration: Android Gradle Plugin 8.11.1, Gradle 8.14, and Kotlin 2.2.20. Upgrade older Android build configurations before adopting this release; Kotlin 1.9 is incompatible. Applications control their own `targetSdk`; the example targets API 36.
 
 ## Need Help?
 
