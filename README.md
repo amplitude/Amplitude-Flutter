@@ -20,14 +20,14 @@ This is the official Amplitude Flutter SDK developed and maintained by Amplitude
 
 From Amplitude Flutter v4, we bump up the kotlin version to v1.9.22 to support latest Gradle.
 
-The following matrix lists the baseline requirements for Amplitude Flutter and the verified requirements for the native Android dependency configuration listed below. Native dependencies can impose higher Android build requirements than the baseline.
+Build requirements depend on the SDK and native dependency versions:
 
 | Amplitude Flutter |  Dart   | Flutter | Gradle | Android Gradle Plugin | Kotlin Gradle Plugin |
 |-------------------|---------|---------|--------|-----------------------|-----------------------|
 | >= 4.0.0 (baseline) | >=3.3 | >=3.7 | 8.2 | 8.2.2 | 1.9.22 |
 | 4.6.2 with `analytics-android` 1.29.1 | >=3.3 | >=3.19.0 | 8.7 | 8.6.0 | 1.9.22 |
 
-For the 4.6.2 configuration above, the native Android dependency chain requires the consuming app to use `compileSdk` 35 or higher and Android Gradle Plugin 8.6.0 or higher. Debug and release builds were verified with Flutter 3.19.0, Gradle 8.7, Kotlin Gradle Plugin 1.9.22, and JDK 17. These requirements apply to this native dependency configuration, not retroactively to every 4.x release. Because the native SDK dependency uses the `1.29.+` version range, check which version Gradle resolves when diagnosing build compatibility.
+The 4.6.2 configuration above also requires `compileSdk` 35 or higher and JDK 17.
 
 Learn more about the Android [Gradle Plugin compatibility](https://developer.android.com/studio/releases/gradle-plugin#updating-gradle), [Gradle compatibility](https://docs.gradle.org/current/userguide/compatibility.html#kotlin), and [Kotlin compatibility](https://kotlinlang.org/docs/whatsnew17.html#bumping-minimum-supported-versions).
 
