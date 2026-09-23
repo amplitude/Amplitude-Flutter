@@ -259,6 +259,24 @@ class Amplitude {
         {'instanceName': configuration.instanceName, 'properties': properties});
   }
 
+  /// Sets offline mode. If [enabled] is true, the SDK will not upload events
+  /// to Amplitude servers, but will continue to log them locally. When set to
+  /// false, event uploading will resume.
+  ///
+  /// Note: On Web, the Browser SDK automatically manages offline and online
+  /// connectivity, so this method is safely handled as a no-op.
+  ///
+  /// ```dart
+  /// await amplitude.setOffline(true);
+  /// ```
+  Future<void> setOffline(bool enabled) async {
+    Map<String, bool> properties = {};
+    properties['offline'] = enabled;
+
+    return await _channel.invokeMethod('setOffline',
+        {'instanceName': configuration.instanceName, 'properties': properties});
+  }
+
   /// Resets userId to 'null' and deviceId to a random UUID.
   ///
   /// Note different devices on different platforms should have different device Ids.

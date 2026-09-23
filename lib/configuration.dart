@@ -90,6 +90,14 @@ class Configuration {
 
   /// Applicable to all platforms (iOS, Android, Web)
   ///
+  /// Whether the SDK connects to the network. When set to true, the SDK will
+  /// log events locally without uploading them to Amplitude servers until
+  /// offline mode is disabled.
+  /// Check platform-specific documentation for more information.
+  bool offline;
+
+  /// Applicable to all platforms (iOS, Android, Web)
+  ///
   /// Configures tracking of extra properties.
   /// Check platform-specific documentation for more information.
   TrackingOptions trackingOptions;
@@ -242,6 +250,7 @@ class Configuration {
     this.identityStorage = 'cookie',
     this.userId,
     this.transport = 'fetch',
+    this.offline = false,
     this.fetchRemoteConfig = false,
     Autocapture? autocapture,
   })  : defaultTracking = defaultTracking ?? const DefaultTrackingOptions(),
@@ -324,6 +333,7 @@ class Configuration {
           : Constants.minTimeBetweenSessionsMillisForWeb,
       'userId': userId,
       'transport': transport,
+      'offline': offline,
       'fetchRemoteConfig': fetchRemoteConfig,
       'autocapture': Autocapture.toMapOrBool(autocapture),
       // This field doesn't belong to Configuration
