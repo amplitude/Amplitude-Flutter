@@ -10,13 +10,12 @@ dependencies:
     sdk: flutter
 
   cupertino_icons: ^1.0.6
+  amplitude_flutter:
+    path: ../
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
-  amplitude_flutter:
-    path: ../
 
 flutter:
   uses-material-design: true

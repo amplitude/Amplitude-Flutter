@@ -26,6 +26,10 @@ apply plugin: 'kotlin-android'
 
 android {
     compileSdkVersion 35
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
     // Condition for namespace compatibility in AGP 8
     if (project.android.hasProperty("namespace")) {
         namespace 'com.amplitude.amplitude_flutter'
@@ -73,7 +77,7 @@ tasks.withType(Test) {
 kotlin {
     tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
         kotlinOptions {
-            jvmTarget = "1.8"
+            jvmTarget = "17"
         }
     }
 }
