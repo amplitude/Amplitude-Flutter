@@ -1,3 +1,10 @@
+## [4.7.3](https://github.com/amplitude/Amplitude-Flutter/compare/v4.7.2...v4.7.3) (2026-10-05)
+
+
+### Bug Fixes
+
+* **android:** align plugin Java and Kotlin targets to 17 ([#322](https://github.com/amplitude/Amplitude-Flutter/issues/322)) ([f210c66](https://github.com/amplitude/Amplitude-Flutter/commit/f210c6616a92ebbc347e71ec864dd0586722a8e0))
+
 ## [4.7.2](https://github.com/amplitude/Amplitude-Flutter/compare/v4.7.1...v4.7.2) (2026-09-21)
 
 
