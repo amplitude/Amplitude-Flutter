@@ -94,6 +94,7 @@ void main() {
     'sessionTimeout': 30 * 60 * 1000,
     'userId': null,
     'transport': 'fetch',
+    'offline': false,
     'fetchRemoteConfig': false,
     'autocapture': {
       'sessions': true,
@@ -446,6 +447,18 @@ void main() {
 
     verify(mockChannel.invokeMethod(
         'flush', {'instanceName': Constants.defaultInstanceName})).called(1);
+  });
+
+  test('Should setOffline calls MethodChannel', () async {
+    when(mockChannel.invokeMethod('setOffline', any))
+        .thenAnswer((_) async => null);
+
+    await amplitude.setOffline(true);
+
+    verify(mockChannel.invokeMethod('setOffline', {
+      'instanceName': Constants.defaultInstanceName,
+      'properties': {'offline': true}
+    })).called(1);
   });
 
   // Reset the mock method call handler after each test

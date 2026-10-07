@@ -82,6 +82,7 @@ class AmplitudeFlutterPluginTest {
             "locationListening" to true,
             "useAdvertisingIdForDeviceId" to false,
             "useAppSetIdForDeviceId" to false,
+            "offline" to false,
             "appVersion" to null
         )
         testEventMap = mutableMapOf(
@@ -313,6 +314,17 @@ class AmplitudeFlutterPluginTest {
         plugin.onMethodCall(methodCall, result)
 
         verify(exactly = 1) { result.success("flush called..") }
+    }
+
+    @Test
+    fun shouldSetOffline() {
+        val initMethodCall = MethodCall("init", JSONObject(testConfigurationMap))
+        plugin.onMethodCall(initMethodCall, result)
+
+        val methodCall = MethodCall("setOffline", JSONObject(mapOf("instanceName" to "\$default_instance", "properties" to mapOf("offline" to true))))
+        plugin.onMethodCall(methodCall, result)
+
+        verify(exactly = 1) { result.success("setOffline called..") }
     }
 
 }

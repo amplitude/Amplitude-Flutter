@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
@@ -12,8 +13,14 @@ import 'constants.dart';
 @JS()
 external Amplitude get amplitude;
 
+@JS('Object.defineProperty')
+external void _jsDefineProperty(
+    JSObject o, JSString property, JSObject descriptor);
+
 class AmplitudeFlutterPlugin {
   Map<String, Amplitude> instances = {};
+  Map<String, JSObject> detachedConnectivityPlugins = {};
+  Map<String, void Function(bool)> offlineControllers = {};
 
   static void registerWith(Registrar registrar) {
     final channel = MethodChannel(
@@ -33,15 +40,49 @@ class AmplitudeFlutterPlugin {
       var args = call.arguments;
       String apiKey = args['apiKey'];
       JSObject configuration = getConfiguration(call);
+      String instanceName =
+          args['instanceName'] ?? Constants.defaultInstanceName;
+      bool initialOffline = args['offline'] == true;
 
-      // Set library
+      // Track and control offline state across SDK lifecycle
+      bool manualOffline = initialOffline;
+      bool currentOffline = initialOffline;
+
+      void setOfflineState(bool offline) {
+        manualOffline = offline;
+        currentOffline = offline;
+      }
+
+      offlineControllers[instanceName] = setOfflineState;
+
+      // Set library and install offline guard during plugin setup to prevent
+      // Browser SDK network checker from overwriting manual offline mode during init
       Amplitude instance = amplitude.createInstance();
       instance.add(createJSInteropWrapper(FlutterLibraryPlugin(
-          args['library'] ?? 'amplitude_flutter/unknown')));
-      instance.init(apiKey, configuration);
+        args['library'] ?? 'amplitude_flutter/unknown',
+        onSetup: (JSObject config) {
+          final descriptor = JSObject();
+          descriptor.setProperty('configurable'.toJS, true.toJS);
+          descriptor.setProperty('enumerable'.toJS, true.toJS);
+          descriptor.setProperty(
+              'get'.toJS, (() => currentOffline.toJS).toJS);
+          descriptor.setProperty('set'.toJS, ((JSAny? val) {
+            if (manualOffline) return;
+            if (val != null && val is JSBoolean) {
+              currentOffline = val.toDart;
+            }
+          }).toJS);
+          _jsDefineProperty(config, 'offline'.toJS, descriptor);
+        },
+      )));
 
-      instances[args['instanceName'] ?? Constants.defaultInstanceName] =
-          instance;
+      await instance.init(apiKey, configuration).toDart;
+
+      instances[instanceName] = instance;
+
+      if (initialOffline) {
+        applyOfflineMode(instanceName, instance, true);
+      }
 
       return null;
     }
@@ -106,6 +147,17 @@ class AmplitudeFlutterPlugin {
           bool enabled = args['setOptOut'];
           instance.setOptOut(enabled.toJS);
         }
+      case "setOffline":
+        {
+          Map args = call.arguments['properties'];
+          bool? offline = args['offline'];
+          if (offline != null) {
+            String instanceName =
+                call.arguments['instanceName'] ?? Constants.defaultInstanceName;
+            applyOfflineMode(instanceName, instance, offline);
+          }
+          return;
+        }
       default:
         throw PlatformException(
           code: 'Unimplemented',
@@ -140,5 +192,35 @@ class AmplitudeFlutterPlugin {
   JSObject getConfiguration(MethodCall call) {
     final configuration = Map<String, dynamic>.from(call.arguments as Map);
     return transformWebConfiguration(configuration).jsify() as JSObject;
+  }
+
+  /// Applies manual offline mode to a web Amplitude instance, ensuring
+  /// automatic network listeners do not overwrite the forced offline state,
+  /// and restoring the connectivity checker when returning online.
+  void applyOfflineMode(
+      String instanceName, Amplitude instance, bool offline) {
+    const pluginName = '@amplitude/plugin-network-checker-browser';
+    offlineControllers[instanceName]?.call(offline);
+    if (offline) {
+      final existingPlugin = instance.plugin(pluginName.toJS);
+      if (existingPlugin != null) {
+        detachedConnectivityPlugins[instanceName] = existingPlugin;
+        instance.remove(pluginName.toJS);
+      }
+      final config = instance.getProperty('config'.toJS);
+      if (config != null && config is JSObject) {
+        config.setProperty('offline'.toJS, true.toJS);
+      }
+    } else {
+      final detached = detachedConnectivityPlugins.remove(instanceName);
+      if (detached != null) {
+        instance.add(detached);
+      }
+      final config = instance.getProperty('config'.toJS);
+      if (config != null && config is JSObject) {
+        config.setProperty('offline'.toJS, false.toJS);
+      }
+      instance.flush();
+    }
   }
 }

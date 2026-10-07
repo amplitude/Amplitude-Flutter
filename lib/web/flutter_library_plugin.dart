@@ -7,6 +7,13 @@ var libraryJSKey = 'library'.toJS;
 class FlutterLibraryPlugin {
   String library = 'amplitude-flutter/unknown';
   String name = 'FlutterLibraryPlugin';
+  final void Function(JSObject config)? onSetup;
+
+  void setup(JSAny? config, JSAny? client) {
+    if (config != null && config is JSObject) {
+      onSetup?.call(config);
+    }
+  }
 
   JSObject execute(JSObject event) {
     event.hasProperty('library'.toJS);
@@ -19,5 +26,5 @@ class FlutterLibraryPlugin {
     return event;
   }
 
-  FlutterLibraryPlugin(this.library);
+  FlutterLibraryPlugin(this.library, {this.onSetup});
 }
