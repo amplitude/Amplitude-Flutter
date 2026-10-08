@@ -3,10 +3,10 @@ import 'dart:async';
 // ignore_for_file: depend_on_referenced_packages
 import 'package:amplitude_flutter/amplitude.dart';
 import 'package:amplitude_flutter/autocapture/autocapture.dart';
-import 'package:amplitude_flutter/autocapture/element_interactions.dart';
 import 'package:amplitude_flutter/autocapture/page_views.dart';
 import 'package:amplitude_flutter/configuration.dart';
 import 'package:amplitude_flutter/constants.dart';
+import 'package:amplitude_flutter/observers/amplitude_element_tap_detector.dart';
 import 'package:amplitude_flutter/observers/amplitude_navigator_observer.dart';
 import 'package:flutter/material.dart';
 
@@ -53,16 +53,18 @@ class _MyAppState extends State<MyApp> {
         // (as `[Amplitude] Screen Viewed`) instead of also as
         // `[Amplitude] Page Viewed`.
         //
-        // The web autocapture options below are all opt-in. The DOM-based ones
-        // (elementInteractions, formInteractions) require the semantics tree,
-        // which main() enables on web. ElementInteractionsOptions() ships
-        // Flutter-aware selectors so clicks on Flutter widgets are captured.
+        // The web autocapture options below are all opt-in. Element
+        // interactions come from the AmplitudeElementTapDetector wrapping the
+        // app in build(), which works on every platform with the semantics
+        // tree off; the Browser SDK's DOM elementInteractions capture is left
+        // off so a tap on web is reported once, not once per mechanism. The
+        // DOM-based formInteractions capture requires the semantics tree,
+        // which main() enables on web.
         autocapture: const AutocaptureOptions(
           screenViews: true,
           pageViews: PageViewsDisabled(),
           appLifecycles: true,
           deepLinks: true,
-          elementInteractions: ElementInteractionsOptions(),
           formInteractions: true,
           pageUrlEnrichment: true,
         )));
@@ -89,78 +91,84 @@ class _MyAppState extends State<MyApp> {
     return AppState(
       analytics: analytics,
       setMessage: setMessage,
-      child: MaterialApp(
-        theme: ThemeData(
-            inputDecorationTheme: InputDecorationTheme(
-                contentPadding: const EdgeInsets.all(8), filled: true)),
-        navigatorObservers: [_navigatorObserver],
-        routes: {
-          '/details': (context) => const DetailsScreen(),
-        },
-        home: Scaffold(
-          appBar: AppBar(
-            title: const Text('Amplitude Flutter'),
-          ),
-          body: Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: ListView(
-              children: <Widget>[
-                DeviceIdForm(),
-                divider,
-                UserIdForm(),
-                divider,
-                ResetForm(),
-                divider,
-                SessionIdForm(),
-                divider,
-                EventForm(),
-                divider,
-                IdentifyForm(),
-                divider,
-                GroupForm(),
-                divider,
-                GroupIdentifyForm(),
-                divider,
-                RevenueForm(),
-                divider,
-                // FlushThresholdForm(),
-                // divider,
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        child: const Text('Opt Out'),
-                        onPressed: () {
-                          analytics.setOptOut(true);
-                          setMessage('Opted out — tracking disabled.');
-                        },
+      // Taps on interactive widgets are autocaptured as
+      // `[Amplitude] Element Interacted` events on every platform.
+      child: AmplitudeElementTapDetector(
+        amplitude: analytics,
+        child: MaterialApp(
+          theme: ThemeData(
+              inputDecorationTheme: InputDecorationTheme(
+                  contentPadding: const EdgeInsets.all(8), filled: true)),
+          navigatorObservers: [_navigatorObserver],
+          routes: {
+            '/details': (context) => const DetailsScreen(),
+          },
+          home: Scaffold(
+            appBar: AppBar(
+              title: const Text('Amplitude Flutter'),
+            ),
+            body: Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: ListView(
+                children: <Widget>[
+                  DeviceIdForm(),
+                  divider,
+                  UserIdForm(),
+                  divider,
+                  ResetForm(),
+                  divider,
+                  SessionIdForm(),
+                  divider,
+                  EventForm(),
+                  divider,
+                  IdentifyForm(),
+                  divider,
+                  GroupForm(),
+                  divider,
+                  GroupIdentifyForm(),
+                  divider,
+                  RevenueForm(),
+                  divider,
+                  // FlushThresholdForm(),
+                  // divider,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          child: const Text('Opt Out'),
+                          onPressed: () {
+                            analytics.setOptOut(true);
+                            setMessage('Opted out — tracking disabled.');
+                          },
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: ElevatedButton(
-                        child: const Text('Opt In'),
-                        onPressed: () {
-                          analytics.setOptOut(false);
-                          setMessage('Opted in — tracking enabled.');
-                        },
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: ElevatedButton(
+                          child: const Text('Opt In'),
+                          onPressed: () {
+                            analytics.setOptOut(false);
+                            setMessage('Opted in — tracking enabled.');
+                          },
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                divider,
-                ElevatedButton(
-                  child: const Text('Flush Events'),
-                  onPressed: _flushEvents,
-                ),
-                Builder(
-                  builder: (context) => ElevatedButton(
-                    child: const Text('Open Details Screen'),
-                    onPressed: () => Navigator.of(context).pushNamed('/details'),
+                    ],
                   ),
-                ),
-                Text(_message, style: Theme.of(context).textTheme.bodyLarge)
-              ],
+                  divider,
+                  ElevatedButton(
+                    child: const Text('Flush Events'),
+                    onPressed: _flushEvents,
+                  ),
+                  Builder(
+                    builder: (context) => ElevatedButton(
+                      child: const Text('Open Details Screen'),
+                      onPressed: () =>
+                          Navigator.of(context).pushNamed('/details'),
+                    ),
+                  ),
+                  Text(_message, style: Theme.of(context).textTheme.bodyLarge)
+                ],
+              ),
             ),
           ),
         ),
