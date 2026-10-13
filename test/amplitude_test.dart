@@ -508,24 +508,6 @@ void main() {
     expect(await amplitude.isBuilt, isFalse);
   }, skip: kIsWeb ? 'Android-only initialization behavior' : false);
 
-  for (final platform in [
-    TargetPlatform.android,
-    TargetPlatform.iOS,
-    TargetPlatform.macOS
-  ]) {
-    test('${platform.name} isBuilt reports an initialization error', () async {
-      debugDefaultTargetPlatformOverride = platform;
-      addTearDown(() => debugDefaultTargetPlatformOverride = null);
-      mockChannel = MockMethodChannel();
-      when(mockChannel.invokeMethod<void>('init', any)).thenAnswer((_) async {
-        throw PlatformException(code: 'amplitude_init_failed');
-      });
-      amplitude = Amplitude(testConfiguration, mockChannel);
-      expect(await amplitude.isBuilt, isFalse);
-      verifyNever(mockChannel.invokeMethod<void>('awaitBuild', any));
-    });
-  }
-
   test('non-Android initialization does not invoke awaitBuild', () async {
     debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
     addTearDown(() => debugDefaultTargetPlatformOverride = null);

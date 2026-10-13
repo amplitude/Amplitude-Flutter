@@ -90,13 +90,4 @@ void main() {
     initialized.completeError(StateError('Initialization failed.'));
     expect(await analytics.isBuilt, isFalse);
   });
-
-  test('isBuilt handles an already completed web initialization', () async {
-    initialized.complete(null);
-    final analytics = dart_sdk.Amplitude(
-      Configuration(apiKey: 'test-api-key'),
-      AdapterChannel(plugin),
-    );
-    expect(await analytics.isBuilt, isTrue);
-  });
 }

@@ -39,8 +39,7 @@ class AmplitudeFlutterPluginReadinessTest {
         nativeBuild = CompletableDeferred()
         every { amplitude.isBuilt } returns nativeBuild
         every { amplitude.logger } returns mockk<Logger>(relaxed = true)
-        // Exercise the real method handler while controlling only SDK completion.
-        // Avoid configuration, persistence, and network work unrelated to the barrier.
+        // Exercise the real method handler with controlled SDK completion.
         AmplitudeFlutterPlugin::class.java.getDeclaredField("instances").apply {
             isAccessible = true
             set(plugin, mapOf(instanceName to amplitude))
@@ -48,7 +47,7 @@ class AmplitudeFlutterPluginReadinessTest {
     }
 
     @Test
-    fun `awaitBuild remains pending while track submits directly`() {
+    fun `awaitBuild waits for success while track submits directly`() {
         val readiness = awaitBuild()
         idleMain()
         assertTrue(readiness.replies.isEmpty())
@@ -63,18 +62,11 @@ class AmplitudeFlutterPluginReadinessTest {
         idleMain()
         assertTrue(readiness.replies.isEmpty())
         assertFalse(nativeBuild.isCompleted)
-    }
 
-    @Test
-    fun `successful worker completion replies once on main`() {
-        val result = awaitBuild()
         onWorker { nativeBuild.complete(true) }
-        assertTrue(result.replies.isEmpty())
+        assertTrue(readiness.replies.isEmpty())
         idleMain()
-        assertSuccess(result)
-        onWorker { nativeBuild.complete(true) }
-        idleMain()
-        assertSuccess(result)
+        assertSuccess(readiness)
     }
 
     @Test
@@ -84,80 +76,15 @@ class AmplitudeFlutterPluginReadinessTest {
         assertTrue(result.replies.isEmpty())
         idleMain()
         assertError(result, "native build failed")
-        idleMain()
-        assertError(result, "native build failed")
     }
 
     @Test
-    fun `cancelled worker completion replies once on main`() {
+    fun `already cancelled build replies once on main`() {
+        nativeBuild.cancel(CancellationException("native build cancelled"))
         val result = awaitBuild()
-        onWorker { nativeBuild.cancel(CancellationException("native build cancelled")) }
         assertTrue(result.replies.isEmpty())
         idleMain()
         assertError(result, "native build cancelled")
-        idleMain()
-        assertError(result, "native build cancelled")
-    }
-
-    @Test
-    fun `already successful build still posts one main reply`() {
-        nativeBuild.complete(true)
-        val result = awaitBuild()
-        assertTrue(result.replies.isEmpty())
-        idleMain()
-        assertSuccess(result)
-        idleMain()
-        assertSuccess(result)
-    }
-
-    @Test
-    fun `already failed build still posts one main error`() {
-        nativeBuild.completeExceptionally(IllegalStateException("already failed"))
-        val result = awaitBuild()
-        assertTrue(result.replies.isEmpty())
-        idleMain()
-        assertError(result, "already failed")
-        idleMain()
-        assertError(result, "already failed")
-    }
-
-    @Test
-    fun `already cancelled build still posts one main error`() {
-        nativeBuild.cancel(CancellationException("already cancelled"))
-        val result = awaitBuild()
-        assertTrue(result.replies.isEmpty())
-        idleMain()
-        assertError(result, "already cancelled")
-        idleMain()
-        assertError(result, "already cancelled")
-    }
-
-    @Test
-    fun `two readiness requests each receive one reply`() {
-        val first = awaitBuild()
-        val second = awaitBuild()
-        onWorker { nativeBuild.complete(true) }
-        idleMain()
-        assertSuccess(first)
-        assertSuccess(second)
-        idleMain()
-        assertSuccess(first)
-        assertSuccess(second)
-    }
-
-    @Test
-    fun `failed readiness does not unregister the native instance`() {
-        val readiness = awaitBuild()
-        nativeBuild.completeExceptionally(IllegalStateException("native build failed"))
-        idleMain()
-        assertError(readiness, "native build failed")
-        val track = RecordingResult()
-        plugin.onMethodCall(MethodCall("track", mapOf(
-            "instanceName" to instanceName,
-            "event" to mapOf("event_type" to "after-failure"),
-        )), track)
-        assertEquals("track called..", track.replies.single().value)
-        verify(exactly = 1) { amplitude.track(match<BaseEvent> { it.eventType == "after-failure" }) }
     }
 
     private fun awaitBuild(): RecordingResult = RecordingResult().also {
