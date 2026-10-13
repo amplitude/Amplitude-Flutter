@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:flutter/services.dart';
 import 'events/event_options.dart';
 import 'events/identify_event.dart';
@@ -13,7 +15,15 @@ class Amplitude {
   Configuration configuration;
   MethodChannel _channel = const MethodChannel('amplitude_flutter');
 
-  /// Whether the Amplitude instance has been successfully initialized
+  /// Whether the platform SDK has completed initialization successfully.
+  ///
+  /// Remains pending during initialization and resolves to false if the platform
+  /// reports an initialization error. Android waits for the native SDK's build,
+  /// web waits for the Browser SDK's initialization promise, and iOS/macOS reply
+  /// after the Swift SDK's constructor and initial setup complete.
+  ///
+  /// Analytics calls can be submitted while initialization is pending. Readiness
+  /// does not establish that an event has been persisted or uploaded.
   ///
   /// ```
   /// var amplitude = Amplitude(Configuration(apiKey: 'apiKey'));
@@ -36,8 +46,19 @@ class Amplitude {
 
   /// Private method to initialize and return a `Future<bool>`
   Future<bool> _init() async {
+    final initializedInstanceName = configuration.instanceName;
     try {
-      await _channel.invokeMethod('init', configuration.toMap());
+      await _channel.invokeMethod<void>('init', configuration.toMap());
+
+      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+        // MethodChannel calls are FIFO, and the Android SDK queues calls made
+        // while it builds. This extra call is only a readiness barrier for the
+        // public isBuilt future; it does not delay analytics calls.
+        await _channel.invokeMethod<void>('awaitBuild', {
+          'instanceName': initializedInstanceName,
+        });
+      }
+
       return true; // Initialization successful
     } catch (e) {
       print('Error initializing Amplitude: $e');

@@ -36,6 +36,33 @@ the Chrome platform:
 
 CI should run both so the web configuration path stays covered.
 
+The Android initialization tests exercise the bundled method handler with
+controlled SDK build completion. Prepare the example project, then run them with:
+
+```sh
+cd example
+flutter build apk --debug
+cd android
+./gradlew :amplitude_flutter:testDebugUnitTest --tests com.amplitude.amplitude_flutter.AmplitudeFlutterPluginReadinessTest
+```
+
+The Swift initialization tests compile the bundled adapter against the real
+Flutter and SDK dependencies. On macOS with Xcode 26.2 or later and CocoaPods,
+prepare those dependencies and run the test from the repository root:
+
+```sh
+flutter precache --ios --macos
+flutter pub get
+cd example
+flutter build ios --debug --config-only --no-codesign
+cd ios
+pod install
+cd ../..
+python3 tool/run_swift_init_tests.py
+```
+
+These focused native tests also run in CI.
+
 ## Practices
 
 ### PR Commit Title Conventions

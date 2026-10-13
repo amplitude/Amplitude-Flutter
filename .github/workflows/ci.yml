@@ -26,3 +26,46 @@ jobs:
 
       - name: Test
         run: flutter test
+
+      - name: Test web bindings in Chrome
+        run: flutter test --platform chrome
+
+  android-readiness:
+    name: Android initialization readiness
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          channel: stable
+      - name: Prepare Flutter Android project
+        working-directory: example
+        run: flutter build apk --debug
+      - name: Test native readiness replies
+        working-directory: example/android
+        run: ./gradlew :amplitude_flutter:testDebugUnitTest --tests com.amplitude.amplitude_flutter.AmplitudeFlutterPluginReadinessTest
+
+  swift-readiness:
+    name: Swift initialization error replies
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744
+      - name: Select Xcode
+        run: sudo xcode-select -switch /Applications/Xcode_26.2.app
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          channel: stable
+      - name: Prepare real Flutter and Swift dependencies
+        run: |
+          flutter precache --ios --macos
+          flutter pub get
+          cd example
+          flutter build ios --debug --config-only --no-codesign
+          cd ios
+          pod install
+      - name: Test bundled Swift initialization replies
+        run: python3 tool/run_swift_init_tests.py

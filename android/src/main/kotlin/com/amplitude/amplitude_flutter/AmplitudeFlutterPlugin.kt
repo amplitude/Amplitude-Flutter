@@ -41,6 +41,7 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 
     companion object {
         private const val methodChannelName = "amplitude_flutter"
+        private const val initializationErrorCode = "amplitude_init_failed"
 
         /**
          * Returns an Amplitude instance by its instance name.
@@ -121,6 +122,25 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         val amplitude = instances[instanceName] ?: throw IllegalArgumentException("Amplitude instance $instanceName not found")
 
         when (call.method) {
+            "awaitBuild" -> {
+                // init has already registered the instance. This separate
+                // barrier only reports when the Android SDK finishes building.
+                amplitude.isBuilt.invokeOnCompletion { exception ->
+                    mainHandler.post {
+                        if (exception == null) {
+                            result.success(true)
+                        } else {
+                            amplitude.logger.warn("Amplitude build did not complete: ${exception.message}")
+                            result.error(
+                                initializationErrorCode,
+                                "Amplitude initialization failed.",
+                                exception.toString()
+                            )
+                        }
+                    }
+                }
+            }
+
             "track", "identify", "groupIdentify", "setGroup", "revenue" -> {
                 val event = getEvent(call)
                 amplitude.track(event)

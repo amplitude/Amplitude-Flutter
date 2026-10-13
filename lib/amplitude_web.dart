@@ -38,11 +38,13 @@ class AmplitudeFlutterPlugin {
       Amplitude instance = amplitude.createInstance();
       instance.add(createJSInteropWrapper(FlutterLibraryPlugin(
           args['library'] ?? 'amplitude_flutter/unknown')));
-      instance.init(apiKey, configuration);
+      final initialized = instance.init(apiKey, configuration);
 
       instances[args['instanceName'] ?? Constants.defaultInstanceName] =
           instance;
 
+      // Register before waiting so analytics calls can use the SDK's own queue.
+      await initialized.promise.toDart;
       return null;
     }
 
