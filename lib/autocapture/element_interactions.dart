@@ -159,7 +159,14 @@ class ElementInteractionsDisabled extends ElementInteractions {
   const ElementInteractionsDisabled();
 }
 
-/// Enable autocapture ElementInteractions.
+/// Enable ordinary interaction capture.
+///
+/// On non-web platforms the SDK observes Flutter pointer events automatically,
+/// without an app wrapper, callback interception or gesture-arena participation.
+/// Generated `[Amplitude] Element Interacted` events use Amplitude.track().
+/// On web this retains Browser DOM capture, including Flutter semantics nodes;
+/// the semantics requirement documented on [ElementInteractionsOptions] applies.
+/// Keyboard and semantics-only activations bypass the Flutter pointer observer.
 ///
 /// Enables click tracking with the Flutter-aware
 /// [ElementInteractionsOptions.defaultCssSelectorAllowlist], so clicks on

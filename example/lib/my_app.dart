@@ -53,6 +53,8 @@ class _MyAppState extends State<MyApp> {
         // (as `[Amplitude] Screen Viewed`) instead of also as
         // `[Amplitude] Page Viewed`.
         //
+        // ElementInteractionsEnabled also captures Flutter pointer interactions
+        // automatically on non-web platforms, without a capture widget.
         // The web autocapture options below are all opt-in. The DOM-based ones
         // (elementInteractions, formInteractions) require the semantics tree,
         // which main() enables on web. ElementInteractionsOptions() ships
@@ -62,7 +64,7 @@ class _MyAppState extends State<MyApp> {
           pageViews: PageViewsDisabled(),
           appLifecycles: true,
           deepLinks: true,
-          elementInteractions: ElementInteractionsOptions(),
+          elementInteractions: ElementInteractionsEnabled(),
           formInteractions: true,
           pageUrlEnrichment: true,
         )));

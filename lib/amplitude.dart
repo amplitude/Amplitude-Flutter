@@ -1,6 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
+import 'autocapture/autocapture.dart';
+import 'autocapture/element_interactions.dart';
+import 'src/interaction/interaction_capture.dart';
 import 'events/event_options.dart';
 import 'events/identify_event.dart';
 import 'events/identify.dart';
@@ -12,6 +16,65 @@ import 'events/group_identify_event.dart';
 class Amplitude {
   Configuration configuration;
   MethodChannel _channel = const MethodChannel('amplitude_flutter');
+
+  static final Map<String, Amplitude> _captureOwners = {};
+  InteractionCapture? _interactionCapture;
+  bool _ordinaryCapture = false;
+
+  void _installCapture() {
+    // The native adapters also address instances by name. Reinitializing a
+    // name must not leave the previous Dart observer emitting duplicate events.
+    _captureOwners
+        .remove(configuration.instanceName)
+        ?._interactionCapture
+        ?.dispose();
+    final options = configuration.autocapture;
+    // Web retains Browser DOM capture for simple flags and explicit filters.
+    _ordinaryCapture = !kIsWeb &&
+        (options is AutocaptureEnabled ||
+            options is AutocaptureOptions &&
+                options.elementInteractions is ElementInteractionsEnabled);
+    if (!_ordinaryCapture) return;
+    _captureOwners[configuration.instanceName] = this;
+    _interactionCapture = InteractionCapture(
+      enabled: !configuration.optOut,
+      emit: (observation) {
+        final generation = _interactionCapture!.generation;
+        unawaited(_trackInteraction(observation, generation));
+      },
+    );
+  }
+
+  Future<void> _trackInteraction(
+    CapturedInteraction observation,
+    int generation,
+  ) async {
+    try {
+      // Capture can begin before runApp and before platform initialization
+      // finishes. Recheck cleanup boundaries after this asynchronous wait.
+      if (!await isBuilt ||
+          !identical(_captureOwners[configuration.instanceName], this) ||
+          _interactionCapture?.generation != generation ||
+          configuration.optOut) {
+        return;
+      }
+      await track(
+        BaseEvent(
+          observation.type,
+          eventProperties: Map<String, dynamic>.from(observation.properties),
+        ),
+      );
+    } catch (error) {
+      assert(() {
+        debugPrint('Amplitude interaction capture: $error');
+        return true;
+      }());
+    }
+  }
+
+  void _resetCapture() {
+    _captureOwners[configuration.instanceName]?._interactionCapture?.reset();
+  }
 
   /// Whether the Amplitude instance has been successfully initialized
   ///
@@ -31,15 +94,28 @@ class Amplitude {
   /// ```
   Amplitude(this.configuration, [MethodChannel? methodChannel]) {
     _channel = methodChannel ?? _channel;
+    _installCapture();
     isBuilt = _init();
   }
 
   /// Private method to initialize and return a `Future<bool>`
   Future<bool> _init() async {
     try {
-      await _channel.invokeMethod('init', configuration.toMap());
+      final config = configuration.toMap();
+      final platformAutocapture = config['autocapture'];
+      if (platformAutocapture is Map && _ordinaryCapture) {
+        config['autocapture'] = {
+          ...platformAutocapture,
+          'elementInteractions': false,
+        };
+      }
+      await _channel.invokeMethod('init', config);
       return true; // Initialization successful
     } catch (e) {
+      _interactionCapture?.dispose();
+      if (identical(_captureOwners[configuration.instanceName], this)) {
+        _captureOwners.remove(configuration.instanceName);
+      }
       print('Error initializing Amplitude: $e');
       return false; // Initialization failed
     }
@@ -205,6 +281,7 @@ class Amplitude {
   /// amplitude.setUserId('user Id');
   /// ```
   Future<void> setUserId(String? userId) async {
+    _resetCapture();
     Map<String, String?> properties = {};
     properties['setUserId'] = userId;
 
@@ -230,6 +307,7 @@ class Amplitude {
   /// amplitude.setDeviceId('device Id');
   /// ```
   Future<void> setDeviceId(String? deviceId) async {
+    _resetCapture();
     Map<String, String?> properties = {};
     properties['setDeviceId'] = deviceId;
 
@@ -252,6 +330,14 @@ class Amplitude {
   /// Set setOptOut to true to disable logging for a specific user.
   /// Set setOptOut to false to re-enable logging.
   Future<void> setOptOut(bool enabled) async {
+    configuration.optOut = enabled;
+    final owner = _captureOwners[configuration.instanceName];
+    if (owner != null) {
+      owner.configuration.optOut = enabled;
+      owner._interactionCapture?.configure(
+        enabled: owner._ordinaryCapture && !enabled,
+      );
+    }
     Map<String, bool> properties = {};
     properties['setOptOut'] = enabled;
 
@@ -263,6 +349,7 @@ class Amplitude {
   ///
   /// Note different devices on different platforms should have different device Ids.
   Future<void> reset() async {
+    _resetCapture();
     return await _channel
         .invokeMethod('reset', {'instanceName': configuration.instanceName});
   }

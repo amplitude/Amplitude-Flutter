@@ -128,7 +128,11 @@ class AutocaptureOptions extends Autocapture {
   /// render.
   final bool fileDownloads;
 
-  /// Web specific
+  /// Cross-platform
+  ///
+  /// [ElementInteractionsEnabled] installs SDK-owned Flutter pointer capture on
+  /// non-web platforms. On web it retains Browser DOM capture. Explicit
+  /// [ElementInteractionsOptions] remains web-only with its existing CSS filters.
   ///
   /// Configures element interaction (click) tracking using `ElementInteractions`. See [docs](https://amplitude.com/docs/sdks/analytics/browser/browser-sdk-2#autocapture)
   /// for more information. Set to `ElementInteractionsDisabled()` to disable tracking clicks.
@@ -272,9 +276,10 @@ class AutocaptureEnabled extends Autocapture {
   /// Whether to capture file download events.
   final bool fileDownloads = true;
 
-  /// Web specific
+  /// Cross-platform
   ///
-  /// Whether to capture element interaction (click) events.
+  /// Whether to capture ordinary element interactions: SDK-owned Flutter pointer
+  /// capture on non-web platforms and Browser DOM capture on web.
   final bool elementInteractions = true;
 
   /// Web specific
