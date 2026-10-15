@@ -2,8 +2,8 @@ group 'com.amplitude.amplitude_flutter'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    // Only used when building android/ on its own. An app that depends on this plugin
-    // builds it with the app's own Android Gradle Plugin and Kotlin versions.
+    // Apps that declare their own Android Gradle Plugin and Kotlin plugin, as every app
+    // created with Flutter 3.16 or later does, build this plugin with those versions instead.
     ext.kotlin_version = '2.2.20'
     repositories {
         google()
