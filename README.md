@@ -20,7 +20,7 @@ This is the official Amplitude Flutter SDK developed and maintained by Amplitude
 
 Requires Dart 3.3+ and Flutter 3.19+.
 
-For the upcoming Android API 36 release, use JDK 17, `compileSdk` 36 or later, and the tested build configuration: Android Gradle Plugin 8.11.1, Gradle 8.14, and Kotlin 2.2.20. Upgrade older Android build configurations before adopting this release; Kotlin 1.9 is incompatible. Applications control their own `targetSdk`; the example targets API 36.
+For the upcoming Android API 36 release, use JDK 17, `compileSdk` 36 or later, and the tested build configuration: Android Gradle Plugin 8.11.1, Gradle 8.14, and Kotlin 2.2.20. Upgrade older Android build configurations before adopting this release. Your app must use Kotlin 2.1.0 or later; Kotlin 2.0 and earlier can't compile against the Kotlin 2.2 standard library this release depends on. Applications control their own `targetSdk`; the example targets API 36.
 
 ## Need Help?
 
