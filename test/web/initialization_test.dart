@@ -90,4 +90,19 @@ void main() {
     initialized.completeError(StateError('Initialization failed.'));
     expect(await analytics.isBuilt, isFalse);
   });
+
+  test('isBuilt reports false when web initialization never settles', () async {
+    // A blocked SDK script leaves the snippet's init promise pending forever.
+    plugin =
+        AmplitudeFlutterPlugin(initTimeout: const Duration(milliseconds: 50));
+    final analytics = dart_sdk.Amplitude(
+      Configuration(apiKey: 'test-api-key', instanceName: 'web-timeout'),
+      AdapterChannel(plugin),
+    );
+
+    await analytics.track(BaseEvent('queued'));
+    expect(tracked, hasLength(1));
+    expect(
+        await analytics.isBuilt.timeout(const Duration(seconds: 5)), isFalse);
+  });
 }

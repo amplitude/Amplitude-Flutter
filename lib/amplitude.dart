@@ -19,8 +19,10 @@ class Amplitude {
   ///
   /// Remains pending during initialization and resolves to false if the platform
   /// reports an initialization error. Android waits for the native SDK's build,
-  /// web waits for the Browser SDK's initialization promise, and iOS/macOS reply
-  /// after the Swift SDK's constructor and initial setup complete.
+  /// web waits for the Browser SDK's initialization promise and resolves to
+  /// false after 10 seconds if it never settles (for example, when the SDK
+  /// script is blocked), and iOS/macOS reply after the Swift SDK's constructor
+  /// and initial setup complete.
   ///
   /// Analytics calls can be submitted while initialization is pending. Readiness
   /// does not establish that an event has been persisted or uploaded.

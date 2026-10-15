@@ -13,6 +13,16 @@ import 'constants.dart';
 external Amplitude get amplitude;
 
 class AmplitudeFlutterPlugin {
+  /// How long `init` waits for the Browser SDK's initialization promise.
+  ///
+  /// The snippet's queued `init` only settles once the SDK script loads, so a
+  /// script blocked by an ad blocker or CSP would otherwise leave `isBuilt`
+  /// pending forever.
+  static const defaultInitTimeout = Duration(seconds: 10);
+
+  AmplitudeFlutterPlugin({this.initTimeout = defaultInitTimeout});
+
+  final Duration initTimeout;
   Map<String, Amplitude> instances = {};
 
   static void registerWith(Registrar registrar) {
@@ -44,7 +54,14 @@ class AmplitudeFlutterPlugin {
           instance;
 
       // Register before waiting so analytics calls can use the SDK's own queue.
-      await initialized.promise.toDart;
+      await initialized.promise.toDart.timeout(initTimeout, onTimeout: () {
+        throw PlatformException(
+          code: 'amplitude_init_failed',
+          message: 'Timed out after ${initTimeout.inSeconds}s waiting for the '
+              'Amplitude Browser SDK to initialize. Check that the SDK script '
+              'loaded.',
+        );
+      });
       return null;
     }
 
