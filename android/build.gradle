@@ -2,8 +2,8 @@ group 'com.amplitude.amplitude_flutter'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    // Apps that declare their own Android Gradle Plugin and Kotlin plugin, as every app
-    // created with Flutter 3.16 or later does, build this plugin with those versions instead.
+    // These versions only apply if the app doesn't set its own AGP and Kotlin versions.
+    // Apps created with Flutter 3.16 or later always do.
     ext.kotlin_version = '2.2.20'
     repositories {
         google()
