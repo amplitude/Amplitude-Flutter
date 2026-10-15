@@ -2,6 +2,8 @@ group 'com.amplitude.amplitude_flutter'
 version '1.0-SNAPSHOT'
 
 buildscript {
+    // Only used when building android/ on its own. An app that depends on this plugin
+    // builds it with the app's own Android Gradle Plugin and Kotlin versions.
     ext.kotlin_version = '2.2.20'
     repositories {
         google()
@@ -25,6 +27,9 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
+    // Hardcoded, as `flutter create --template=plugin` does. Plugins can only read
+    // `flutter.compileSdkVersion` on Flutter 3.27+, and we support Flutter 3.19+.
+    // Keep this at 35 or higher: androidx.core 1.16 (via analytics-android) requires it.
     compileSdkVersion 36
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
@@ -47,7 +52,9 @@ android {
     }
 }
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    // No explicit kotlin-stdlib: the Kotlin Gradle plugin adds one that matches the app's
+    // Kotlin version. Pinning it to $kotlin_version forced apps onto that stdlib, which
+    // older Kotlin compilers can't read.
     implementation "org.jetbrains.kotlin:kotlin-reflect:1.6.10"
     implementation "androidx.annotation:annotation:1.7.0"
 
