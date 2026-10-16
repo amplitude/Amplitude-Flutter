@@ -1,7 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart'
-    show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:flutter/services.dart';
 import 'events/event_options.dart';
 import 'events/identify_event.dart';
@@ -48,19 +46,10 @@ class Amplitude {
 
   /// Private method to initialize and return a `Future<bool>`
   Future<bool> _init() async {
-    final initializedInstanceName = configuration.instanceName;
     try {
+      // Each platform replies to init once its SDK is ready; analytics calls
+      // made meanwhile are not delayed.
       await _channel.invokeMethod<void>('init', configuration.toMap());
-
-      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-        // MethodChannel calls are FIFO, and the Android SDK queues calls made
-        // while it builds. This extra call is only a readiness barrier for the
-        // public isBuilt future; it does not delay analytics calls.
-        await _channel.invokeMethod<void>('awaitBuild', {
-          'instanceName': initializedInstanceName,
-        });
-      }
-
       return true; // Initialization successful
     } catch (e) {
       print('Error initializing Amplitude: $e');

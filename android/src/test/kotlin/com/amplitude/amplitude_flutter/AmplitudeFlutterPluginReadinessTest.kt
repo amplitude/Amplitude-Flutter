@@ -39,16 +39,13 @@ class AmplitudeFlutterPluginReadinessTest {
         nativeBuild = CompletableDeferred()
         every { amplitude.isBuilt } returns nativeBuild
         every { amplitude.logger } returns mockk<Logger>(relaxed = true)
-        // Exercise the real method handler with controlled SDK completion.
-        AmplitudeFlutterPlugin::class.java.getDeclaredField("instances").apply {
-            isAccessible = true
-            set(plugin, mapOf(instanceName to amplitude))
-        }
+        // Exercise the real handlers with controlled SDK completion.
+        setInstances(mapOf(instanceName to amplitude))
     }
 
     @Test
-    fun `awaitBuild waits for success while track submits directly`() {
-        val readiness = awaitBuild()
+    fun `init reply waits for success while track submits directly`() {
+        val readiness = replyWhenBuilt()
         idleMain()
         assertTrue(readiness.replies.isEmpty())
 
@@ -71,7 +68,7 @@ class AmplitudeFlutterPluginReadinessTest {
 
     @Test
     fun `exceptional worker completion replies once on main`() {
-        val result = awaitBuild()
+        val result = replyWhenBuilt()
         onWorker { nativeBuild.completeExceptionally(IllegalStateException("native build failed")) }
         assertTrue(result.replies.isEmpty())
         idleMain()
@@ -81,14 +78,47 @@ class AmplitudeFlutterPluginReadinessTest {
     @Test
     fun `already cancelled build replies once on main`() {
         nativeBuild.cancel(CancellationException("native build cancelled"))
-        val result = awaitBuild()
+        val result = replyWhenBuilt()
         assertTrue(result.replies.isEmpty())
         idleMain()
         assertError(result, "native build cancelled")
     }
 
-    private fun awaitBuild(): RecordingResult = RecordingResult().also {
-        plugin.onMethodCall(MethodCall("awaitBuild", mapOf("instanceName" to instanceName)), it)
+    @Test
+    fun `same-name replacement waits for the current instance`() {
+        val result = replyWhenBuilt()
+        val replacementBuild = CompletableDeferred<Boolean>()
+        val replacement = mockk<Amplitude>(relaxed = true)
+        every { replacement.isBuilt } returns replacementBuild
+        setInstances(mapOf(instanceName to replacement))
+
+        onWorker { nativeBuild.complete(true) }
+        idleMain()
+        assertTrue("Replaced instance must not report readiness", result.replies.isEmpty())
+
+        onWorker { replacementBuild.complete(true) }
+        idleMain()
+        assertSuccess(result)
+    }
+
+    @Test
+    fun `missing instance replies with an error`() {
+        setInstances(emptyMap())
+        val result = replyWhenBuilt()
+        val reply = result.replies.single()
+        assertEquals("error", reply.kind)
+        assertEquals("amplitude_init_failed", reply.code)
+    }
+
+    private fun replyWhenBuilt(): RecordingResult = RecordingResult().also {
+        plugin.replyWhenBuilt(instanceName, it)
+    }
+
+    private fun setInstances(instances: Map<String, Amplitude>) {
+        AmplitudeFlutterPlugin::class.java.getDeclaredField("instances").apply {
+            isAccessible = true
+            set(plugin, instances)
+        }
     }
 
     private fun idleMain() = shadowOf(Looper.getMainLooper()).idle()
@@ -103,7 +133,7 @@ class AmplitudeFlutterPluginReadinessTest {
         assertEquals(1, result.replies.size)
         val reply = result.replies.single()
         assertEquals("success", reply.kind)
-        assertEquals(true, reply.value)
+        assertEquals("init called..", reply.value)
         assertTrue("Reply must be on Android's main looper", reply.onMain)
     }
 

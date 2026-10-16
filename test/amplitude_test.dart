@@ -8,7 +8,7 @@ import 'package:amplitude_flutter/events/event_options.dart';
 import 'package:amplitude_flutter/events/identify.dart';
 import 'package:amplitude_flutter/events/revenue.dart';
 import 'package:flutter/foundation.dart'
-    show TargetPlatform, debugDefaultTargetPlatformOverride, kIsWeb;
+    show TargetPlatform, debugDefaultTargetPlatformOverride;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
@@ -130,8 +130,6 @@ void main() {
   setUp(() async {
     mockChannel = MockMethodChannel();
     when(mockChannel.invokeMethod<void>('init', any)).thenAnswer((_) async {});
-    when(mockChannel.invokeMethod<void>('awaitBuild', any))
-        .thenAnswer((_) async {});
     amplitude = Amplitude(testConfiguration, mockChannel);
     await amplitude.isBuilt;
   });
@@ -453,77 +451,50 @@ void main() {
         'flush', {'instanceName': Constants.defaultInstanceName})).called(1);
   });
 
-  test('Android isBuilt waits for native build without delaying track',
-      () async {
-    debugDefaultTargetPlatformOverride = TargetPlatform.android;
-    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+  test('isBuilt waits for the init reply without delaying track', () async {
     mockChannel = MockMethodChannel();
     final initCompleter = Completer<void>();
-    final buildCompleter = Completer<void>();
     when(mockChannel.invokeMethod<void>('init', any))
         .thenAnswer((_) => initCompleter.future);
-    when(mockChannel.invokeMethod<void>('awaitBuild', any))
-        .thenAnswer((_) => buildCompleter.future);
     when(mockChannel.invokeMethod<void>('track', any)).thenAnswer((_) async {});
-    final configuration = Configuration(
-      apiKey: testApiKey,
-      instanceName: 'original-instance',
-    );
-    amplitude = Amplitude(configuration, mockChannel);
+    amplitude = Amplitude(testConfiguration, mockChannel);
     var isBuiltCompleted = false;
     unawaited(amplitude.isBuilt.then((_) => isBuiltCompleted = true));
 
     await amplitude.track(BaseEvent('early'));
     verify(mockChannel.invokeMethod<void>('track', any)).called(1);
-    verifyNever(mockChannel.invokeMethod<void>('awaitBuild', any));
-
-    configuration.instanceName = 'mutated-instance';
-    initCompleter.complete();
     await Future<void>.delayed(Duration.zero);
     expect(isBuiltCompleted, isFalse);
-    verify(mockChannel.invokeMethod<void>('awaitBuild', {
-      'instanceName': 'original-instance',
-    })).called(1);
-
-    buildCompleter.complete();
-    expect(await amplitude.isBuilt, isTrue);
-  }, skip: kIsWeb ? 'Android-only initialization behavior' : false);
-
-  test('Android isBuilt reports a native build failure', () async {
-    debugDefaultTargetPlatformOverride = TargetPlatform.android;
-    addTearDown(() => debugDefaultTargetPlatformOverride = null);
-    mockChannel = MockMethodChannel();
-    final buildCompleter = Completer<void>();
-    when(mockChannel.invokeMethod<void>('init', any)).thenAnswer((_) async {});
-    when(mockChannel.invokeMethod<void>('awaitBuild', any))
-        .thenAnswer((_) => buildCompleter.future);
-    amplitude = Amplitude(testConfiguration, mockChannel);
-
-    await Future<void>.delayed(Duration.zero);
-    verify(mockChannel.invokeMethod<void>('awaitBuild', any)).called(1);
-    buildCompleter.completeError(PlatformException(
-      code: 'amplitude_init_failed',
-      message: 'Native initialization failed.',
-    ));
-    expect(await amplitude.isBuilt, isFalse);
-  }, skip: kIsWeb ? 'Android-only initialization behavior' : false);
-
-  test('non-Android initialization does not invoke awaitBuild', () async {
-    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
-    addTearDown(() => debugDefaultTargetPlatformOverride = null);
-    mockChannel = MockMethodChannel();
-    final initCompleter = Completer<void>();
-    when(mockChannel.invokeMethod<void>('init', any))
-        .thenAnswer((_) => initCompleter.future);
-    when(mockChannel.invokeMethod<void>('track', any)).thenAnswer((_) async {});
-    amplitude = Amplitude(testConfiguration, mockChannel);
-
-    await amplitude.track(BaseEvent('direct'));
-    verify(mockChannel.invokeMethod<void>('track', any)).called(1);
 
     initCompleter.complete();
     expect(await amplitude.isBuilt, isTrue);
-    verifyNever(mockChannel.invokeMethod<void>('awaitBuild', any));
+  });
+
+  test('isBuilt reports an init failure as false', () async {
+    mockChannel = MockMethodChannel();
+    when(mockChannel.invokeMethod<void>('init', any)).thenAnswer((_) async {
+      throw PlatformException(
+        code: 'amplitude_init_failed',
+        message: 'Native initialization failed.',
+      );
+    });
+    amplitude = Amplitude(testConfiguration, mockChannel);
+
+    expect(await amplitude.isBuilt, isFalse);
+  });
+
+  test('initialization does not depend on the UI target platform', () async {
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    for (final platform in TargetPlatform.values) {
+      debugDefaultTargetPlatformOverride = platform;
+      final channel = MockMethodChannel();
+      when(channel.invokeMethod<void>('init', any)).thenAnswer((_) async {});
+
+      expect(await Amplitude(testConfiguration, channel).isBuilt, isTrue,
+          reason: '$platform');
+      verify(channel.invokeMethod<void>('init', any)).called(1);
+      verifyNoMoreInteractions(channel);
+    }
   });
 
   // Reset the mock method call handler after each test
