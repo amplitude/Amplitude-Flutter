@@ -46,26 +46,35 @@ internal var pluginInstance: SwiftAmplitudeFlutterPlugin?
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         if call.method == "init" {
             guard let configArgs = call.arguments as? [String: Any] else {
-                print("\(call.method) called but call.arguments type casting failed.")
+                result(FlutterError(
+                    code: "amplitude_init_failed",
+                    message: "Initialization arguments must be a dictionary.",
+                    details: nil
+                ))
                 return
             }
 
-            var amplitude: Amplitude?
+            let amplitude: Amplitude
             do {
                 amplitude = Amplitude(configuration: try getConfiguration(args: configArgs))
-                instances[amplitude!.configuration.instanceName] = amplitude
             } catch {
-                print("Initialization failed.")
+                result(FlutterError(
+                    code: "amplitude_init_failed",
+                    message: "Amplitude initialization failed.",
+                    details: String(describing: error)
+                ))
+                return
             }
+            instances[amplitude.configuration.instanceName] = amplitude
 
             // Set library
-            amplitude?.add(
+            amplitude.add(
                 plugin: FlutterLibraryPlugin(
                     library: configArgs["library"] as? String ?? "amplitude-flutter/unknown"
                 )
             )
 
-            amplitude?.logger?.debug(message: "Amplitude has been successfully initialized.")
+            amplitude.logger?.debug(message: "Amplitude has been successfully initialized.")
 
             result("init called..")
             return
