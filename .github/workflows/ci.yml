@@ -48,6 +48,8 @@ jobs:
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: 'stable'
+          # example/android's Gradle 8.10.2 is below newer Flutter's 8.14+ minimum; bump it separately.
+          flutter-version: '3.44.8'
 
       - name: Install packages
         run: flutter pub get
