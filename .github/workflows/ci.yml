@@ -29,3 +29,52 @@ jobs:
 
       - name: Test web bindings in Chrome
         run: flutter test --platform chrome
+
+  android-readiness:
+    name: Android readiness tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3
+
+      - name: Setup Java
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4.8.0
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: 'stable'
+
+      - name: Install packages
+        run: flutter pub get
+
+      - name: Install example packages
+        working-directory: example
+        run: flutter pub get
+
+      # gradlew and local.properties are gitignored; this generates them.
+      - name: Generate Android Gradle files
+        working-directory: example
+        run: flutter build apk --config-only
+
+      # Only the readiness tests: AmplitudeFlutterPluginTest has a broken
+      # fixture (JSONObject cast to Map in getConfiguration) and fails on main.
+      - name: Run Android readiness tests
+        working-directory: example/android
+        run: ./gradlew :amplitude_flutter:testDebugUnitTest --tests '*ReadinessTest' --console=plain
+
+      - name: Summarize Android readiness tests
+        if: always()
+        run: |
+          results=$(find . -path '*/test-results/testDebugUnitTest/*.xml')
+          if [ -z "$results" ]; then
+            echo "No test results found"
+            exit 1
+          fi
+          tests=$(grep -ho '<testsuite [^>]*' $results | grep -o ' tests="[0-9]*"' | grep -o '[0-9]*' | paste -sd+ - | bc)
+          failures=$(grep -ho '<testsuite [^>]*' $results | grep -o ' failures="[0-9]*"' | grep -o '[0-9]*' | paste -sd+ - | bc)
+          echo "$tests tests completed, $failures failed" | tee -a "$GITHUB_STEP_SUMMARY"
