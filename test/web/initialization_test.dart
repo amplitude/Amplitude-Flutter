@@ -105,4 +105,52 @@ void main() {
     expect(
         await analytics.isBuilt.timeout(const Duration(seconds: 5)), isFalse);
   });
+
+  test('late web initialization after the timeout keeps tracking working',
+      () async {
+    plugin =
+        AmplitudeFlutterPlugin(initTimeout: const Duration(milliseconds: 50));
+    final analytics = dart_sdk.Amplitude(
+      Configuration(apiKey: 'test-api-key', instanceName: 'web-late'),
+      AdapterChannel(plugin),
+    );
+    expect(
+        await analytics.isBuilt.timeout(const Duration(seconds: 5)), isFalse);
+
+    // The SDK script finally loads after isBuilt has already reported false.
+    initialized.complete(null);
+    await Future<void>.delayed(Duration.zero);
+    await analytics.track(BaseEvent('after-late-init'));
+
+    expect(tracked, hasLength(1));
+    expect(await analytics.isBuilt, isFalse);
+  });
+
+  test('late web initialization failure after the timeout is handled',
+      () async {
+    final unhandledRejections = <JSObject>[];
+    final listener = ((JSObject event) {
+      unhandledRejections.add(event);
+    }).toJS;
+    globalContext.callMethod(
+        'addEventListener'.toJS, 'unhandledrejection'.toJS, listener);
+    addTearDown(() => globalContext.callMethod(
+        'removeEventListener'.toJS, 'unhandledrejection'.toJS, listener));
+    plugin =
+        AmplitudeFlutterPlugin(initTimeout: const Duration(milliseconds: 50));
+    final analytics = dart_sdk.Amplitude(
+      Configuration(apiKey: 'test-api-key', instanceName: 'web-late-error'),
+      AdapterChannel(plugin),
+    );
+    expect(
+        await analytics.isBuilt.timeout(const Duration(seconds: 5)), isFalse);
+
+    // An unhandled Dart error here would fail the test; give the browser a
+    // chance to report an unhandled promise rejection too.
+    initialized.completeError(StateError('Late initialization failure.'));
+    await Future<void>.delayed(const Duration(milliseconds: 200));
+
+    expect(unhandledRejections, isEmpty);
+    expect(await analytics.isBuilt, isFalse);
+  });
 }
