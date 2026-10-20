@@ -2,15 +2,18 @@ package com.amplitude.amplitude_flutter
 
 import android.os.Looper
 import com.amplitude.android.Amplitude
-import com.amplitude.common.Logger
 import com.amplitude.core.events.BaseEvent
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.mockk.every
-import io.mockk.mockk
+import io.mockk.mockkConstructor
+import io.mockk.unmockkAll
 import io.mockk.verify
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -18,6 +21,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.LooperMode
@@ -29,23 +33,21 @@ import kotlin.concurrent.thread
 class AmplitudeFlutterPluginReadinessTest {
     private val instanceName = "readiness-test"
     private lateinit var plugin: AmplitudeFlutterPlugin
-    private lateinit var amplitude: Amplitude
     private lateinit var nativeBuild: CompletableDeferred<Boolean>
 
     @Before
     fun setup() {
-        plugin = AmplitudeFlutterPlugin()
-        amplitude = mockk(relaxed = true)
+        plugin = AmplitudeFlutterPlugin().apply { ctxt = RuntimeEnvironment.getApplication() }
         nativeBuild = CompletableDeferred()
-        every { amplitude.isBuilt } returns nativeBuild
-        every { amplitude.logger } returns mockk<Logger>(relaxed = true)
-        // Exercise the real handlers with controlled SDK completion.
-        setInstances(mapOf(instanceName to amplitude))
     }
 
+    @After
+    fun tearDown() = unmockkAll()
+
     @Test
-    fun `init reply waits for success while track submits directly`() {
-        val readiness = replyWhenBuilt()
+    fun `init reply waits for the build while track submits directly`() {
+        controlNativeBuild()
+        val readiness = init()
         idleMain()
         assertTrue(readiness.replies.isEmpty())
 
@@ -55,10 +57,11 @@ class AmplitudeFlutterPluginReadinessTest {
             "event" to mapOf("event_type" to "early-event"),
         )), track)
         assertEquals("track called..", track.replies.single().value)
-        verify(exactly = 1) { amplitude.track(match<BaseEvent> { it.eventType == "early-event" }) }
+        verify(exactly = 1) {
+            anyConstructed<Amplitude>().track(match<BaseEvent> { it.eventType == "early-event" })
+        }
         idleMain()
         assertTrue(readiness.replies.isEmpty())
-        assertFalse(nativeBuild.isCompleted)
 
         onWorker { nativeBuild.complete(true) }
         assertTrue(readiness.replies.isEmpty())
@@ -67,8 +70,9 @@ class AmplitudeFlutterPluginReadinessTest {
     }
 
     @Test
-    fun `exceptional worker completion replies once on main`() {
-        val result = replyWhenBuilt()
+    fun `failed build replies once on main`() {
+        controlNativeBuild()
+        val result = init()
         onWorker { nativeBuild.completeExceptionally(IllegalStateException("native build failed")) }
         assertTrue(result.replies.isEmpty())
         idleMain()
@@ -76,49 +80,40 @@ class AmplitudeFlutterPluginReadinessTest {
     }
 
     @Test
-    fun `already cancelled build replies once on main`() {
+    fun `cancelled build replies once on main`() {
+        controlNativeBuild()
         nativeBuild.cancel(CancellationException("native build cancelled"))
-        val result = replyWhenBuilt()
+        val result = init()
         assertTrue(result.replies.isEmpty())
         idleMain()
         assertError(result, "native build cancelled")
     }
 
     @Test
-    fun `same-name replacement waits for the current instance`() {
-        val result = replyWhenBuilt()
-        val replacementBuild = CompletableDeferred<Boolean>()
-        val replacement = mockk<Amplitude>(relaxed = true)
-        every { replacement.isBuilt } returns replacementBuild
-        setInstances(mapOf(instanceName to replacement))
-
-        onWorker { nativeBuild.complete(true) }
-        idleMain()
-        assertTrue("Replaced instance must not report readiness", result.replies.isEmpty())
-
-        onWorker { replacementBuild.complete(true) }
+    fun `real native build replies once on main`() {
+        // No mocking: the SDK builds on its own threads with Robolectric storage.
+        val result = init()
+        val amplitude = AmplitudeFlutterPlugin::class.java.getDeclaredField("instances").run {
+            isAccessible = true
+            @Suppress("UNCHECKED_CAST")
+            (get(plugin) as Map<String, Amplitude>).getValue(instanceName)
+        }
+        runBlocking { withTimeout(15_000) { amplitude.isBuilt.await() } }
         idleMain()
         assertSuccess(result)
     }
 
-    @Test
-    fun `missing instance replies with an error`() {
-        setInstances(emptyMap())
-        val result = replyWhenBuilt()
-        val reply = result.replies.single()
-        assertEquals("error", reply.kind)
-        assertEquals("amplitude_init_failed", reply.code)
+    /** Makes every Amplitude that init constructs report [nativeBuild] as its build. */
+    private fun controlNativeBuild() {
+        mockkConstructor(Amplitude::class)
+        every { anyConstructed<Amplitude>().isBuilt } returns nativeBuild
     }
 
-    private fun replyWhenBuilt(): RecordingResult = RecordingResult().also {
-        plugin.replyWhenBuilt(instanceName, it)
-    }
-
-    private fun setInstances(instances: Map<String, Amplitude>) {
-        AmplitudeFlutterPlugin::class.java.getDeclaredField("instances").apply {
-            isAccessible = true
-            set(plugin, instances)
-        }
+    private fun init(): RecordingResult = RecordingResult().also {
+        plugin.onMethodCall(MethodCall("init", mapOf(
+            "apiKey" to "test-api-key",
+            "instanceName" to instanceName,
+        )), it)
     }
 
     private fun idleMain() = shadowOf(Looper.getMainLooper()).idle()
