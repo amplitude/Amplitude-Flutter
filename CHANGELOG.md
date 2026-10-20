@@ -1,3 +1,15 @@
+# [4.8.0](https://github.com/amplitude/Amplitude-Flutter/compare/v4.7.3...v4.8.0) (2026-10-20)
+
+
+### Bug Fixes
+
+* make isBuilt reflect platform initialization ([#324](https://github.com/amplitude/Amplitude-Flutter/issues/324)) ([c164c1c](https://github.com/amplitude/Amplitude-Flutter/commit/c164c1c16d69511e340cc6188185e87d613d51cf))
+
+
+### Features
+
+* **android:** support API 36 with updated build tooling ([#320](https://github.com/amplitude/Amplitude-Flutter/issues/320)) ([ef0ed06](https://github.com/amplitude/Amplitude-Flutter/commit/ef0ed0636ad06d6b9139d2ebd24f3b3808ef2395))
+
 ## [4.7.3](https://github.com/amplitude/Amplitude-Flutter/compare/v4.7.2...v4.7.3) (2026-10-05)
 
 
