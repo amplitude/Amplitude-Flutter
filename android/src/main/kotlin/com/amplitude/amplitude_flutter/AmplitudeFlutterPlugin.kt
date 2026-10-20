@@ -41,6 +41,7 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 
     companion object {
         private const val methodChannelName = "amplitude_flutter"
+        private const val initializationErrorCode = "amplitude_init_failed"
 
         /**
          * Returns an Amplitude instance by its instance name.
@@ -113,7 +114,22 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                 AutocaptureOption.DEEP_LINKS in configuration.autocapture
             )
 
-            result.success("init called..")
+            // The instance is registered, so analytics calls proceed while the
+            // reply, which backs the Dart isBuilt future, waits for the build.
+            amplitude.isBuilt.invokeOnCompletion { exception ->
+                mainHandler.post {
+                    if (exception == null) {
+                        result.success("init called..")
+                    } else {
+                        amplitude.logger.warn("Amplitude build did not complete: ${exception.message}")
+                        result.error(
+                            initializationErrorCode,
+                            "Amplitude initialization failed.",
+                            exception.toString()
+                        )
+                    }
+                }
+            }
             return
         }
 

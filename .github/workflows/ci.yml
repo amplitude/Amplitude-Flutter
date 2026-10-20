@@ -26,3 +26,6 @@ jobs:
 
       - name: Test
         run: flutter test
+
+      - name: Test web bindings in Chrome
+        run: flutter test --platform chrome
