@@ -24,7 +24,13 @@ rootProject.allprojects {
 }
 
 apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
+// AGP 9 has built-in Kotlin support and registers the `kotlin` extension itself,
+// so applying the Kotlin Gradle Plugin on top fails with "Cannot add extension
+// with name 'kotlin'" (see #306). Only apply it when nothing has registered the
+// extension yet: AGP 8, or AGP 9 with android.builtInKotlin=false.
+if (project.extensions.findByName('kotlin') == null) {
+    apply plugin: 'kotlin-android'
+}
 
 android {
     compileSdkVersion 36
