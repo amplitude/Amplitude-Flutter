@@ -487,5 +487,98 @@ void main() {
 
       expect(r!.gestureSettings!.touchSlop, 7);
     });
+
+    group('overlapping layouts', () {
+      Widget overlaid(
+        Widget under,
+        HitTestBehavior behavior,
+        void Function(String) ran,
+      ) =>
+          app(
+            SizedBox(
+              width: 300,
+              child: Stack(
+                children: [
+                  under,
+                  Positioned.fill(
+                    child: GestureDetector(
+                      key: const ValueKey('over'),
+                      behavior: behavior,
+                      onTap: () => ran('over'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+
+      testWidgets(
+          'translucent overlay over a button reports the callback that ran',
+          (t) async {
+        String? ran;
+        await t.pumpWidget(
+          overlaid(
+            ElevatedButton(
+              key: const ValueKey('under'),
+              onPressed: () => ran = 'under',
+              child: const Text('under'),
+            ),
+            HitTestBehavior.translucent,
+            (id) => ran = id,
+          ),
+        );
+        final p = t.getCenter(byId('under'));
+
+        await t.tapAt(p);
+
+        expect(ran, isNotNull);
+        expect(keyOf(resolveAt(t, p)), ran);
+      });
+
+      testWidgets(
+          'translucent overlay over a tile title reports the callback that ran',
+          (t) async {
+        String? ran;
+        await t.pumpWidget(
+          overlaid(
+            CheckboxListTile(
+              key: const ValueKey('tile'),
+              value: false,
+              onChanged: (_) => ran = 'tile',
+              title: const Text('Title'),
+            ),
+            HitTestBehavior.translucent,
+            (id) => ran = id,
+          ),
+        );
+        final p = t.getCenter(find.text('Title'));
+
+        await t.tapAt(p);
+
+        expect(ran, isNotNull);
+        expect(keyOf(resolveAt(t, p)), ran);
+      });
+
+      testWidgets('opaque overlay hides the control beneath', (t) async {
+        String? ran;
+        await t.pumpWidget(
+          overlaid(
+            ElevatedButton(
+              key: const ValueKey('under'),
+              onPressed: () => ran = 'under',
+              child: const Text('under'),
+            ),
+            HitTestBehavior.opaque,
+            (id) => ran = id,
+          ),
+        );
+        final p = t.getCenter(byId('under'));
+
+        await t.tapAt(p);
+
+        expect(ran, 'over');
+        expect(keyOf(resolveAt(t, p)), 'over');
+      });
+    });
   });
 }

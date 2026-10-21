@@ -32,10 +32,31 @@ class TargetResolver {
   InteractionTarget? resolve(PointerDownEvent event) {
     final result = HitTestResult();
     WidgetsBinding.instance.hitTestInView(result, event.position, event.viewId);
-    final hitPath =
-        result.path.map((e) => e.target).whereType<RenderObject>().toSet();
+    // Position on the hit-test path, which is also the order recognizers
+    // join the gesture arena: a lower index was hit first, and the arena
+    // gives an unresolved tap to its first member.
+    final hitOrder = <RenderObject, int>{};
+    for (final entry in result.path) {
+      final target = entry.target;
+      if (target is RenderObject) {
+        hitOrder.putIfAbsent(target, () => hitOrder.length);
+      }
+    }
     Element? best;
     var bestRank = 0;
+    var bestHitIndex = 0;
+    // Between a control and one nested inside it, rank decides (ties go to
+    // the deeper one). Between controls in different branches, such as a
+    // translucent overlay and the button beneath it, the one Flutter hit
+    // first wins, as it does in the gesture arena.
+    bool beatsBest(Element candidate, int rank, int hitIndex) {
+      final current = best;
+      if (current == null) return true;
+      return _isAncestor(current, candidate)
+          ? rank >= bestRank
+          : hitIndex < bestHitIndex;
+    }
+
     void visit(Element element, Widget? composite, InkResponse? inkOwner) {
       if (!element.mounted) return;
       final w = element.widget;
@@ -56,15 +77,12 @@ class TargetResolver {
       // A global composite rank would hide independently supplied child
       // controls. Reset rank only within a public composite's explicit
       // content slots; its framework-created ListTile/Checkbox/Switch retain
-      // composite ownership.
-      if (composite is CheckboxListTile &&
-              (identical(w, composite.secondary) ||
-                  identical(w, composite.title) ||
-                  identical(w, composite.subtitle)) ||
-          composite is SwitchListTile &&
-              (identical(w, composite.secondary) ||
-                  identical(w, composite.title) ||
-                  identical(w, composite.subtitle))) {
+      // composite ownership. The rank is restored on leaving the slot so the
+      // reset can't leak into sibling branches.
+      final inSlot = composite != null && _isContentSlot(composite, w);
+      final bestOutsideSlot = best;
+      final rankOutsideSlot = bestRank;
+      if (inSlot) {
         bestRank = 0;
         composite = null;
       }
@@ -74,14 +92,22 @@ class TargetResolver {
       if (inkOwner != null && identical(w, inkOwner.child)) inkOwner = null;
       final rank =
           w is GestureDetector && inkOwner != null ? 0 : _targetRank(w);
-      if (rank > 0 && rank >= bestRank && _isOnHitPath(element, hitPath)) {
+      // Null when this tap couldn't reach the element. Component widgets
+      // (buttons, tiles) have no render object of their own; their nearest
+      // descendant render object stands in for them.
+      final hitIndex = rank > 0 ? hitOrder[element.renderObject] : null;
+      if (hitIndex != null && beatsBest(element, rank, hitIndex)) {
         best = element;
         bestRank = rank;
+        bestHitIndex = hitIndex;
       }
       if (w is CheckboxListTile || w is SwitchListTile) composite = w;
       if (w is InkResponse && _targetRank(w) > 0) inkOwner = w;
       final owner = inkOwner;
       element.visitChildElements((child) => visit(child, composite, owner));
+      if (inSlot && identical(best, bestOutsideSlot)) {
+        bestRank = rankOutsideSlot;
+      }
     }
 
     final root = WidgetsBinding.instance.rootElement;
@@ -127,12 +153,28 @@ class TargetResolver {
     return true;
   }
 
-  /// Whether [element] was reachable by this tap according to Flutter's hit
-  /// test. Component widgets (buttons, tiles) have no render object of
-  /// their own; their nearest descendant render object stands in for them.
-  bool _isOnHitPath(Element element, Set<RenderObject> hitPath) {
-    final renderObject = element.renderObject;
-    return renderObject != null && hitPath.contains(renderObject);
+  /// Whether [w] is one of [composite]'s developer-supplied content slots.
+  bool _isContentSlot(Widget composite, Widget w) {
+    if (composite is CheckboxListTile) {
+      return identical(w, composite.secondary) ||
+          identical(w, composite.title) ||
+          identical(w, composite.subtitle);
+    }
+    if (composite is SwitchListTile) {
+      return identical(w, composite.secondary) ||
+          identical(w, composite.title) ||
+          identical(w, composite.subtitle);
+    }
+    return false;
+  }
+
+  bool _isAncestor(Element ancestor, Element element) {
+    var found = false;
+    element.visitAncestorElements((e) {
+      found = identical(e, ancestor);
+      return !found;
+    });
+    return found;
   }
 
   /// Ranks how specifically [w] identifies an interaction target.
