@@ -42,6 +42,8 @@ class TargetResolver {
         hitOrder.putIfAbsent(target, () => hitOrder.length);
       }
     }
+    // Per call, so no transform outlives the layout it was computed from.
+    final positions = _LocalPositions(event.position);
     Element? best;
     var bestRank = 0;
     var bestHitIndex = 0;
@@ -71,7 +73,7 @@ class TargetResolver {
       if (ro is RenderBox &&
           (!ro.attached ||
               !ro.hasSize ||
-              !ro.size.contains(ro.globalToLocal(event.position)))) {
+              !ro.size.contains(positions.localTo(ro)))) {
         return;
       }
       // A global composite rank would hide independently supplied child
@@ -230,4 +232,83 @@ class TargetResolver {
     }
     return 0;
   }
+}
+
+/// [RenderBox.globalToLocal] of one pointer position for many boxes, in
+/// time linear in the number of render objects visited.
+///
+/// `globalToLocal` recomputes the transform to the root from scratch, so
+/// calling it on every box of a walk down the tree costs O(depth²). This
+/// caches each render object's transform to the root and extends the
+/// parent's by one [RenderObject.applyPaintTransform], the same calls
+/// [RenderObject.getTransformTo] makes, so the result is identical.
+class _LocalPositions {
+  _LocalPositions(this.position);
+
+  /// The global position, in logical pixels.
+  final Offset position;
+
+  final _toRoot = <RenderObject, Matrix4>{};
+  final _local = <RenderBox, Offset>{};
+
+  /// [position] in [box]'s local coordinates.
+  Offset localTo(RenderBox box) {
+    final cached = _local[box];
+    if (cached != null) return cached;
+    final local = _unproject(_transformToRoot(box));
+    assert(
+      _sameOffset(local, box.globalToLocal(position)),
+      'Cached globalToLocal for $box gave $local, but Flutter gives '
+      '${box.globalToLocal(position)}.',
+    );
+    return _local[box] = local;
+  }
+
+  /// Same matrix as `ro.getTransformTo(null)`.
+  Matrix4 _transformToRoot(RenderObject ro) {
+    final cached = _toRoot[ro];
+    if (cached != null) return cached;
+    final parent = ro.parent;
+    final Matrix4 transform;
+    if (parent == null || identical(parent, ro.owner?.rootNode)) {
+      // Flutter leaves the root's own transform out; let it decide how.
+      transform = ro.getTransformTo(null);
+    } else {
+      transform = _transformToRoot(parent).clone();
+      parent.applyPaintTransform(ro, transform);
+    }
+    return _toRoot[ro] = transform;
+  }
+
+  /// [RenderBox.globalToLocal]'s unprojection of [position] onto the local
+  /// X-Y plane, given the local-to-global [toRoot] (left unchanged).
+  Offset _unproject(Matrix4 toRoot) {
+    final transform = toRoot.clone();
+    if (transform.invert() == 0.0) return Offset.zero;
+    final m = transform.storage;
+    // Matrix4.perspectiveTransform, as vector_math computes it.
+    (double, double, double) project(double x, double y, double z) {
+      final w = 1.0 / ((m[3] * x) + (m[7] * y) + (m[11] * z) + m[15]);
+      return (
+        ((m[0] * x) + (m[4] * y) + (m[8] * z) + m[12]) * w,
+        ((m[1] * x) + (m[5] * y) + (m[9] * z) + m[13]) * w,
+        ((m[2] * x) + (m[6] * y) + (m[10] * z) + m[14]) * w,
+      );
+    }
+
+    final (ix, iy, iz) = project(0.0, 0.0, 0.0);
+    final (fx, fy, fz) = project(0.0, 0.0, 1.0);
+    final (dx, dy, dz) = (fx - ix, fy - iy, fz - iz);
+    final (sx, sy, sz) = project(position.dx, position.dy, 0.0);
+    // n = (0, 0, 1); dot products written out so NaN and infinity
+    // propagate as they do in Vector3.dot.
+    final t = (0.0 * sx + 0.0 * sy + 1.0 * sz) / (0.0 * dx + 0.0 * dy + dz);
+    return Offset(sx - dx * t, sy - dy * t);
+  }
+
+  static bool _sameOffset(Offset a, Offset b) =>
+      _same(a.dx, b.dx) && _same(a.dy, b.dy);
+
+  static bool _same(double a, double b) =>
+      a == b || (a - b).abs() <= 1e-6 || (a.isNaN && b.isNaN);
 }

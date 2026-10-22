@@ -580,5 +580,141 @@ void main() {
         expect(keyOf(resolveAt(t, p)), 'over');
       });
     });
+
+    group('transformed ancestors', () {
+      // Two 80x60 controls 40 apart, so the row is 200x60, centred in a
+      // 400x400 box under the transform. The box keeps the transformed
+      // controls inside the transform's own layout bounds: the resolver
+      // prunes by each ancestor box's bounds, while RenderTransform hit-tests
+      // its child without checking its own size.
+      Future<void> pumpSideBySide(
+        WidgetTester t,
+        Widget Function(Widget row) wrap,
+        List<String> ran,
+      ) {
+        Widget control(String id) => GestureDetector(
+              key: ValueKey(id),
+              behavior: HitTestBehavior.opaque,
+              onTap: () => ran.add(id),
+              child: const SizedBox(width: 80, height: 60),
+            );
+        return t.pumpWidget(
+          app(
+            KeyedSubtree(
+              key: const ValueKey('xf'),
+              child: wrap(
+                SizedBox(
+                  width: 400,
+                  height: 400,
+                  child: Center(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        control('a'),
+                        const SizedBox(width: 40),
+                        control('b'),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+
+      Future<void> expectResolvesLikeTap(
+        WidgetTester t,
+        Offset p,
+        List<String> ran,
+        String? expected,
+      ) async {
+        ran.clear();
+        await t.tapAt(p);
+        final tapped = ran.isEmpty ? null : ran.single;
+        expect(tapped, expected, reason: 'tap at $p');
+        expect(keyOf(resolveAt(t, p)), tapped, reason: 'resolve at $p');
+      }
+
+      Offset globalOf(WidgetTester t, String id, Offset local) =>
+          t.renderObject<RenderBox>(byId(id)).localToGlobal(local);
+
+      testWidgets('a rotated ancestor resolves the control under the tap',
+          (t) async {
+        final ran = <String>[];
+        await pumpSideBySide(
+          t,
+          (row) => Transform.rotate(angle: 0.7, child: row),
+          ran,
+        );
+
+        await expectResolvesLikeTap(t, t.getCenter(byId('a')), ran, 'a');
+        await expectResolvesLikeTap(t, t.getCenter(byId('b')), ran, 'b');
+        await expectResolvesLikeTap(
+            t, globalOf(t, 'a', const Offset(3, 3)), ran, 'a');
+        await expectResolvesLikeTap(
+            t, globalOf(t, 'a', const Offset(-3, -3)), ran, null);
+      });
+
+      testWidgets('a scaled ancestor resolves the control under the tap',
+          (t) async {
+        final ran = <String>[];
+        await pumpSideBySide(
+          t,
+          (row) => Transform.scale(scale: 1.7, child: row),
+          ran,
+        );
+        // Unscaled, `a` spans x in [c - 100, c - 20]; scaled 1.7 about the
+        // row's centre it spans [c - 170, c - 34], so c - 25 is in the gap.
+        final c = t.getCenter(byId('xf'));
+        final insideUnscaledOnly = Offset(c.dx - 25, c.dy);
+
+        await expectResolvesLikeTap(t, t.getCenter(byId('a')), ran, 'a');
+        await expectResolvesLikeTap(t, t.getCenter(byId('b')), ran, 'b');
+        await expectResolvesLikeTap(t, insideUnscaledOnly, ran, null);
+      });
+
+      Widget perspective(Widget row) => Transform(
+            transform: Matrix4.identity()
+              ..setEntry(3, 2, 0.002)
+              ..rotateY(0.6),
+            alignment: Alignment.center,
+            child: row,
+          );
+
+      List<Offset> perspectivePoints(WidgetTester t) => [
+            t.getCenter(byId('a')),
+            t.getCenter(byId('b')),
+            globalOf(t, 'a', const Offset(15, 45)),
+            globalOf(t, 'b', const Offset(65, 10)),
+          ];
+
+      testWidgets('a perspective ancestor resolves the control under the tap',
+          skip: true, // The resolver prunes with RenderBox.globalToLocal,
+          // which unprojects perspective differently from hit testing
+          // (BoxHitTestResult.addWithPaintTransform), so even a control's
+          // centre is pruned. Pre-existing; not changed by the linear walk.
+          (t) async {
+        final ran = <String>[];
+        await pumpSideBySide(t, perspective, ran);
+        final [ca, cb, pa, pb] = perspectivePoints(t);
+
+        await expectResolvesLikeTap(t, ca, ran, 'a');
+        await expectResolvesLikeTap(t, cb, ran, 'b');
+        await expectResolvesLikeTap(t, pa, ran, 'a');
+        await expectResolvesLikeTap(t, pb, ran, 'b');
+      });
+
+      testWidgets('a perspective ancestor maps points as globalToLocal does',
+          (t) async {
+        await pumpSideBySide(t, perspective, <String>[]);
+
+        // The resolver asserts, in debug, that each cached local position
+        // matches RenderBox.globalToLocal, including its unprojection.
+        for (final p in perspectivePoints(t)) {
+          expect(() => resolveAt(t, p), returnsNormally, reason: '$p');
+        }
+      });
+    });
   });
 }
