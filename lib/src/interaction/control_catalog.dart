@@ -1,4 +1,6 @@
-import 'package:flutter/cupertino.dart' show CupertinoButton;
+import 'package:flutter/cupertino.dart'
+    show CupertinoButton, CupertinoCheckbox, CupertinoListTile, CupertinoSwitch;
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 /// One row of the catalog: how to recognize a Flutter control and read it.
@@ -24,8 +26,9 @@ class ControlSpec {
   /// accepts input. [slots] are the developer-supplied widgets it renders,
   /// and [builds] the catalog rows it builds outside those slots, which
   /// belong to it rather than being targets of their own. [generic] marks
-  /// the handlers concrete controls are built from (InkResponse and
-  /// GestureDetector), which are never targets inside another control.
+  /// the handlers concrete controls are built from (InkResponse,
+  /// GestureDetector and RawGestureDetector), which are never targets
+  /// inside another control.
   static ControlSpec of<T extends Widget>({
     required String name,
     bool Function(T w)? isActive,
@@ -49,6 +52,21 @@ class ControlSpec {
 
   final String name;
   final List<ControlSpec> builds;
+
+  /// [builds], and everything those rows build in turn: a
+  /// CheckboxListTile's Checkbox builds a CupertinoCheckbox on iOS, which
+  /// still belongs to the tile.
+  late final Set<ControlSpec> buildsTransitively = () {
+    final all = <ControlSpec>{};
+    void add(ControlSpec row) {
+      for (final built in row.builds) {
+        if (all.add(built)) add(built);
+      }
+    }
+
+    add(this);
+    return all;
+  }();
   final bool generic;
   final bool Function(Widget w) _isType;
   final bool Function(Widget w) _isActive;
@@ -126,9 +144,29 @@ final cupertinoButtonRow = ControlSpec.of<CupertinoButton>(
   slots: (w) => [w.child],
 );
 
+final cupertinoSwitchRow = ControlSpec.of<CupertinoSwitch>(
+  name: 'CupertinoSwitch',
+  isEnabled: (w) => w.onChanged != null,
+);
+
+final cupertinoCheckboxRow = ControlSpec.of<CupertinoCheckbox>(
+  name: 'CupertinoCheckbox',
+  isEnabled: (w) => w.onChanged != null,
+);
+
+final cupertinoListTileRow = ControlSpec.of<CupertinoListTile>(
+  name: 'CupertinoListTile',
+  isActive: (w) => w.onTap != null,
+  slots: (w) => [w.leading, w.title, w.subtitle, w.additionalInfo, w.trailing],
+);
+
+// Checkbox.adaptive builds a CupertinoCheckbox on iOS and macOS.
+// Switch.adaptive draws its own Cupertino-style switch, not a
+// CupertinoSwitch.
 final checkboxRow = ControlSpec.of<Checkbox>(
   name: 'Checkbox',
   isEnabled: (w) => w.onChanged != null,
+  builds: [cupertinoCheckboxRow],
 );
 
 final switchRow = ControlSpec.of<Switch>(
@@ -204,6 +242,43 @@ final gestureDetectorRow = ControlSpec.of<GestureDetector>(
   generic: true,
 );
 
+// A button built directly on a RawGestureDetector (cupertino_ui's
+// CupertinoButton is one) is a target when a primary tap would reach one of
+// its callbacks. Such a button keeps its tap recognizer while disabled but
+// sets every callback to null, so this needs no enabled read.
+final rawGestureDetectorRow = ControlSpec.of<RawGestureDetector>(
+  name: 'RawGestureDetector',
+  isActive: _acceptsPrimaryTap,
+  slots: (w) => [w.child],
+  generic: true,
+);
+
+/// Whether a primary-button tap would join the arena, the check
+/// [TapGestureRecognizer.isPointerAllowed] makes. Other recognizer types,
+/// such as the drag recognizers a Scrollable builds, don't count.
+bool _acceptsPrimaryTap(RawGestureDetector w) {
+  for (final factory in w.gestures.values) {
+    if (factory is! GestureRecognizerFactory<TapGestureRecognizer>) continue;
+    try {
+      final r = factory.constructor();
+      try {
+        factory.initializer(r);
+        if (r.onTapDown != null ||
+            r.onTapUp != null ||
+            r.onTap != null ||
+            r.onTapCancel != null) {
+          return true;
+        }
+      } finally {
+        r.dispose();
+      }
+    } catch (_) {
+      // A factory that can't be built off its widget says nothing.
+    }
+  }
+  return false;
+}
+
 /// Every control the resolver recognizes. No widget matches two rows.
 final List<ControlSpec> controlCatalog = [
   elevatedButtonRow,
@@ -214,6 +289,9 @@ final List<ControlSpec> controlCatalog = [
   iconButtonRow,
   floatingActionButtonRow,
   cupertinoButtonRow,
+  cupertinoSwitchRow,
+  cupertinoCheckboxRow,
+  cupertinoListTileRow,
   checkboxRow,
   switchRow,
   dropdownButtonRow,
@@ -224,6 +302,7 @@ final List<ControlSpec> controlCatalog = [
   textFieldRow,
   inkResponseRow,
   gestureDetectorRow,
+  rawGestureDetectorRow,
 ];
 
 final _rowByType = <Type, ControlSpec?>{};

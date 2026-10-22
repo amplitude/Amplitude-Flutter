@@ -1,6 +1,8 @@
 import 'package:amplitude_flutter/src/interaction/control_catalog.dart';
 import 'package:amplitude_flutter/src/interaction/target_resolver.dart';
-import 'package:flutter/cupertino.dart' show CupertinoButton;
+import 'package:flutter/cupertino.dart'
+    show CupertinoButton, CupertinoCheckbox, CupertinoListTile, CupertinoSwitch;
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -46,6 +48,44 @@ const _box = ColoredBox(
   color: Colors.blue,
   child: SizedBox(width: 80, height: 40),
 );
+
+/// A button built on a [RawGestureDetector], the way Flutter's
+/// CupertinoButton is: a disabled button keeps its tap recognizer, but sets
+/// every tap callback to null.
+class _RawButton extends StatelessWidget {
+  const _RawButton({this.detectorKey, this.onPressed, this.onLongPress});
+
+  final Key? detectorKey;
+  final VoidCallback? onPressed;
+  final VoidCallback? onLongPress;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onPressed != null;
+    return RawGestureDetector(
+      key: detectorKey,
+      behavior: HitTestBehavior.opaque,
+      gestures: <Type, GestureRecognizerFactory>{
+        TapGestureRecognizer:
+            GestureRecognizerFactoryWithHandlers<TapGestureRecognizer>(
+          TapGestureRecognizer.new,
+          (r) {
+            r.onTapDown = enabled ? (_) {} : null;
+            r.onTapUp = enabled ? (_) => onPressed!() : null;
+            r.onTapCancel = enabled ? () {} : null;
+          },
+        ),
+        if (onLongPress != null)
+          LongPressGestureRecognizer:
+              GestureRecognizerFactoryWithHandlers<LongPressGestureRecognizer>(
+            LongPressGestureRecognizer.new,
+            (r) => r.onLongPress = onLongPress,
+          ),
+      },
+      child: _box,
+    );
+  }
+}
 
 PopupMenuItemBuilder<int> _menu(void Function() ran) => (_) {
       ran();
@@ -279,6 +319,56 @@ final _forms = <_Form>[
     enabled: false,
   ),
   _Form(
+    'CupertinoSwitch',
+    'default',
+    (ran) =>
+        CupertinoSwitch(key: formKey, value: false, onChanged: (_) => ran()),
+  ),
+  _Form(
+    'CupertinoSwitch',
+    'disabled',
+    (_) => const CupertinoSwitch(key: formKey, value: false, onChanged: null),
+    enabled: false,
+  ),
+  _Form(
+    'CupertinoCheckbox',
+    'default',
+    (ran) =>
+        CupertinoCheckbox(key: formKey, value: false, onChanged: (_) => ran()),
+  ),
+  _Form(
+    'CupertinoCheckbox',
+    'disabled',
+    (_) => const CupertinoCheckbox(key: formKey, value: false, onChanged: null),
+    enabled: false,
+  ),
+  _Form(
+    'CupertinoListTile',
+    'default',
+    (ran) => _wide(
+      CupertinoListTile(key: formKey, onTap: ran, title: const Text('x')),
+    ),
+  ),
+  _Form(
+    'CupertinoListTile',
+    '.notched',
+    (ran) => _wide(
+      CupertinoListTile.notched(
+        key: formKey,
+        onTap: ran,
+        title: const Text('x'),
+      ),
+    ),
+  ),
+  // Without onTap it has no handler.
+  _Form(
+    'CupertinoListTile',
+    'disabled',
+    (_) => _wide(const CupertinoListTile(key: formKey, title: Text('x'))),
+    enabled: false,
+    reported: false,
+  ),
+  _Form(
     'Checkbox',
     'default',
     (ran) => Checkbox(key: formKey, value: false, onChanged: (_) => ran()),
@@ -391,6 +481,21 @@ final _forms = <_Form>[
       ),
     ),
   ),
+  // On iOS the inner control is the CupertinoCheckbox that Checkbox.adaptive
+  // builds.
+  _Form(
+    'CheckboxListTile',
+    '.adaptive checkbox',
+    (ran) => _wide(
+      CheckboxListTile.adaptive(
+        key: formKey,
+        value: false,
+        onChanged: (_) => ran(),
+        title: const Text('title'),
+      ),
+    ),
+    at: (t) => t.getCenter(find.byType(Checkbox)),
+  ),
   _Form(
     'CheckboxListTile',
     'disabled',
@@ -441,6 +546,19 @@ final _forms = <_Form>[
         title: const Text('title'),
       ),
     ),
+  ),
+  _Form(
+    'SwitchListTile',
+    '.adaptive switch',
+    (ran) => _wide(
+      SwitchListTile.adaptive(
+        key: formKey,
+        value: false,
+        onChanged: (_) => ran(),
+        title: const Text('title'),
+      ),
+    ),
+    at: (t) => t.getCenter(find.byType(Switch)),
   ),
   _Form(
     'SwitchListTile',
@@ -506,6 +624,13 @@ final _forms = <_Form>[
     'GestureDetector',
     'onTap',
     (ran) => GestureDetector(key: formKey, onTap: ran, child: _box),
+  ),
+  // The plain and disabled buttons have tests of their own below.
+  _Form(
+    'RawGestureDetector',
+    'button with a long press',
+    (ran) =>
+        _RawButton(detectorKey: formKey, onPressed: ran, onLongPress: () {}),
   ),
 ];
 
@@ -576,6 +701,80 @@ void main() {
         },
       );
     }
+  });
+
+  testWidgets('a RawGestureDetector button is a target', (t) async {
+    var ran = 0;
+    await t.pumpWidget(
+      app(_RawButton(detectorKey: formKey, onPressed: () => ran++)),
+    );
+    final p = t.getCenter(find.byKey(formKey));
+
+    final r = resolveAt(t, p);
+    await t.tapAt(p);
+
+    expect(ran, 1);
+    expect(r?.element, same(t.element(find.byKey(formKey))));
+    expect(r!.enabled, isTrue);
+  });
+
+  // The tap recognizer stays, but with no callbacks it never joins the
+  // arena.
+  testWidgets('a RawGestureDetector button with its tap callbacks off is not',
+      (t) async {
+    await t.pumpWidget(app(const _RawButton(detectorKey: formKey)));
+
+    expect(resolveAt(t, t.getCenter(find.byKey(formKey))), isNull);
+  });
+
+  const tileKey = ValueKey('tile');
+
+  /// Taps a [_RawButton] in a tappable ListTile's trailing, and checks the
+  /// resolver credits whichever of the two ran.
+  Future<void> tapButtonInTile(WidgetTester t, {required bool enabled}) async {
+    var tile = 0;
+    var button = 0;
+    await t.pumpWidget(
+      app(
+        _wide(
+          ListTile(
+            key: tileKey,
+            onTap: () => tile++,
+            title: const Text('x'),
+            trailing: _RawButton(
+              detectorKey: formKey,
+              onPressed: enabled ? () => button++ : null,
+            ),
+          ),
+        ),
+      ),
+    );
+    final p = t.getCenter(find.byKey(formKey));
+
+    final r = resolveAt(t, p);
+    await t.tapAt(p);
+    await t.pump(const Duration(seconds: 1));
+
+    expect((tile, button), enabled ? (0, 1) : (1, 0));
+    final ran = enabled ? formKey : tileKey;
+    expect(r?.element, same(t.element(find.byKey(ran))));
+    expect(r!.enabled, isTrue);
+  }
+
+  testWidgets(
+    "a RawGestureDetector button in a ListTile's trailing takes the tap",
+    (t) => tapButtonInTile(t, enabled: true),
+  );
+
+  testWidgets(
+    'the same button disabled credits the ListTile',
+    (t) => tapButtonInTile(t, enabled: false),
+  );
+
+  testWidgets("a scrollable's drag detector is not a target", (t) async {
+    await t.pumpWidget(app(ListView(children: const [SizedBox(height: 40)])));
+
+    expect(resolveAt(t, t.getCenter(find.byType(ListView))), isNull);
   });
 
   testWidgets(

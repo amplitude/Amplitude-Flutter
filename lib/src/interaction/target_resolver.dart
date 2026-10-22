@@ -94,11 +94,12 @@ class TargetResolver {
       var childOwner = owner;
       // The generic handlers a control is built from (a button's InkWell, an
       // InkWell's own GestureDetector) and the controls it lists in `builds`
-      // (a CheckboxListTile's ListTile and Checkbox) are its internals, not
-      // targets. They are ruled out before isActive runs.
+      // (a CheckboxListTile's ListTile and Checkbox), and what those build,
+      // are its internals, not targets. They are ruled out before isActive
+      // runs.
       final internal = owner != null &&
           spec != null &&
-          (spec.generic || owner.spec.builds.contains(spec));
+          (spec.generic || owner.spec.buildsTransitively.contains(spec));
       if (spec != null && !internal && spec.isActive(w)) {
         // Null when this tap couldn't reach the element.
         final hitIndex = hitOrder[ro];
