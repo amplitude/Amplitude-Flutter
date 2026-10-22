@@ -6,6 +6,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 
 import 'control_catalog.dart';
+import 'scroll_stops.dart';
 
 /// The Flutter control a pointer-down landed on.
 class InteractionTarget {
@@ -29,6 +30,8 @@ class InteractionTarget {
 /// and keeping the most specific interactive widget on the hit-test path.
 class TargetResolver {
   const TargetResolver();
+
+  static final _scrollStops = ScrollStops();
 
   InteractionTarget? resolve(PointerDownEvent event) {
     final result = HitTestResult();
@@ -77,6 +80,13 @@ class TargetResolver {
       // Scrollable toggles its IgnorePointer's render object directly.
       final ro = element.renderObject;
       if (ro != null && !searched.contains(ro)) return;
+      // A press on a flinging list only stops it. Flutter's hit test ignored
+      // the content, but the hold re-enabled it before this route ran.
+      if (w is Scrollable && element is StatefulElement) {
+        final position = (element.state as ScrollableState).position;
+        _scrollStops.watch(position);
+        if (_scrollStops.stoppedInThisTask(position)) return;
+      }
       // A developer handler inside a control's slot (a GestureDetector in a
       // ListTile title, an InkWell in a button's child) is deeper in the
       // arena and wins the tap, so entering a slot leaves the control's

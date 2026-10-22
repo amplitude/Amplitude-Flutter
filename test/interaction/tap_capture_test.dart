@@ -401,4 +401,149 @@ void main() {
       );
     });
   });
+
+  group('scrolling', () {
+    // A list of keyed rows whose callbacks record their key. Rebuilds
+    // whenever [rebuild] changes, if given.
+    Widget rows(
+      List<Object?> taps, {
+      ScrollController? controller,
+      ValueNotifier<int>? rebuild,
+    }) {
+      Widget list(int v) => ListView.builder(
+            controller: controller,
+            itemCount: 2000,
+            itemBuilder: (_, i) => ListTile(
+              key: ValueKey(i),
+              title: Text('Item $i $v'),
+              onTap: () => taps.add(i),
+            ),
+          );
+      return MaterialApp(
+        home: Scaffold(
+          body: rebuild == null
+              ? list(0)
+              : ValueListenableBuilder<int>(
+                  valueListenable: rebuild,
+                  builder: (_, v, __) => list(v),
+                ),
+        ),
+      );
+    }
+
+    List<Object?> keys(List<TapObservation<Object?>> out) =>
+        out.map((o) => o.snapshot).toList();
+
+    Future<void> flingAndRun(WidgetTester t, Offset by) async {
+      await t.fling(find.byType(ListView), by, 3000);
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 100));
+    }
+
+    testWidgets(
+      'a press that stops a fling is not a tap',
+      (t) async {
+        final out = <TapObservation<Object?>>[];
+        keyCapture(out);
+        final taps = <Object?>[];
+        final controller = ScrollController();
+        addTearDown(controller.dispose);
+        await t.pumpWidget(rows(taps, controller: controller));
+
+        await t.tap(find.text('Item 2 0'));
+        await t.pump();
+        expect(taps, [2]);
+        expect(keys(out), taps);
+
+        await flingAndRun(t, const Offset(0, -300));
+        expect(controller.position.isScrollingNotifier.value, isTrue);
+        final point = t.getCenter(find.byType(ListView));
+        await t.tapAt(point);
+        final offsetAtTap = controller.offset;
+        await t.pumpAndSettle();
+        expect(controller.offset, offsetAtTap, reason: 'the press stopped it');
+        expect(taps, [2], reason: 'stopping a fling runs no onTap');
+        expect(keys(out), taps);
+
+        await t.tapAt(point);
+        await t.pump();
+        expect(taps, hasLength(2), reason: 'the same point, once idle');
+        expect(keys(out), taps);
+      },
+      variant: TargetPlatformVariant(
+        {TargetPlatform.android, TargetPlatform.iOS},
+      ),
+    );
+
+    testWidgets(
+        'a press that stops a fling credits the control around the list',
+        (t) async {
+      final out = <TapObservation<Object?>>[];
+      keyCapture(out);
+      final taps = <Object?>[];
+      await t.pumpWidget(
+        app(
+          InkWell(
+            key: const ValueKey('card'),
+            onTap: () => taps.add('card'),
+            child: SizedBox(
+              height: 200,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: 2000,
+                itemBuilder: (_, i) => GestureDetector(
+                  key: ValueKey(i),
+                  onTap: () => taps.add(i),
+                  child: SizedBox(width: 100, child: Text('Tile $i')),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await flingAndRun(t, const Offset(-300, 0));
+      await t.tapAt(t.getCenter(find.byType(ListView)));
+      await t.pumpAndSettle();
+      expect(taps, ['card']);
+      expect(keys(out), taps);
+    });
+
+    testWidgets('a tap after a fling ends on its own still counts', (t) async {
+      final out = <TapObservation<Object?>>[];
+      keyCapture(out);
+      final taps = <Object?>[];
+      await t.pumpWidget(rows(taps));
+
+      await t.fling(find.byType(ListView), const Offset(0, -300), 3000);
+      await t.pumpAndSettle();
+      await t.tapAt(t.getCenter(find.byType(ListView)));
+      await t.pump();
+      expect(taps, hasLength(1));
+      expect(keys(out), taps);
+    });
+
+    testWidgets('a press that stops a rebuilt list is not a tap', (t) async {
+      final out = <TapObservation<Object?>>[];
+      keyCapture(out);
+      final taps = <Object?>[];
+      final rebuild = ValueNotifier<int>(0);
+      addTearDown(rebuild.dispose);
+      await t.pumpWidget(rows(taps, rebuild: rebuild));
+
+      await flingAndRun(t, const Offset(0, -300));
+      rebuild.value++;
+      await t.pump();
+      final point = t.getCenter(find.byType(ListView));
+      await t.tapAt(point);
+      await t.pumpAndSettle();
+      expect(taps, isEmpty, reason: 'stopping a fling runs no onTap');
+      expect(out, isEmpty);
+
+      await t.tapAt(point);
+      await t.pump();
+      expect(taps, hasLength(1));
+      expect(keys(out), taps);
+    });
+  });
 }
