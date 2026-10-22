@@ -30,6 +30,35 @@ jobs:
       - name: Test web bindings in Chrome
         run: flutter test --platform chrome
 
+  test-minimum-flutter:
+    name: Check the source code on the minimum Flutter
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: 'stable'
+          # Keep in sync with the flutter lower bound in pubspec.yaml.
+          flutter-version: '3.19.0'
+
+      - name: Check Flutter version
+        run: flutter --version
+
+      # Flutter 3.19's `flutter pub get` doesn't recognize example/android's Kotlin DSL
+      # build files, mistakes the example for a v1 embedding app and fails; plain pub
+      # resolves the same dependencies without that check.
+      - name: Install packages
+        run: dart pub get
+
+      - name: Linter
+        run: flutter analyze
+
+      - name: Test
+        run: flutter test
+
   android-readiness:
     name: Android readiness tests
     runs-on: ubuntu-latest
