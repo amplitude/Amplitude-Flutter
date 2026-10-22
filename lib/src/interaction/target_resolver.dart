@@ -49,42 +49,52 @@ class TargetResolver {
     Element? best;
     var bestRank = 0;
     var bestHitIndex = 0;
-    // Between a control and one nested inside it, rank decides (ties go to
-    // the deeper one). Between controls in different branches, such as a
-    // translucent overlay and the button beneath it, the one Flutter hit
-    // first wins, as it does in the gesture arena.
-    bool beatsBest(Element candidate, int rank, int hitIndex) {
+    var bestEnabled = true;
+    // Between controls in different branches, such as a translucent overlay
+    // and the button beneath it, the one Flutter hit first wins, as it does
+    // in the gesture arena. Between a control and one nested inside it, rank
+    // decides (ties go to the deeper one), except that a disabled control
+    // builds no recognizer, so it can't take a tap from an enabled ancestor.
+    bool beatsBest(Element candidate, int rank, int hitIndex, bool enabled) {
       final current = best;
       if (current == null) return true;
-      return _isAncestor(current, candidate)
-          ? rank >= bestRank
-          : hitIndex < bestHitIndex;
+      if (!_isAncestor(current, candidate)) return hitIndex < bestHitIndex;
+      if (!enabled && bestEnabled) return false;
+      return rank >= bestRank;
     }
 
-    void visit(Element element, Widget? composite, InkResponse? inkOwner) {
+    // [slots] holds the developer-supplied slots of the nearest ranked
+    // control above [element] whose slots haven't been entered yet.
+    void visit(Element element, List<Widget?>? slots, InkResponse? inkOwner) {
       if (!element.mounted) return;
       final w = element.widget;
       if (w is View && w.view.viewId != event.viewId) return;
-      if (w is Visibility && !w.visible ||
+      // Early exits only: hit-path pruning below would also drop these
+      // branches, since Flutter doesn't hit them.
+      if (w is Visibility && !w.visible && !w.maintainInteractivity ||
           w is Offstage && w.offstage ||
           w is IgnorePointer && w.ignoring ||
           w is AbsorbPointer && w.absorbing) {
         return;
       }
-      // A component element's render object is the root of its subtree.
+      // A component element (a button, a tile) has no render object of its
+      // own; this is its nearest descendant render object, which stands in
+      // for it both here and in [hitOrder].
       final ro = element.renderObject;
       if (ro != null && !searched.contains(ro)) return;
-      // A global composite rank would hide independently supplied child
-      // controls. Reset rank only within a public composite's explicit
-      // content slots; its framework-created ListTile/Checkbox/Switch retain
-      // composite ownership. The rank is restored on leaving the slot so the
-      // reset can't leak into sibling branches.
-      final inSlot = composite != null && _isContentSlot(composite, w);
+      // A developer handler inside a ranked control's slot (a
+      // GestureDetector in a ListTile title, an InkWell in a button's child)
+      // is deeper in the arena and wins the tap, so reset the rank on
+      // entering a slot. Framework internals between the control and its
+      // slots keep the control's rank, since they aren't the slot widget.
+      // The rank is restored on leaving the slot so the reset can't leak
+      // into sibling branches, such as a CheckboxListTile's own checkbox.
+      final inSlot = slots != null && slots.any((s) => identical(s, w));
       final bestOutsideSlot = best;
       final rankOutsideSlot = bestRank;
       if (inSlot) {
         bestRank = 0;
-        composite = null;
+        slots = null;
       }
       // InkResponse/InkWell build a GestureDetector of their own with equal
       // rank; skip it so the developer's widget is reported, and resume
@@ -92,19 +102,22 @@ class TargetResolver {
       if (inkOwner != null && identical(w, inkOwner.child)) inkOwner = null;
       final rank =
           w is GestureDetector && inkOwner != null ? 0 : _targetRank(w);
-      // Null when this tap couldn't reach the element. Component widgets
-      // (buttons, tiles) have no render object of their own; their nearest
-      // descendant render object stands in for them.
-      final hitIndex = rank > 0 ? hitOrder[element.renderObject] : null;
-      if (hitIndex != null && beatsBest(element, rank, hitIndex)) {
-        best = element;
-        bestRank = rank;
-        bestHitIndex = hitIndex;
+      // Null when this tap couldn't reach the element.
+      final hitIndex = rank > 0 ? hitOrder[ro] : null;
+      if (hitIndex != null) {
+        final enabled = _enabled(w);
+        if (beatsBest(element, rank, hitIndex, enabled)) {
+          best = element;
+          bestRank = rank;
+          bestHitIndex = hitIndex;
+          bestEnabled = enabled;
+        }
       }
-      if (w is CheckboxListTile || w is SwitchListTile) composite = w;
-      if (w is InkResponse && _targetRank(w) > 0) inkOwner = w;
+      if (slots == null && rank > 0) slots = _developerSlots(w);
+      if (w is InkResponse && rank > 0) inkOwner = w;
+      final childSlots = slots;
       final owner = inkOwner;
-      element.visitChildElements((child) => visit(child, composite, owner));
+      element.visitChildElements((child) => visit(child, childSlots, owner));
       if (inSlot && identical(best, bestOutsideSlot)) {
         bestRank = rankOutsideSlot;
       }
@@ -117,7 +130,7 @@ class TargetResolver {
     if (target == null) return null;
     return InteractionTarget(
       element: target,
-      enabled: _enabled(target.widget),
+      enabled: bestEnabled,
       // Not MediaQuery.maybeOf: that would subscribe the app's own widget to
       // MediaQuery changes just because it was tapped.
       gestureSettings: target
@@ -153,20 +166,18 @@ class TargetResolver {
     return true;
   }
 
-  /// Whether [w] is one of [composite]'s developer-supplied content slots.
-  bool _isContentSlot(Widget composite, Widget w) {
-    if (composite is CheckboxListTile) {
-      return identical(w, composite.secondary) ||
-          identical(w, composite.title) ||
-          identical(w, composite.subtitle);
-    }
-    if (composite is SwitchListTile) {
-      return identical(w, composite.secondary) ||
-          identical(w, composite.title) ||
-          identical(w, composite.subtitle);
-    }
-    return false;
-  }
+  /// The slots of [w] that hold developer-supplied widgets, or null when
+  /// [w] has none. Only the widget passed in a slot counts as entering it.
+  List<Widget?>? _developerSlots(Widget w) => switch (w) {
+        ButtonStyleButton() => [w.child],
+        MaterialButton() => [w.child],
+        CupertinoButton() => [w.child],
+        FloatingActionButton() => [w.child],
+        ListTile() => [w.leading, w.title, w.subtitle, w.trailing],
+        CheckboxListTile() => [w.secondary, w.title, w.subtitle],
+        SwitchListTile() => [w.secondary, w.title, w.subtitle],
+        _ => null,
+      };
 
   /// [hit] and all of their render-tree ancestors. Transforms hit-test
   /// their children without adding themselves to the result, so the

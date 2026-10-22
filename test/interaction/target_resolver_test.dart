@@ -2,6 +2,7 @@ import 'package:amplitude_flutter/src/interaction/target_resolver.dart';
 import 'package:flutter/cupertino.dart' show CupertinoButton;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 int _countingBuilds = 0;
@@ -16,6 +17,20 @@ class _CountingGestureDetector extends GestureDetector {
     _countingBuilds++;
     return super.build(context);
   }
+}
+
+/// Joins the hit path without ending it, as a translucent box with nothing
+/// hit beneath it does, and handles nothing.
+class _HitButNotHandled extends SingleChildRenderObjectWidget {
+  const _HitButNotHandled();
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderHitButNotHandled();
+}
+
+class _RenderHitButNotHandled extends RenderProxyBoxWithHitTestBehavior {
+  _RenderHitButNotHandled() : super(behavior: HitTestBehavior.translucent);
 }
 
 InteractionTarget? resolveAt(WidgetTester t, Offset at) =>
@@ -531,7 +546,8 @@ void main() {
 
         await t.tapAt(p);
 
-        expect(ran, isNotNull);
+        // The overlay joined the arena first, so it wins the unresolved tap.
+        expect(ran, 'over');
         expect(keyOf(resolveAt(t, p)), ran);
       });
 
@@ -555,7 +571,8 @@ void main() {
 
         await t.tapAt(p);
 
-        expect(ran, isNotNull);
+        // The overlay joined the arena first, so it wins the unresolved tap.
+        expect(ran, 'over');
         expect(keyOf(resolveAt(t, p)), ran);
       });
 
@@ -581,10 +598,182 @@ void main() {
       });
     });
 
+    group('nested handlers follow the gesture arena', () {
+      // Real-tap oracle: the callback that ran must be the one resolved.
+      Future<void> expectResolvesLikeTap(
+        WidgetTester t,
+        Offset p,
+        List<String> ran,
+        String expected,
+      ) async {
+        final resolved = keyOf(resolveAt(t, p));
+        ran.clear();
+        await t.tapAt(p);
+        await t.pump(const Duration(seconds: 1));
+        expect(ran, [expected], reason: 'callback that ran at $p');
+        expect(resolved, expected, reason: 'resolved at $p');
+      }
+
+      testWidgets('a GestureDetector in a ListTile title wins', (t) async {
+        final ran = <String>[];
+        await t.pumpWidget(
+          app(
+            SizedBox(
+              width: 300,
+              child: ListTile(
+                key: const ValueKey('tile'),
+                onTap: () => ran.add('tile'),
+                title: GestureDetector(
+                  key: const ValueKey('link'),
+                  onTap: () => ran.add('link'),
+                  child: const Text('link'),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        await expectResolvesLikeTap(t, t.getCenter(byId('link')), ran, 'link');
+      });
+
+      testWidgets("an InkWell in an ElevatedButton's child wins", (t) async {
+        final ran = <String>[];
+        await t.pumpWidget(
+          app(
+            ElevatedButton(
+              key: const ValueKey('btn'),
+              onPressed: () => ran.add('btn'),
+              child: InkWell(
+                key: const ValueKey('ink'),
+                onTap: () => ran.add('ink'),
+                child: const Text('ink'),
+              ),
+            ),
+          ),
+        );
+
+        await expectResolvesLikeTap(t, t.getCenter(byId('ink')), ran, 'ink');
+      });
+
+      testWidgets("a GestureDetector in an InkWell's child wins", (t) async {
+        final ran = <String>[];
+        await t.pumpWidget(
+          app(
+            Material(
+              child: InkWell(
+                key: const ValueKey('ink'),
+                onTap: () => ran.add('ink'),
+                child: GestureDetector(
+                  key: const ValueKey('gd'),
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => ran.add('gd'),
+                  child: const SizedBox(width: 80, height: 40),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        await expectResolvesLikeTap(t, t.getCenter(byId('gd')), ran, 'gd');
+      });
+
+      testWidgets('a disabled control in an enabled tile credits the tile',
+          (t) async {
+        final ran = <String>[];
+        await t.pumpWidget(
+          app(
+            SizedBox(
+              width: 300,
+              child: ListTile(
+                key: const ValueKey('tile'),
+                onTap: () => ran.add('tile'),
+                title: const Text('Row'),
+                trailing: const IconButton(
+                  key: ValueKey('icon'),
+                  onPressed: null,
+                  icon: Icon(Icons.delete),
+                ),
+              ),
+            ),
+          ),
+        );
+        final p = t.getCenter(byId('icon'));
+
+        await expectResolvesLikeTap(t, p, ran, 'tile');
+        expect(resolveAt(t, p)!.enabled, isTrue);
+      });
+
+      testWidgets('leaving a slot restores the rank it reset', (t) async {
+        // The `secondary` slot is moved over the tile's own checkbox, so
+        // the hit path runs through the slot first and then the checkbox.
+        // Without the restore the checkbox, ranked below the tile, would
+        // win against a zero rank left over from the slot.
+        final ran = <String>[];
+        Widget tile(Offset shift) => app(
+              SizedBox(
+                width: 300,
+                child: CheckboxListTile(
+                  key: const ValueKey('tile'),
+                  value: false,
+                  onChanged: (_) => ran.add('tile'),
+                  title: const Text('Title'),
+                  secondary: Transform.translate(
+                    offset: shift,
+                    child: const SizedBox(
+                      key: ValueKey('shifted'),
+                      width: 24,
+                      height: 24,
+                      child: _HitButNotHandled(),
+                    ),
+                  ),
+                ),
+              ),
+            );
+        await t.pumpWidget(tile(Offset.zero));
+        final shift =
+            t.getCenter(find.byType(Checkbox)) - t.getCenter(byId('shifted'));
+        await t.pumpWidget(tile(shift));
+        final p = t.getCenter(find.byType(Checkbox));
+        final hitPath = t.hitTestOnBinding(p).path.map((e) => e.target);
+        expect(
+            hitPath, contains(t.renderObject(find.byType(_HitButNotHandled))));
+        expect(hitPath, contains(t.renderObject(find.byType(Checkbox))));
+
+        await expectResolvesLikeTap(t, p, ran, 'tile');
+      });
+    });
+
+    testWidgets('an invisible control that keeps interactivity is a target',
+        (t) async {
+      final ran = <String>[];
+      await t.pumpWidget(
+        app(
+          Visibility(
+            visible: false,
+            maintainSize: true,
+            maintainState: true,
+            maintainAnimation: true,
+            maintainInteractivity: true,
+            child: ElevatedButton(
+              key: const ValueKey('ghost'),
+              onPressed: () => ran.add('ghost'),
+              child: const Text('ghost'),
+            ),
+          ),
+        ),
+      );
+      final p = t.getCenter(byId('ghost'));
+      final resolved = keyOf(resolveAt(t, p));
+
+      await t.tapAt(p);
+
+      expect(ran, ['ghost']);
+      expect(resolved, 'ghost');
+    });
+
     group('transformed ancestors', () {
-      // Two 80x60 controls 40 apart, so the row is 200x60, centred in a
-      // 400x400 box under the transform, which keeps the transformed
-      // controls inside the transform's own layout bounds.
+      // Fixture layout: two 80x60 controls 40 apart form a 200x60 row,
+      // centred in a 400x400 box under the transform.
       Future<void> pumpSideBySide(
         WidgetTester t,
         Widget Function(Widget row) wrap,
