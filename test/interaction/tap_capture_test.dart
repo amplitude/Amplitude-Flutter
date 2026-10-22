@@ -287,11 +287,49 @@ void main() {
       expect(joined, hasLength(1));
     });
 
+    testWidgets('no snapshot is built for a press that cannot become a tap',
+        (t) async {
+      final snapshots = <Object?>[];
+      final out = <TapObservation<Object?>>[];
+      final capture = TapCapture<Object?>(
+        buildSnapshot: (target) {
+          final key = (target.element.widget.key as ValueKey?)?.value;
+          snapshots.add(key);
+          return key;
+        },
+        onTap: out.add,
+        enabled: true,
+      );
+      addTearDown(capture.dispose);
+      await t.pumpWidget(app(control('button', () {})));
+      final point = t.getCenter(byId('button'));
+
+      final secondary = await t.startGesture(
+        point,
+        kind: PointerDeviceKind.mouse,
+        buttons: kSecondaryButton,
+      );
+      await secondary.up();
+      expect(snapshots, isEmpty);
+
+      final first = await t.startGesture(point, pointer: 7);
+      final second = await t.startGesture(point, pointer: 8);
+      await second.up();
+      await first.up();
+      expect(snapshots, ['button']); // Only the first press.
+      expect(out, isEmpty);
+
+      await t.tap(byId('button'));
+      expect(snapshots, ['button', 'button']);
+      expect(out.single.snapshot, 'button');
+    });
+
     testWidgets('a throwing consumer never breaks the app or other consumers',
         (t) async {
+      final xDelivered = <TapObservation<Object?>>[];
       final x = TapCapture<Object?>(
         buildSnapshot: (_) => throw StateError('snapshot'),
-        onTap: (_) => fail('a throwing snapshot must not be delivered'),
+        onTap: xDelivered.add,
         enabled: true,
       );
       addTearDown(x.dispose);
@@ -311,6 +349,7 @@ void main() {
       await t.tap(byId('button'));
       expect(callbacks, 2);
       expect(z, hasLength(2));
+      expect(xDelivered, isEmpty); // Its snapshot threw at pointer-down.
     });
 
     testWidgets('disabled targets are delivered with enabled false', (t) async {

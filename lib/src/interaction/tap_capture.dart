@@ -30,16 +30,17 @@ class TapObservation<T> {
 /// shared between every [TapCapture].
 class TapCapture<T> implements _TapConsumer {
   TapCapture({
-    required this.buildSnapshot,
-    required this.onTap,
+    required TapSnapshotBuilder<T> buildSnapshot,
+    required void Function(TapObservation<T>) onTap,
     required bool enabled,
-  }) {
+  })  : _buildSnapshot = buildSnapshot,
+        _onTap = onTap {
     WidgetsFlutterBinding.ensureInitialized();
     configure(enabled: enabled);
   }
 
-  final TapSnapshotBuilder<T> buildSnapshot;
-  final void Function(TapObservation<T>) onTap;
+  final TapSnapshotBuilder<T> _buildSnapshot;
+  final void Function(TapObservation<T>) _onTap;
   bool _disposed = false;
 
   @override
@@ -72,9 +73,9 @@ class TapCapture<T> implements _TapConsumer {
     InteractionTarget target,
     PointerDownEvent down,
   ) {
-    final snapshot = buildSnapshot(target);
+    final snapshot = _buildSnapshot(target);
     final enabled = target.enabled;
-    return (up) => onTap(
+    return (up) => _onTap(
           TapObservation(
             snapshot: snapshot,
             enabled: enabled,
@@ -152,9 +153,9 @@ class _PointerObserver {
       } else if (event is PointerUpEvent) {
         _up(event);
       }
-    } catch (error) {
+    } catch (error, stack) {
       _contacts.remove(event.pointer);
-      _report(error);
+      _report(error, stack);
     }
   }
 
@@ -166,30 +167,34 @@ class _PointerObserver {
         attempt.valid = false;
       }
     }
+    final valid = !overlapping && event.buttons == kPrimaryButton;
+    // Resolved even for an attempt that is already invalid: the target's
+    // gesture settings give the slop.
     InteractionTarget? target;
     try {
       target = const TargetResolver().resolve(event);
-    } catch (error) {
-      _report(error);
+    } catch (error, stack) {
+      _report(error, stack);
     }
     final consumers = <_TapConsumer, _Pending>{};
-    if (target != null) {
+    // No consumer builds a snapshot for a press that can't become a tap.
+    if (target != null && valid) {
       for (final consumer in _consumers.toList()) {
         try {
           consumers[consumer] =
               _Pending(consumer._generation, consumer._begin(target, event));
-        } catch (error) {
-          _report(error);
+        } catch (error, stack) {
+          _report(error, stack);
         }
       }
     }
-    // Recorded even without a target, so an overlapping down still
-    // invalidates it.
+    // Recorded even when invalid or without a target, so an overlapping
+    // down still invalidates it.
     _contacts[event.pointer] = _Attempt(
       event,
       computeHitSlop(event.kind, target?.gestureSettings),
       consumers,
-    )..valid = !overlapping && event.buttons == kPrimaryButton;
+    )..valid = valid;
   }
 
   void _up(PointerUpEvent event) {
@@ -208,16 +213,16 @@ class _PointerObserver {
           consumer._generation == pending.generation) {
         try {
           pending.deliver(event);
-        } catch (error) {
-          _report(error);
+        } catch (error, stack) {
+          _report(error, stack);
         }
       }
     }
   }
 
-  void _report(Object error) {
+  void _report(Object error, StackTrace stack) {
     assert(() {
-      debugPrint('Amplitude tap capture: $error');
+      debugPrint('Amplitude tap capture: $error\n$stack');
       return true;
     }());
   }
