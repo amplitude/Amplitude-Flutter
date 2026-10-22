@@ -169,9 +169,13 @@ final switchListTileRow = ControlSpec.of<SwitchListTile>(
   builds: [listTileRow, switchRow],
 );
 
+// Without a child it builds an IconButton, which is its own. The child slot
+// keeps a developer's IconButton passed as the child a target of its own.
 final popupMenuButtonRow = ControlSpec.of<PopupMenuButton>(
   name: 'PopupMenuButton',
-  isActive: (w) => w.enabled,
+  isEnabled: (w) => w.enabled,
+  slots: (w) => [w.child, w.icon],
+  builds: [iconButtonRow],
 );
 
 final textFieldRow = ControlSpec.of<TextField>(
