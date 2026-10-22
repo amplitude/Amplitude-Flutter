@@ -262,6 +262,10 @@ bool _acceptsPrimaryTap(RawGestureDetector w) {
     try {
       final r = factory.constructor();
       try {
+        // A subclass can restrict where it accepts a pointer, as Scrollbar's
+        // track recognizer does, so only a plain one counts. Flutter's and
+        // cupertino_ui's CupertinoButton build a plain one.
+        if (r.runtimeType != TapGestureRecognizer) continue;
         factory.initializer(r);
         if (r.onTapDown != null ||
             r.onTapUp != null ||

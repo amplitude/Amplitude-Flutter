@@ -777,6 +777,109 @@ void main() {
     expect(resolveAt(t, t.getCenter(find.byType(ListView))), isNull);
   });
 
+  // A Scrollbar wraps its scrollable in a RawGestureDetector whose track
+  // recognizer, a TapGestureRecognizer subclass, takes only pointers over
+  // the track.
+  group('inside a Scrollbar', () {
+    /// An overflowing list of plain rows, with [control] as its first row.
+    Widget list({Widget? control, ScrollController? controller}) => ListView(
+          controller: controller,
+          children: [
+            if (control != null) control,
+            for (var i = 0; i < 50; i++) Text('row $i'),
+          ],
+        );
+
+    testWidgets(
+      'a tap on plain content inside a Scrollbar reports nothing',
+      variant: TargetPlatformVariant(
+        {TargetPlatform.iOS, TargetPlatform.macOS},
+      ),
+      (t) async {
+        final controller = ScrollController();
+        addTearDown(controller.dispose);
+        await t.pumpWidget(
+          app(
+            Scrollbar(
+              controller: controller,
+              thumbVisibility: true,
+              child: list(controller: controller),
+            ),
+          ),
+        );
+        // The Scrollbar turns on its gestures once it sees the metrics.
+        await t.pump();
+        final p = t.getCenter(find.text('row 3'));
+
+        final r = resolveAt(t, p);
+        await t.tapAt(p);
+        await t.pump(const Duration(seconds: 1));
+
+        expect(r, isNull);
+      },
+    );
+
+    // macOS's default ScrollBehavior adds the Scrollbar.
+    testWidgets(
+      'a disabled button inside a Scrollbar is reported as itself',
+      variant: TargetPlatformVariant.only(TargetPlatform.macOS),
+      (t) async {
+        await t.pumpWidget(
+          app(
+            list(
+              control: const ElevatedButton(
+                key: formKey,
+                onPressed: null,
+                child: Text('x'),
+              ),
+            ),
+          ),
+        );
+        // The Scrollbar turns on its gestures once it sees the metrics.
+        await t.pump();
+        final p = t.getCenter(find.byKey(formKey));
+
+        final r = resolveAt(t, p);
+        await t.tapAt(p);
+        await t.pump(const Duration(seconds: 1));
+
+        expect(r?.element, same(t.element(find.byKey(formKey))));
+        expect(controlSpecOf(r!.element.widget)?.name, 'ElevatedButton');
+        expect(r.enabled, isFalse);
+      },
+    );
+
+    testWidgets(
+      'an enabled control inside a Scrollbar is still credited',
+      variant: TargetPlatformVariant.only(TargetPlatform.macOS),
+      (t) async {
+        var ran = 0;
+        await t.pumpWidget(
+          app(
+            list(
+              control: ElevatedButton(
+                key: formKey,
+                onPressed: () => ran++,
+                child: const Text('x'),
+              ),
+            ),
+          ),
+        );
+        // The Scrollbar turns on its gestures once it sees the metrics.
+        await t.pump();
+        final p = t.getCenter(find.byKey(formKey));
+
+        final r = resolveAt(t, p);
+        await t.tapAt(p);
+        await t.pump(const Duration(seconds: 1));
+
+        expect(ran, 1);
+        expect(r?.element, same(t.element(find.byKey(formKey))));
+        expect(r!.enabled, isTrue);
+      },
+    );
+  });
+
   testWidgets(
       "a developer IconButton in a PopupMenuButton's child takes the tap",
       (t) async {
