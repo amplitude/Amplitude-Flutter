@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:amplitude_flutter/src/interaction/tap_capture.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -177,6 +179,52 @@ void main() {
       await t.pump(const Duration(seconds: 5));
       await g.up();
       expect(out.length, 1);
+    });
+
+    testWidgets('a mouse click that drifts 5 px still counts', (t) async {
+      final out = <TapObservation<Object?>>[];
+      keyCapture(out);
+      var ran = false;
+      await t.pumpWidget(app(control('a', () => ran = true)));
+      final g = await t.startGesture(
+        t.getCenter(byId('a')),
+        kind: PointerDeviceKind.mouse,
+      );
+      await g.moveBy(const Offset(5, 0));
+      await g.up();
+      expect(ran, isTrue);
+      expect(out.single.snapshot, 'a');
+    });
+
+    testWidgets('a mouse drag past the tap slop does not count', (t) async {
+      final out = <TapObservation<Object?>>[];
+      keyCapture(out);
+      var ran = false;
+      await t.pumpWidget(app(control('a', () => ran = true)));
+      final g = await t.startGesture(
+        t.getCenter(byId('a')),
+        kind: PointerDeviceKind.mouse,
+      );
+      await g.moveBy(const Offset(kTouchSlop + 2, 0));
+      await g.up();
+      expect(ran, isFalse);
+      expect(out, isEmpty);
+    });
+
+    testWidgets("touch slop follows Flutter's tap recognizer", (t) async {
+      t.view.gestureSettings = ui.GestureSettings(
+        physicalTouchSlop: 8 * t.view.devicePixelRatio,
+      );
+      addTearDown(t.view.resetGestureSettings);
+      final out = <TapObservation<Object?>>[];
+      keyCapture(out);
+      var ran = false;
+      await t.pumpWidget(app(control('a', () => ran = true)));
+      final g = await t.startGesture(t.getCenter(byId('a')));
+      await g.moveBy(const Offset(12, 0));
+      await g.up();
+      // 3.19's tap recognizer ignores the platform slop; later ones use it.
+      expect(out.isNotEmpty, ran);
     });
 
     testWidgets('secondary mouse input never counts', (t) async {

@@ -116,6 +116,7 @@ class _PointerObserver {
   static final instance = _PointerObserver();
   final _consumers = <_TapConsumer>{};
   final _contacts = <int, _Attempt>{};
+  final _slops = <DeviceGestureSettings?, double>{};
 
   void add(_TapConsumer consumer) {
     if (_consumers.isEmpty) {
@@ -192,10 +193,22 @@ class _PointerObserver {
     // down still invalidates it.
     _contacts[event.pointer] = _Attempt(
       event,
-      computeHitSlop(event.kind, target?.gestureSettings),
+      _tapSlop(target?.gestureSettings),
       consumers,
     )..valid = valid;
   }
+
+  /// The slop Flutter's tap recognizer uses, for every pointer kind: 18 px on
+  /// 3.19, and the platform touch slop on later versions.
+  double _tapSlop(DeviceGestureSettings? settings) =>
+      _slops.putIfAbsent(settings, () {
+        final recognizer = TapGestureRecognizer()..gestureSettings = settings;
+        try {
+          return recognizer.preAcceptSlopTolerance ?? kTouchSlop;
+        } finally {
+          recognizer.dispose();
+        }
+      });
 
   void _up(PointerUpEvent event) {
     final attempt = _contacts.remove(event.pointer);
