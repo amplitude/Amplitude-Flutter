@@ -583,10 +583,8 @@ void main() {
 
     group('transformed ancestors', () {
       // Two 80x60 controls 40 apart, so the row is 200x60, centred in a
-      // 400x400 box under the transform. The box keeps the transformed
-      // controls inside the transform's own layout bounds: the resolver
-      // prunes by each ancestor box's bounds, while RenderTransform hit-tests
-      // its child without checking its own size.
+      // 400x400 box under the transform, which keeps the transformed
+      // controls inside the transform's own layout bounds.
       Future<void> pumpSideBySide(
         WidgetTester t,
         Widget Function(Widget row) wrap,
@@ -690,10 +688,6 @@ void main() {
           ];
 
       testWidgets('a perspective ancestor resolves the control under the tap',
-          skip: true, // The resolver prunes with RenderBox.globalToLocal,
-          // which unprojects perspective differently from hit testing
-          // (BoxHitTestResult.addWithPaintTransform), so even a control's
-          // centre is pruned. Pre-existing; not changed by the linear walk.
           (t) async {
         final ran = <String>[];
         await pumpSideBySide(t, perspective, ran);
@@ -705,15 +699,97 @@ void main() {
         await expectResolvesLikeTap(t, pb, ran, 'b');
       });
 
-      testWidgets('a perspective ancestor maps points as globalToLocal does',
-          (t) async {
-        await pumpSideBySide(t, perspective, <String>[]);
+      // In the next three tests the control leaves the layout box of the
+      // Transform (or SlideTransition's FractionalTranslation) itself, whose
+      // hitTest skips its own bounds check. A plain box such as SizedBox
+      // around it would check its bounds, and the tap would miss.
+      Widget recorder(String id, double size, List<String> ran) =>
+          GestureDetector(
+            key: ValueKey(id),
+            behavior: HitTestBehavior.opaque,
+            onTap: () => ran.add(id),
+            child: SizedBox(width: size, height: size),
+          );
 
-        // The resolver asserts, in debug, that each cached local position
-        // matches RenderBox.globalToLocal, including its unprojection.
-        for (final p in perspectivePoints(t)) {
-          expect(() => resolveAt(t, p), returnsNormally, reason: '$p');
-        }
+      testWidgets(
+          "content translated outside its parent's box resolves to the control",
+          (t) async {
+        final ran = <String>[];
+        await t.pumpWidget(
+          app(
+            Transform.translate(
+              offset: const Offset(150, 0),
+              child: recorder('moved', 80, ran),
+            ),
+          ),
+        );
+
+        await expectResolvesLikeTap(
+            t, t.getCenter(byId('moved')), ran, 'moved');
+      });
+
+      testWidgets(
+          "content scaled beyond its parent's box resolves to the control",
+          (t) async {
+        final ran = <String>[];
+        await t.pumpWidget(
+          app(
+            Transform.scale(
+              scale: 3,
+              child: recorder('big', 60, ran),
+            ),
+          ),
+        );
+        // Scaled 3x about its centre, `big` spans 90 either side of it; the
+        // transform's own 60x60 box spans only 30.
+        final p = t.getCenter(byId('big')) + const Offset(50, 0);
+
+        await expectResolvesLikeTap(t, p, ran, 'big');
+      });
+
+      testWidgets('a control mid-SlideTransition resolves to the control',
+          (t) async {
+        final ran = <String>[];
+        await t.pumpWidget(
+          app(
+            SlideTransition(
+              position: const AlwaysStoppedAnimation(Offset(1.5, 0)),
+              child: recorder('sliding', 100, ran),
+            ),
+          ),
+        );
+
+        await expectResolvesLikeTap(
+            t, t.getCenter(byId('sliding')), ran, 'sliding');
+      });
+
+      testWidgets('OverlayPortal content resolves to the control',
+          skip: true, // The overlay child renders under the Overlay's
+          // theater, which hit-tests it and stops, so the page subtree holding
+          // the OverlayPortal element (route transitions down to its parent)
+          // is off the hit path and pruned before the walk reaches the
+          // portal. Exempting OverlayPortal itself from pruning can't help.
+          (t) async {
+        final ran = <String>[];
+        final controller = OverlayPortalController();
+        await t.pumpWidget(
+          app(
+            OverlayPortal(
+              controller: controller,
+              overlayChildBuilder: (_) => Positioned(
+                left: 300,
+                top: 300,
+                child: recorder('portal', 80, ran),
+              ),
+              child: const SizedBox(width: 10, height: 10),
+            ),
+          ),
+        );
+        controller.show();
+        await t.pump();
+
+        await expectResolvesLikeTap(
+            t, t.getCenter(byId('portal')), ran, 'portal');
       });
     });
   });
