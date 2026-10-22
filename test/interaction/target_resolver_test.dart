@@ -703,11 +703,13 @@ void main() {
         expect(resolveAt(t, p)!.enabled, isTrue);
       });
 
-      testWidgets('leaving a slot restores the rank it reset', (t) async {
+      testWidgets("a slot doesn't carry into its control's own internals",
+          (t) async {
         // The `secondary` slot is moved over the tile's own checkbox, so
         // the hit path runs through the slot first and then the checkbox.
-        // Without the restore the checkbox, ranked below the tile, would
-        // win against a zero rank left over from the slot.
+        // Leaving the slot must not leave the tile's internals: if it did,
+        // the checkbox the tile builds would be reported instead of the
+        // tile.
         final ran = <String>[];
         Widget tile(Offset shift) => app(
               SizedBox(

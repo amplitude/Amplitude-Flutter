@@ -2,9 +2,10 @@
 // Original target ranking, hit-path checks, hidden-widget pruning and
 // composite-tile handling by Zohaib Farooqi and Wei Sun:
 // https://github.com/amplitude/Amplitude-Flutter/pull/317.
-import 'package:flutter/cupertino.dart' show CupertinoButton;
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+
+import 'control_catalog.dart';
 
 /// The Flutter control a pointer-down landed on.
 class InteractionTarget {
@@ -47,25 +48,24 @@ class TargetResolver {
     // that a Transform or SlideTransition moved outside its box.
     final searched = _hitPathAndAncestors(hitOrder.keys);
     Element? best;
-    var bestRank = 0;
     var bestHitIndex = 0;
     var bestEnabled = true;
     // Between controls in different branches, such as a translucent overlay
     // and the button beneath it, the one Flutter hit first wins, as it does
-    // in the gesture arena. Between a control and one nested inside it, rank
-    // decides (ties go to the deeper one), except that a disabled control
-    // builds no recognizer, so it can't take a tap from an enabled ancestor.
-    bool beatsBest(Element candidate, int rank, int hitIndex, bool enabled) {
+    // in the gesture arena. Between a control and one nested inside it, the
+    // deeper one wins, except that a disabled control builds no recognizer,
+    // so it can't take a tap from an enabled ancestor.
+    bool beatsBest(Element candidate, int hitIndex, bool enabled) {
       final current = best;
       if (current == null) return true;
       if (!_isAncestor(current, candidate)) return hitIndex < bestHitIndex;
       if (!enabled && bestEnabled) return false;
-      return rank >= bestRank;
+      return true;
     }
 
-    // [slots] holds the developer-supplied slots of the nearest ranked
-    // control above [element] whose slots haven't been entered yet.
-    void visit(Element element, List<Widget?>? slots, InkResponse? inkOwner) {
+    // [owner] is the nearest enclosing control whose internals the walk is
+    // in. It is null at the top and inside a developer-supplied slot.
+    void visit(Element element, _Owner? owner) {
       if (!element.mounted) return;
       final w = element.widget;
       if (w is View && w.view.viewId != event.viewId) return;
@@ -82,50 +82,43 @@ class TargetResolver {
       // for it both here and in [hitOrder].
       final ro = element.renderObject;
       if (ro != null && !searched.contains(ro)) return;
-      // A developer handler inside a ranked control's slot (a
-      // GestureDetector in a ListTile title, an InkWell in a button's child)
-      // is deeper in the arena and wins the tap, so reset the rank on
-      // entering a slot. Framework internals between the control and its
-      // slots keep the control's rank, since they aren't the slot widget.
-      // The rank is restored on leaving the slot so the reset can't leak
-      // into sibling branches, such as a CheckboxListTile's own checkbox.
-      final inSlot = slots != null && slots.any((s) => identical(s, w));
-      final bestOutsideSlot = best;
-      final rankOutsideSlot = bestRank;
-      if (inSlot) {
-        bestRank = 0;
-        slots = null;
+      // A developer handler inside a control's slot (a GestureDetector in a
+      // ListTile title, an InkWell in a button's child) is deeper in the
+      // arena and wins the tap, so entering a slot leaves the control's
+      // internals. Framework widgets between the control and its slots
+      // aren't the slot widget, so they stay internal.
+      if (owner != null && owner.slots.any((s) => identical(s, w))) {
+        owner = null;
       }
-      // InkResponse/InkWell build a GestureDetector of their own with equal
-      // rank; skip it so the developer's widget is reported, and resume
-      // normal ranking inside the developer's `child`.
-      if (inkOwner != null && identical(w, inkOwner.child)) inkOwner = null;
-      final rank =
-          w is GestureDetector && inkOwner != null ? 0 : _targetRank(w);
-      // Null when this tap couldn't reach the element.
-      final hitIndex = rank > 0 ? hitOrder[ro] : null;
-      if (hitIndex != null) {
-        final enabled = _enabled(w);
-        if (beatsBest(element, rank, hitIndex, enabled)) {
-          best = element;
-          bestRank = rank;
-          bestHitIndex = hitIndex;
-          bestEnabled = enabled;
+      final spec = controlRowOfType(w);
+      var childOwner = owner;
+      // The generic handlers a control is built from (a button's InkWell, an
+      // InkWell's own GestureDetector) and the controls it lists in `builds`
+      // (a CheckboxListTile's ListTile and Checkbox) are its internals, not
+      // targets. They are ruled out before isActive runs.
+      final internal = owner != null &&
+          spec != null &&
+          (spec.generic || owner.spec.builds.contains(spec));
+      if (spec != null && !internal && spec.isActive(w)) {
+        // Null when this tap couldn't reach the element.
+        final hitIndex = hitOrder[ro];
+        if (hitIndex != null) {
+          final enabled = spec.isEnabled(w);
+          if (beatsBest(element, hitIndex, enabled)) {
+            best = element;
+            bestHitIndex = hitIndex;
+            bestEnabled = enabled;
+          }
         }
+        // Even when it wasn't hit, or lost: what it builds is still its own.
+        childOwner = _Owner(spec, spec.slots(w));
       }
-      if (slots == null && rank > 0) slots = _developerSlots(w);
-      if (w is InkResponse && rank > 0) inkOwner = w;
-      final childSlots = slots;
-      final owner = inkOwner;
-      element.visitChildElements((child) => visit(child, childSlots, owner));
-      if (inSlot && identical(best, bestOutsideSlot)) {
-        bestRank = rankOutsideSlot;
-      }
+      element.visitChildElements((child) => visit(child, childOwner));
     }
 
     final root = WidgetsBinding.instance.rootElement;
     if (root == null) return null;
-    visit(root, null, null);
+    visit(root, null);
     final target = best;
     if (target == null) return null;
     return InteractionTarget(
@@ -139,45 +132,6 @@ class TargetResolver {
           .gestureSettings,
     );
   }
-
-  bool _enabled(Widget w) {
-    if (w is ButtonStyleButton) {
-      return w.onPressed != null || w.onLongPress != null;
-    }
-    if (w is MaterialButton) {
-      return w.onPressed != null || w.onLongPress != null;
-    }
-    if (w is IconButton) return w.onPressed != null;
-    if (w is FloatingActionButton) return w.onPressed != null;
-    if (w is CupertinoButton) return w.onPressed != null;
-    if (w is CheckboxListTile) return w.onChanged != null;
-    if (w is SwitchListTile) return w.onChanged != null;
-    if (w is Checkbox) return w.onChanged != null;
-    if (w is Switch) return w.onChanged != null;
-    if (w is DropdownButton) {
-      // `w is DropdownButton` matches any DropdownButton<T>; reading the
-      // typed getters through the static type throws a cast error for
-      // every real (typed) dropdown, so read them dynamically.
-      final dynamic dropdown = w;
-      return dropdown.onChanged != null &&
-          ((dropdown.items as List?)?.isNotEmpty ?? false);
-    }
-    if (w is ListTile) return w.enabled;
-    return true;
-  }
-
-  /// The slots of [w] that hold developer-supplied widgets, or null when
-  /// [w] has none. Only the widget passed in a slot counts as entering it.
-  List<Widget?>? _developerSlots(Widget w) => switch (w) {
-        ButtonStyleButton() => [w.child],
-        MaterialButton() => [w.child],
-        CupertinoButton() => [w.child],
-        FloatingActionButton() => [w.child],
-        ListTile() => [w.leading, w.title, w.subtitle, w.trailing],
-        CheckboxListTile() => [w.secondary, w.title, w.subtitle],
-        SwitchListTile() => [w.secondary, w.title, w.subtitle],
-        _ => null,
-      };
 
   /// [hit] and all of their render-tree ancestors. Transforms hit-test
   /// their children without adding themselves to the result, so the
@@ -202,58 +156,12 @@ class TargetResolver {
     });
     return found;
   }
+}
 
-  /// Ranks how specifically [w] identifies an interaction target.
-  ///
-  /// Returns 0 for non-interactive widgets. Concrete controls rank above the
-  /// generic handlers (`InkResponse`, `GestureDetector`) they are built
-  /// from, and composite controls that build other public controls rank
-  /// above those (`CheckboxListTile` builds a `ListTile` and a `Checkbox`),
-  /// so during the deepest-wins descent a control is not displaced by its
-  /// own internals, while a deeper control nested inside another (e.g. an
-  /// `IconButton` inside a `ListTile`) still wins.
-  int _targetRank(Widget w) {
-    // Private widgets are framework/library internals (e.g. Material 3's
-    // IconButton builds a private ButtonStyleButton subclass). Reporting
-    // them would displace the public widget the developer actually wrote.
-    if (w is ButtonStyleButton) {
-      return w is ElevatedButton ||
-              w is TextButton ||
-              w is OutlinedButton ||
-              w is FilledButton
-          ? 2
-          : 0;
-    }
-    if (w is MaterialButton ||
-        w is IconButton ||
-        w is FloatingActionButton ||
-        w is CupertinoButton ||
-        w is Checkbox ||
-        w is Switch ||
-        w is DropdownButton) {
-      return 2;
-    }
-    if (w is ListTile) {
-      return (w.onTap != null || w.onLongPress != null) ? 2 : 0;
-    }
-    if (w is CheckboxListTile || w is SwitchListTile) return 3;
-    if (w is PopupMenuButton) return w.enabled ? 2 : 0;
-    if (w is TextField) return (w.enabled ?? true) ? 2 : 0;
-    if (w is InkResponse) {
-      // Includes InkWell.
-      return (w.onTap != null || w.onLongPress != null || w.onDoubleTap != null)
-          ? 1
-          : 0;
-    }
-    if (w is GestureDetector) {
-      return (w.onTap != null ||
-              w.onTapUp != null ||
-              w.onTapDown != null ||
-              w.onLongPress != null ||
-              w.onDoubleTap != null)
-          ? 1
-          : 0;
-    }
-    return 0;
-  }
+/// A control whose internals the walk is in, and its developer slots.
+class _Owner {
+  _Owner(this.spec, this.slots);
+
+  final ControlSpec spec;
+  final List<Widget?> slots;
 }
