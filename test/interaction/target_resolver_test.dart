@@ -867,5 +867,61 @@ void main() {
             t, t.getCenter(byId('portal')), ran, 'portal');
       });
     });
+
+    group('scrolling', () {
+      testWidgets('a list rebuilt mid-fling still reports taps once it settles',
+          (t) async {
+        final taps = <int>[];
+        final notifier = ValueNotifier<int>(0);
+        addTearDown(notifier.dispose);
+        final controller = ScrollController();
+        addTearDown(controller.dispose);
+        await t.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: ValueListenableBuilder<int>(
+                valueListenable: notifier,
+                builder: (_, v, __) => ListView.builder(
+                  controller: controller,
+                  itemCount: 2000,
+                  itemBuilder: (_, i) => ListTile(
+                    key: ValueKey(i),
+                    title: Text('Item $i $v'),
+                    onTap: () => taps.add(i),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        await t.fling(find.byType(ListView), const Offset(0, -300), 3000);
+        await t.pump();
+        await t.pump(const Duration(milliseconds: 100));
+        notifier.value++;
+        await t.pump();
+        await t.pumpAndSettle();
+
+        // Scrollable flips its IgnorePointer through the render object, so
+        // a rebuild mid-fling leaves the widget saying `ignoring: true`.
+        final ignorePointer = t.widget<IgnorePointer>(
+          find
+              .descendant(
+                of: find.byType(Scrollable),
+                matching: find.byType(IgnorePointer),
+              )
+              .first,
+        );
+        expect(ignorePointer.ignoring, isTrue);
+
+        final p = t.getCenter(find.byType(ListView));
+        final resolved = keyOf(resolveAt(t, p));
+        await t.tapAt(p);
+        await t.pump(const Duration(seconds: 1));
+
+        expect(taps, hasLength(1), reason: 'callback that ran at $p');
+        expect(resolved, taps.single, reason: 'resolved at $p');
+      });
+    });
   });
 }

@@ -69,17 +69,12 @@ class TargetResolver {
       if (!element.mounted) return;
       final w = element.widget;
       if (w is View && w.view.viewId != event.viewId) return;
-      // Early exits only: hit-path pruning below would also drop these
-      // branches, since Flutter doesn't hit them.
-      if (w is Visibility && !w.visible && !w.maintainInteractivity ||
-          w is Offstage && w.offstage ||
-          w is IgnorePointer && w.ignoring ||
-          w is AbsorbPointer && w.absorbing) {
-        return;
-      }
       // A component element (a button, a tile) has no render object of its
       // own; this is its nearest descendant render object, which stands in
-      // for it both here and in [hitOrder].
+      // for it both here and in [hitOrder]. Pruning by the hit path also
+      // drops hidden and blocked branches (Offstage, IgnorePointer and the
+      // like) by their live render state. Their widget flags can be stale:
+      // Scrollable toggles its IgnorePointer's render object directly.
       final ro = element.renderObject;
       if (ro != null && !searched.contains(ro)) return;
       // A developer handler inside a control's slot (a GestureDetector in a
