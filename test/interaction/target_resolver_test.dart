@@ -793,13 +793,7 @@ void main() {
             t, t.getCenter(byId('sliding')), ran, 'sliding');
       });
 
-      testWidgets('OverlayPortal content resolves to the control',
-          skip: true, // The overlay child renders under the Overlay's
-          // theater, which hit-tests it and stops, so the page subtree holding
-          // the OverlayPortal element (route transitions down to its parent)
-          // is off the hit path and pruned before the walk reaches the
-          // portal. Exempting OverlayPortal itself from pruning can't help.
-          (t) async {
+      testWidgets('OverlayPortal content resolves to the control', (t) async {
         final ran = <String>[];
         final controller = OverlayPortalController();
         await t.pumpWidget(
@@ -820,6 +814,255 @@ void main() {
 
         await expectResolvesLikeTap(
             t, t.getCenter(byId('portal')), ran, 'portal');
+      });
+    });
+
+    group('OverlayPortal content', () {
+      // Real-tap oracle: the expected callback must run, and the resolver
+      // must pick [target]. Taps at [target]'s centre unless [at] is given.
+      Future<void> expectTapResolvesTo(
+        WidgetTester t,
+        Finder target,
+        List<String> ran,
+        String expected, {
+        Offset? at,
+      }) async {
+        // Read before tapping: the tap can close the menu holding [target].
+        final element = target.evaluate().single;
+        final p = at ?? t.getCenter(target);
+        final resolved = resolveAt(t, p)?.element;
+        ran.clear();
+        await t.tapAt(p);
+        await t.pumpAndSettle();
+        expect(ran, [expected], reason: 'callback that ran at $p');
+        expect(resolved, same(element), reason: 'resolved at $p');
+      }
+
+      // Until controls are identified, a tap on a menu entry resolves to a
+      // gesture detector inside it; what matters here is that the walk
+      // reaches the menu at all.
+      Future<void> expectTapReaches(
+        WidgetTester t,
+        Finder entry,
+        List<String> ran,
+        String expected,
+      ) async {
+        final element = entry.evaluate().single;
+        final p = t.getCenter(entry);
+        final resolved = resolveAt(t, p)?.element;
+        // Checked before tapping: the tap closes the menu.
+        var inside = identical(resolved, element);
+        resolved?.visitAncestorElements((e) {
+          inside = inside || identical(e, element);
+          return !inside;
+        });
+        final description = '$resolved';
+        ran.clear();
+        await t.tapAt(p);
+        await t.pumpAndSettle();
+        expect(ran, [expected], reason: 'callback that ran at $p');
+        expect(inside, isTrue, reason: 'resolved to $description');
+      }
+
+      Widget item(String id, List<String> ran) => MenuItemButton(
+            key: ValueKey(id),
+            onPressed: () => ran.add(id),
+            child: Text(id),
+          );
+
+      Widget menu(List<Widget> children) => MenuAnchor(
+            menuChildren: children,
+            builder: (context, controller, child) => TextButton(
+              onPressed: () => controller.open(),
+              child: const Text('Edit'),
+            ),
+          );
+
+      Future<void> openMenu(WidgetTester t) async {
+        await t.tap(find.text('Edit'));
+        await t.pumpAndSettle();
+      }
+
+      testWidgets('an open MenuAnchor item', (t) async {
+        final ran = <String>[];
+        await t.pumpWidget(app(menu([item('copy', ran), item('paste', ran)])));
+        await openMenu(t);
+
+        await expectTapReaches(t, byId('paste'), ran, 'paste');
+      });
+
+      testWidgets('an item in an open submenu', (t) async {
+        // The submenu's OverlayPortal is inside the first menu's content.
+        final ran = <String>[];
+        await t.pumpWidget(
+          app(
+            menu([
+              SubmenuButton(
+                menuChildren: [item('deep', ran)],
+                child: const Text('More'),
+              ),
+            ]),
+          ),
+        );
+        await openMenu(t);
+        await t.tap(find.text('More'));
+        await t.pumpAndSettle();
+
+        await expectTapReaches(t, byId('deep'), ran, 'deep');
+      });
+
+      testWidgets('a DropdownMenu entry', (t) async {
+        final ran = <String>[];
+        await t.pumpWidget(
+          app(
+            DropdownMenu<String>(
+              onSelected: (value) => ran.add(value!),
+              dropdownMenuEntries: const [
+                DropdownMenuEntry(value: 'apple', label: 'Apple'),
+                DropdownMenuEntry(value: 'pear', label: 'Pear'),
+              ],
+            ),
+          ),
+        );
+        await t.tap(find.byType(TextField));
+        await t.pumpAndSettle();
+        // DropdownMenu also lays out hidden copies of its entries to size
+        // itself; only the copy in the open menu is hit.
+        final pear = find.widgetWithText(MenuItemButton, 'Pear').hitTestable();
+
+        await expectTapReaches(t, pear, ran, 'pear');
+      });
+
+      testWidgets('an Autocomplete option', (t) async {
+        final ran = <String>[];
+        await t.pumpWidget(
+          app(
+            SizedBox(
+              width: 300,
+              child: Autocomplete<String>(
+                optionsBuilder: (value) => ['apple', 'apricot', 'banana']
+                    .where((option) => option.startsWith(value.text)),
+                onSelected: ran.add,
+              ),
+            ),
+          ),
+        );
+        await t.enterText(find.byType(TextField), 'ap');
+        await t.pumpAndSettle();
+        final apricot = find
+            .ancestor(of: find.text('apricot'), matching: find.byType(InkWell))
+            .first;
+
+        await expectTapReaches(t, apricot, ran, 'apricot');
+      });
+
+      testWidgets('content a nested page shows in the root Overlay',
+          (t) async {
+        // The portal's entry belongs to the root Overlay, not the nested
+        // Navigator's Overlay nearest to it.
+        final ran = <String>[];
+        final controller = OverlayPortalController();
+        await t.pumpWidget(
+          app(
+            SizedBox(
+              width: 200,
+              height: 200,
+              child: Navigator(
+                onGenerateRoute: (_) => MaterialPageRoute<void>(
+                  // Its replacement, OverlayPortal's overlayLocation, is
+                  // newer than the Flutter 3.19 this package supports.
+                  // ignore: deprecated_member_use
+                  builder: (_) => OverlayPortal.targetsRootOverlay(
+                    controller: controller,
+                    overlayChildBuilder: (_) => Positioned(
+                      left: 20,
+                      top: 20,
+                      child: GestureDetector(
+                        key: const ValueKey('root'),
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => ran.add('root'),
+                        child: const SizedBox(width: 80, height: 80),
+                      ),
+                    ),
+                    child: const SizedBox.expand(),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        controller.show();
+        await t.pump();
+
+        await expectTapResolvesTo(t, byId('root'), ran, 'root');
+      });
+
+      testWidgets('a page control beside an open menu', (t) async {
+        final ran = <String>[];
+        await t.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Stack(
+                children: [
+                  Align(
+                    alignment: Alignment.topLeft,
+                    child: menu([item('copy', ran)]),
+                  ),
+                  Align(
+                    alignment: Alignment.bottomRight,
+                    child: GestureDetector(
+                      key: const ValueKey('page'),
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => ran.add('page'),
+                      child: const SizedBox(width: 88, height: 40),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+        await openMenu(t);
+
+        await expectTapResolvesTo(t, byId('page'), ran, 'page');
+      });
+
+      testWidgets('a translucent layer in portal content over a page control',
+          (t) async {
+        // Flutter hits both the layer and the button beneath it, so the walk
+        // also reaches the portal through the page; the layer joined the
+        // arena first and wins.
+        final ran = <String>[];
+        final controller = OverlayPortalController();
+        await t.pumpWidget(
+          app(
+            OverlayPortal(
+              controller: controller,
+              overlayChildBuilder: (_) => Positioned.fill(
+                child: GestureDetector(
+                  key: const ValueKey('layer'),
+                  behavior: HitTestBehavior.translucent,
+                  onTap: () => ran.add('layer'),
+                ),
+              ),
+              child: ElevatedButton(
+                key: const ValueKey('page'),
+                onPressed: () => ran.add('page'),
+                child: const Text('page'),
+              ),
+            ),
+          ),
+        );
+        controller.show();
+        await t.pump();
+
+        await expectTapResolvesTo(
+          t,
+          byId('layer'),
+          ran,
+          'layer',
+          at: t.getCenter(byId('page')),
+        );
       });
     });
 

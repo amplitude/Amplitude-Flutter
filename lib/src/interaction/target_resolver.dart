@@ -62,6 +62,8 @@ class TargetResolver {
     // that a Transform or SlideTransition moved outside its box.
     final searched = _hitPathAndAncestors(hitOrder.keys);
     final units = <_Unit>[];
+    // OverlayPortal content already visited from its Overlay.
+    final portalContent = <Element>{};
 
     void startUnit(_Mark mark) {
       final unit = _Unit(mark);
@@ -115,9 +117,23 @@ class TargetResolver {
       final childAbove = mark ?? above;
       final childBranched =
           (mark == null && branched) || _childCount(element) > 1;
-      element.visitChildElements(
-        (child) => visit(child, element, childAbove, childBranched),
-      );
+      // Portal content the tap hit is visited from its Overlay, before the
+      // overlay entries: the only ancestors visited before it are also its
+      // render ancestors, and it competes with page content by hit order, as
+      // in the gesture arena. It is a branch of its own. The walk skips it
+      // if it reaches it again through the page.
+      if (w is Overlay) {
+        for (final content in _hitPortalContent(element, searched)) {
+          if (portalContent.add(content)) {
+            visit(content, _parentOf(content), childAbove, true);
+          }
+        }
+      }
+      element.visitChildElements((child) {
+        if (portalContent.isEmpty || !portalContent.contains(child)) {
+          visit(child, element, childAbove, childBranched);
+        }
+      });
     }
 
     final root = WidgetsBinding.instance.rootElement;
@@ -245,6 +261,15 @@ class TargetResolver {
     return n;
   }
 
+  static Element? _parentOf(Element e) {
+    Element? parent;
+    e.visitAncestorElements((a) {
+      parent = a;
+      return false;
+    });
+    return parent;
+  }
+
   /// [hit] and all of their render-tree ancestors. Transforms hit-test
   /// their children without adding themselves to the result, so the
   /// ancestors are needed to reach what they hold.
@@ -258,6 +283,61 @@ class TargetResolver {
       }
     }
     return searched;
+  }
+
+  /// The elements of OverlayPortal content in [overlay] that the tap hit.
+  ///
+  /// A portal's overlay child is a render child of the Overlay, painted right
+  /// after the overlay entry holding the portal, but its element stays under
+  /// the portal. Flutter can hit the overlay child without hitting that
+  /// entry, so the walk would prune the entry before reaching the content.
+  List<Element> _hitPortalContent(
+    Element overlay,
+    Set<RenderObject> searched,
+  ) {
+    Element? theater;
+    overlay.visitChildElements((e) => theater = e);
+    final entryOf = <RenderObject, Element>{};
+    theater?.visitChildElements((entry) {
+      final box = entry.renderObject;
+      if (box != null) entryOf[box] = entry;
+    });
+    final content = <Element>[];
+    Element? entry;
+    // In paint order: each entry, then the overlay children it hosts.
+    theater?.renderObject?.visitChildren((child) {
+      final next = entryOf[child];
+      final holder = entry;
+      if (next != null) {
+        entry = next;
+      } else if (holder != null && searched.contains(child)) {
+        final found = _overlayChild(holder, child);
+        if (found != null) content.add(found);
+      }
+    });
+    return content;
+  }
+
+  /// The element under [entry] whose render object is [box], an overlay
+  /// child. Flutter keeps an overlay child deeper in the render tree than
+  /// its OverlayPortal so the portal lays out first; nothing at [box]'s
+  /// depth or deeper can lead to the portal.
+  Element? _overlayChild(Element entry, RenderObject box) {
+    Element? found;
+    void search(Element e) {
+      if (found != null) return;
+      if (e is RenderObjectElement) {
+        if (identical(e.renderObject, box)) {
+          found = e;
+          return;
+        }
+        if (e.renderObject.depth >= box.depth) return;
+      }
+      e.visitChildElements(search);
+    }
+
+    search(entry);
+    return found;
   }
 
   static bool _isAncestor(Element ancestor, Element element) {
