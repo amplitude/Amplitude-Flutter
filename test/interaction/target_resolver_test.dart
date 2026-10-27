@@ -1385,35 +1385,11 @@ void main() {
         expect(resolved, same(element), reason: 'resolved at $p');
       }
 
-      // Until controls are identified, a tap on a menu entry resolves to a
-      // gesture detector inside it; what matters here is that the walk
-      // reaches the menu at all.
-      Future<void> expectTapReaches(
-        WidgetTester t,
-        Finder entry,
-        List<String> ran,
-        String expected,
-      ) async {
-        final element = entry.evaluate().single;
-        final p = t.getCenter(entry);
-        final resolved = resolveAt(t, p)?.element;
-        // Checked before tapping: the tap closes the menu.
-        var inside = identical(resolved, element);
-        resolved?.visitAncestorElements((e) {
-          inside = inside || identical(e, element);
-          return !inside;
-        });
-        final description = '$resolved';
-        ran.clear();
-        await t.tapAt(p);
-        await t.pumpAndSettle();
-        expect(ran, [expected], reason: 'callback that ran at $p');
-        expect(inside, isTrue, reason: 'resolved to $description');
-      }
-
-      Widget item(String id, List<String> ran) => MenuItemButton(
+      Widget item(String id, List<String> ran, {Widget? trailingIcon}) =>
+          MenuItemButton(
             key: ValueKey(id),
             onPressed: () => ran.add(id),
+            trailingIcon: trailingIcon,
             child: Text(id),
           );
 
@@ -1435,7 +1411,7 @@ void main() {
         await t.pumpWidget(app(menu([item('copy', ran), item('paste', ran)])));
         await openMenu(t);
 
-        await expectTapReaches(t, byId('paste'), ran, 'paste');
+        await expectTapResolvesTo(t, byId('paste'), ran, 'paste');
       });
 
       testWidgets('an item in an open submenu', (t) async {
@@ -1455,7 +1431,168 @@ void main() {
         await t.tap(find.text('More'));
         await t.pumpAndSettle();
 
-        await expectTapReaches(t, byId('deep'), ran, 'deep');
+        await expectTapResolvesTo(t, byId('deep'), ran, 'deep');
+      });
+
+      testWidgets("a control in a menu item's trailingIcon wins", (t) async {
+        final ran = <String>[];
+        await t.pumpWidget(
+          app(
+            menu([
+              item(
+                'row',
+                ran,
+                trailingIcon: IconButton(
+                  key: const ValueKey('pin'),
+                  onPressed: () => ran.add('pin'),
+                  icon: const Icon(Icons.push_pin),
+                ),
+              ),
+            ]),
+          ),
+        );
+        await openMenu(t);
+
+        await expectTapResolvesTo(t, byId('pin'), ran, 'pin');
+      });
+
+      testWidgets('a disabled menu item resolves with enabled false',
+          (t) async {
+        await t.pumpWidget(
+          app(
+            menu([
+              const MenuItemButton(
+                key: ValueKey('off'),
+                onPressed: null,
+                child: Text('off'),
+              ),
+            ]),
+          ),
+        );
+        await openMenu(t);
+
+        final r = resolveAt(t, t.getCenter(byId('off')));
+
+        expect(keyOf(r), 'off');
+        expect(r!.name, 'MenuItemButton');
+        expect(r.enabled, isFalse);
+      });
+
+      testWidgets('a SubmenuButton resolves to the TextButton it builds',
+          (t) async {
+        final ran = <String>[];
+        await t.pumpWidget(
+          app(
+            menu([
+              SubmenuButton(
+                key: const ValueKey('more'),
+                onOpen: () => ran.add('more'),
+                menuChildren: [item('deep', ran)],
+                child: const Text('More'),
+              ),
+            ]),
+          ),
+        );
+        await openMenu(t);
+        // A known gap: the MenuAnchor between them hides that the submenu
+        // built this TextButton.
+        final button = find.descendant(
+          of: byId('more'),
+          matching: find.byType(TextButton),
+        );
+
+        await expectTapResolvesTo(t, button, ran, 'more');
+      });
+
+      // Menu toggles pass their key on to the MenuItemButton they build, so
+      // these tests find them by type.
+      testWidgets('a CheckboxMenuButton in an open menu', (t) async {
+        final ran = <String>[];
+        await t.pumpWidget(
+          app(
+            menu([
+              CheckboxMenuButton(
+                value: false,
+                onChanged: (_) => ran.add('bold'),
+                child: const Text('Bold'),
+              ),
+            ]),
+          ),
+        );
+        await openMenu(t);
+        final toggle = find.byType(CheckboxMenuButton);
+        // The checkbox it shows ignores pointers, so the item takes the tap.
+        final box = t.getCenter(find.byType(Checkbox));
+
+        await expectTapResolvesTo(t, toggle, ran, 'bold');
+        await openMenu(t);
+        await expectTapResolvesTo(t, toggle, ran, 'bold', at: box);
+      });
+
+      testWidgets('a RadioMenuButton in an open menu', (t) async {
+        final ran = <String>[];
+        await t.pumpWidget(
+          app(
+            menu([
+              RadioMenuButton<String>(
+                value: 'left',
+                // RadioGroup replaces groupValue and onChanged from Flutter
+                // 3.35; the SDK still supports 3.19.
+                // ignore: deprecated_member_use
+                groupValue: 'right',
+                // ignore: deprecated_member_use
+                onChanged: (_) => ran.add('left'),
+                child: const Text('Left'),
+              ),
+            ]),
+          ),
+        );
+        await openMenu(t);
+
+        await expectTapResolvesTo(
+          t,
+          find.byType(RadioMenuButton<String>),
+          ran,
+          'left',
+        );
+      });
+
+      testWidgets('menu items are named after themselves', (t) async {
+        await t.pumpWidget(
+          app(
+            menu([
+              const CheckboxMenuButton(
+                value: false,
+                onChanged: null,
+                child: Text('check'),
+              ),
+              RadioMenuButton<String>(
+                value: 'a',
+                // ignore: deprecated_member_use
+                groupValue: 'b',
+                // ignore: deprecated_member_use
+                onChanged: (_) {},
+                child: const Text('radio'),
+              ),
+              MenuItemButton(onPressed: () {}, child: const Text('plain')),
+            ]),
+          ),
+        );
+        await openMenu(t);
+
+        final check =
+            resolveAt(t, t.getCenter(find.byType(CheckboxMenuButton)));
+        final radio =
+            resolveAt(t, t.getCenter(find.byType(RadioMenuButton<String>)));
+        final plain = resolveAt(t, t.getCenter(find.text('plain')));
+
+        expect(typeOf(check), CheckboxMenuButton);
+        expect(check!.name, 'CheckboxMenuButton');
+        expect(check.enabled, isFalse);
+        expect(typeOf(radio), RadioMenuButton<String>);
+        expect(radio!.name, 'RadioMenuButton');
+        expect(radio.enabled, isTrue);
+        expect(plain!.name, 'MenuItemButton');
       });
 
       testWidgets('a DropdownMenu entry', (t) async {
@@ -1477,7 +1614,7 @@ void main() {
         // itself; only the copy in the open menu is hit.
         final pear = find.widgetWithText(MenuItemButton, 'Pear').hitTestable();
 
-        await expectTapReaches(t, pear, ran, 'pear');
+        await expectTapResolvesTo(t, pear, ran, 'pear');
       });
 
       testWidgets('an Autocomplete option', (t) async {
@@ -1500,7 +1637,7 @@ void main() {
             .ancestor(of: find.text('apricot'), matching: find.byType(InkWell))
             .first;
 
-        await expectTapReaches(t, apricot, ran, 'apricot');
+        await expectTapResolvesTo(t, apricot, ran, 'apricot');
       });
 
       testWidgets('content a nested page shows in the root Overlay',
