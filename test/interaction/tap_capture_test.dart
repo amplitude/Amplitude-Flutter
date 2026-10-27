@@ -433,6 +433,23 @@ void main() {
       expect(xDelivered, isEmpty); // Its snapshot threw at pointer-down.
     });
 
+    testWidgets('disabled targets are delivered with enabled false', (t) async {
+      final out = <TapObservation<Object?>>[];
+      keyCapture(out);
+      await t.pumpWidget(
+        app(
+          const ElevatedButton(
+            key: ValueKey('off'),
+            onPressed: null,
+            child: Text('Off'),
+          ),
+        ),
+      );
+      await t.tap(byId('off'));
+      expect(out.single.snapshot, 'off');
+      expect(out.single.enabled, false);
+    });
+
     testWidgets('capture never disposes a recognizer the app shares',
         (t) async {
       final out = <TapObservation<Object?>>[];

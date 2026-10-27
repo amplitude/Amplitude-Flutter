@@ -1,6 +1,7 @@
 import 'package:amplitude_flutter/src/interaction/target_resolver.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 int _countingBuilds = 0;
@@ -15,6 +16,20 @@ class _CountingGestureDetector extends GestureDetector {
     _countingBuilds++;
     return super.build(context);
   }
+}
+
+/// Joins the hit path without ending it, as a translucent box with nothing
+/// hit beneath it does, and handles nothing.
+class _HitButNotHandled extends SingleChildRenderObjectWidget {
+  const _HitButNotHandled();
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderHitButNotHandled();
+}
+
+class _RenderHitButNotHandled extends RenderProxyBoxWithHitTestBehavior {
+  _RenderHitButNotHandled() : super(behavior: HitTestBehavior.translucent);
 }
 
 const _rawKey = ValueKey('raw');
@@ -97,8 +112,13 @@ InteractionTarget? resolveAt(WidgetTester t, Offset at) =>
 Object? keyOf(InteractionTarget? r) =>
     (r?.element.widget.key as ValueKey?)?.value;
 
+Type? typeOf(InteractionTarget? r) => r?.element.widget.runtimeType;
+
 Widget app(Widget child) =>
     MaterialApp(home: Scaffold(body: Center(child: child)));
+
+Widget keyedButton(String id) =>
+    ElevatedButton(key: ValueKey(id), onPressed: () {}, child: Text(id));
 
 /// A tap target: a keyed GestureDetector the size of a small button.
 Widget keyedDetector(String id) => GestureDetector(
@@ -114,6 +134,142 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('TargetResolver', () {
+    testWidgets('a concrete control beats its internal handlers', (t) async {
+      await t.pumpWidget(app(keyedButton('b')));
+
+      final r = resolveAt(t, t.getCenter(byId('b')));
+
+      expect(typeOf(r), ElevatedButton);
+    });
+
+    testWidgets('a control nested inside another control wins', (t) async {
+      await t.pumpWidget(
+        app(
+          SizedBox(
+            width: 300,
+            child: ListTile(
+              onTap: () {},
+              title: const Text('Row'),
+              trailing: IconButton(
+                key: const ValueKey('i'),
+                onPressed: () {},
+                icon: const Icon(Icons.delete),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final r = resolveAt(t, t.getCenter(byId('i')));
+
+      expect(keyOf(r), 'i');
+    });
+
+
+    testWidgets('a CheckboxListTile is reported, not its internals', (t) async {
+      await t.pumpWidget(
+        app(
+          SizedBox(
+            width: 300,
+            child: CheckboxListTile(
+              value: false,
+              onChanged: (_) {},
+              title: const Text('Title'),
+            ),
+          ),
+        ),
+      );
+
+      expect(
+        typeOf(resolveAt(t, t.getCenter(find.text('Title')))),
+        CheckboxListTile,
+      );
+      expect(
+        typeOf(resolveAt(t, t.getCenter(find.byType(Checkbox)))),
+        CheckboxListTile,
+      );
+    });
+
+
+    testWidgets('a SwitchListTile is reported, not its internals', (t) async {
+      await t.pumpWidget(
+        app(
+          SizedBox(
+            width: 300,
+            child: SwitchListTile(
+              value: false,
+              onChanged: (_) {},
+              title: const Text('Title'),
+            ),
+          ),
+        ),
+      );
+
+      expect(
+        typeOf(resolveAt(t, t.getCenter(find.text('Title')))),
+        SwitchListTile,
+      );
+      expect(
+        typeOf(resolveAt(t, t.getCenter(find.byType(Switch)))),
+        SwitchListTile,
+      );
+    });
+
+
+    group('independent child in <tile>.<slot> wins', () {
+      Widget independent() => IconButton(
+            key: const ValueKey('independent'),
+            onPressed: () {},
+            icon: const Icon(Icons.star),
+          );
+
+      for (final slot in ['title', 'subtitle', 'secondary']) {
+        Widget? only(String name) => slot == name ? independent() : null;
+
+        testWidgets('CheckboxListTile.$slot', (t) async {
+          await t.pumpWidget(
+            app(
+              SizedBox(
+                width: 300,
+                child: CheckboxListTile(
+                  value: false,
+                  onChanged: (_) {},
+                  title: only('title') ?? const Text('T'),
+                  subtitle: only('subtitle'),
+                  secondary: only('secondary'),
+                ),
+              ),
+            ),
+          );
+
+          final r = resolveAt(t, t.getCenter(byId('independent')));
+
+          expect(keyOf(r), 'independent');
+        });
+
+        testWidgets('SwitchListTile.$slot', (t) async {
+          await t.pumpWidget(
+            app(
+              SizedBox(
+                width: 300,
+                child: SwitchListTile(
+                  value: false,
+                  onChanged: (_) {},
+                  title: only('title') ?? const Text('T'),
+                  subtitle: only('subtitle'),
+                  secondary: only('secondary'),
+                ),
+              ),
+            ),
+          );
+
+          final r = resolveAt(t, t.getCenter(byId('independent')));
+
+          expect(keyOf(r), 'independent');
+        });
+      }
+    });
+
 
     testWidgets('sibling containment: the tapped button is reported',
         (t) async {
@@ -367,6 +523,17 @@ void main() {
       expect(resolveAt(t, behindBarrier), isNull);
     });
 
+    testWidgets('disabled buttons resolve with enabled false', (t) async {
+      await t.pumpWidget(
+        app(const ElevatedButton(onPressed: null, child: Text('off'))),
+      );
+
+      final r = resolveAt(t, t.getCenter(find.text('off')));
+
+      expect(typeOf(r), ElevatedButton);
+      expect(r!.enabled, isFalse);
+    });
+
     testWidgets('resolving does not subscribe the target to MediaQuery',
         (t) async {
       var insets = 0.0;
@@ -581,6 +748,91 @@ void main() {
         await expectResolvesLikeTap(t, t.getCenter(byId('gd')), ran, 'gd');
       });
 
+      testWidgets("an InkWell in an ElevatedButton's child wins", (t) async {
+        final ran = <String>[];
+        await t.pumpWidget(
+          app(
+            ElevatedButton(
+              key: const ValueKey('btn'),
+              onPressed: () => ran.add('btn'),
+              child: InkWell(
+                key: const ValueKey('ink'),
+                onTap: () => ran.add('ink'),
+                child: const Text('ink'),
+              ),
+            ),
+          ),
+        );
+
+        await expectResolvesLikeTap(t, t.getCenter(byId('ink')), ran, 'ink');
+      });
+
+      testWidgets('a disabled control in an enabled tile credits the tile',
+          (t) async {
+        final ran = <String>[];
+        await t.pumpWidget(
+          app(
+            SizedBox(
+              width: 300,
+              child: ListTile(
+                key: const ValueKey('tile'),
+                onTap: () => ran.add('tile'),
+                title: const Text('Row'),
+                trailing: const IconButton(
+                  key: ValueKey('icon'),
+                  onPressed: null,
+                  icon: Icon(Icons.delete),
+                ),
+              ),
+            ),
+          ),
+        );
+        final p = t.getCenter(byId('icon'));
+
+        await expectResolvesLikeTap(t, p, ran, 'tile');
+        expect(resolveAt(t, p)!.enabled, isTrue);
+      });
+
+      testWidgets("a slot doesn't carry into its control's own internals",
+          (t) async {
+        // The `secondary` slot is moved over the tile's own checkbox, so
+        // the hit path runs through the slot first and then the checkbox.
+        // Leaving the slot must not leave the tile's internals: if it did,
+        // the checkbox the tile builds would be reported instead of the
+        // tile.
+        final ran = <String>[];
+        Widget tile(Offset shift) => app(
+              SizedBox(
+                width: 300,
+                child: CheckboxListTile(
+                  key: const ValueKey('tile'),
+                  value: false,
+                  onChanged: (_) => ran.add('tile'),
+                  title: const Text('Title'),
+                  secondary: Transform.translate(
+                    offset: shift,
+                    child: const SizedBox(
+                      key: ValueKey('shifted'),
+                      width: 24,
+                      height: 24,
+                      child: _HitButNotHandled(),
+                    ),
+                  ),
+                ),
+              ),
+            );
+        await t.pumpWidget(tile(Offset.zero));
+        final shift =
+            t.getCenter(find.byType(Checkbox)) - t.getCenter(byId('shifted'));
+        await t.pumpWidget(tile(shift));
+        final p = t.getCenter(find.byType(Checkbox));
+        final hitPath = t.hitTestOnBinding(p).path.map((e) => e.target);
+        expect(
+            hitPath, contains(t.renderObject(find.byType(_HitButNotHandled))));
+        expect(hitPath, contains(t.renderObject(find.byType(Checkbox))));
+
+        await expectResolvesLikeTap(t, p, ran, 'tile');
+      });
     });
 
     testWidgets('an invisible control that keeps interactivity is a target',
