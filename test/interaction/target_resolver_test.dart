@@ -1,4 +1,5 @@
 import 'package:amplitude_flutter/src/interaction/target_resolver.dart';
+import 'package:flutter/cupertino.dart' show CupertinoButton;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -31,6 +32,279 @@ class _HitButNotHandled extends SingleChildRenderObjectWidget {
 class _RenderHitButNotHandled extends RenderProxyBoxWithHitTestBehavior {
   _RenderHitButNotHandled() : super(behavior: HitTestBehavior.translucent);
 }
+
+/// An app control: a Semantics button around a GestureDetector.
+class _FancyButton extends StatelessWidget {
+  const _FancyButton({super.key, required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        child: GestureDetector(
+          onTap: onTap,
+          child: const SizedBox(width: 80, height: 40, child: Text('Fancy')),
+        ),
+      );
+}
+
+/// An app wrapper whose build returns a Material button directly.
+class PrimaryButton extends StatelessWidget {
+  const PrimaryButton({super.key, required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) =>
+      ElevatedButton(onPressed: onPressed, child: const Text('Primary'));
+}
+
+/// One pairing case: tapping `target` must resolve to the widget keyed
+/// [expected] under [name].
+class _Pairing {
+  const _Pairing(this.title, this.build, this.expected, this.name);
+
+  final String title;
+
+  /// Builds the screen; `ran(key)` records which callback ran.
+  final Widget Function(void Function(String) ran) build;
+  final String expected;
+  final String name;
+}
+
+ValueKey<String> _k(String id) => ValueKey(id);
+
+Widget _wide(Widget child) => SizedBox(width: 320, child: child);
+
+final _pairings = <_Pairing>[
+  _Pairing(
+    'a GestureDetector around an enabled button loses to the button',
+    (ran) => GestureDetector(
+      key: _k('gd'),
+      onTap: () => ran('gd'),
+      child: ElevatedButton(
+        key: _k('target'),
+        onPressed: () => ran('target'),
+        child: const Text('Buy'),
+      ),
+    ),
+    'target',
+    'ElevatedButton',
+  ),
+  _Pairing(
+    'a GestureDetector around a disabled button takes the tap',
+    (ran) => GestureDetector(
+      key: _k('gd'),
+      onTap: () => ran('gd'),
+      child: const ElevatedButton(
+        key: ValueKey('target'),
+        onPressed: null,
+        child: Text('Buy'),
+      ),
+    ),
+    'gd',
+    'GestureDetector',
+  ),
+  _Pairing(
+    "a GestureDetector in a CupertinoButton's child wins",
+    (ran) => CupertinoButton(
+      onPressed: () => ran('button'),
+      child: GestureDetector(
+        key: _k('target'),
+        onTap: () => ran('target'),
+        child: const Text('inner'),
+      ),
+    ),
+    'target',
+    'GestureDetector',
+  ),
+  _Pairing(
+    "an ElevatedButton in a CupertinoButton's child wins",
+    (ran) => CupertinoButton(
+      onPressed: () => ran('button'),
+      child: ElevatedButton(
+        key: _k('target'),
+        onPressed: () => ran('target'),
+        child: const Text('inner'),
+      ),
+    ),
+    'target',
+    'ElevatedButton',
+  ),
+  _Pairing(
+    'an InkWell in a ListTile title wins',
+    (ran) => _wide(
+      ListTile(
+        onTap: () => ran('tile'),
+        title: InkWell(
+          key: _k('target'),
+          onTap: () => ran('target'),
+          child: const Text('link'),
+        ),
+      ),
+    ),
+    'target',
+    'InkWell',
+  ),
+  _Pairing(
+    'an ElevatedButton in a ListTile title wins',
+    (ran) => _wide(
+      ListTile(
+        onTap: () => ran('tile'),
+        title: ElevatedButton(
+          key: _k('target'),
+          onPressed: () => ran('target'),
+          child: const Text('go'),
+        ),
+      ),
+    ),
+    'target',
+    'ElevatedButton',
+  ),
+  _Pairing(
+    "a Checkbox in a plain ListTile's trailing wins",
+    (ran) => _wide(
+      ListTile(
+        onTap: () => ran('tile'),
+        title: const Text('row'),
+        trailing: Checkbox(
+          key: _k('target'),
+          value: false,
+          onChanged: (_) => ran('target'),
+        ),
+      ),
+    ),
+    'target',
+    'Checkbox',
+  ),
+  _Pairing(
+    'a Switch inside a GestureDetector wins',
+    (ran) => GestureDetector(
+      onTap: () => ran('gd'),
+      child: Switch(
+        key: _k('target'),
+        value: false,
+        onChanged: (_) => ran('target'),
+      ),
+    ),
+    'target',
+    'Switch',
+  ),
+  _Pairing(
+    'an enabled IconButton in a disabled ListTile wins',
+    (ran) => _wide(
+      ListTile(
+        enabled: false,
+        onTap: () => ran('tile'),
+        title: const Text('row'),
+        trailing: IconButton(
+          key: _k('target'),
+          onPressed: () => ran('target'),
+          icon: const Icon(Icons.delete),
+        ),
+      ),
+    ),
+    'target',
+    'IconButton',
+  ),
+  _Pairing(
+    'ExcludeSemantics does not hide a control',
+    (ran) => ExcludeSemantics(
+      child: ElevatedButton(
+        key: _k('target'),
+        onPressed: () => ran('target'),
+        child: const Text('Hidden'),
+      ),
+    ),
+    'target',
+    'ElevatedButton',
+  ),
+  _Pairing(
+    'an app component with a Semantics button is named after itself',
+    (ran) => _FancyButton(key: _k('target'), onTap: () => ran('target')),
+    'target',
+    'FancyButton',
+  ),
+  _Pairing(
+    'an inline Semantics button is reported as its handler, by role',
+    (ran) => Semantics(
+      button: true,
+      child: GestureDetector(
+        key: _k('target'),
+        behavior: HitTestBehavior.opaque,
+        onTap: () => ran('target'),
+        child: const SizedBox(width: 80, height: 40),
+      ),
+    ),
+    'target',
+    'Button',
+  ),
+  _Pairing(
+    'an app component whose build returns a button is named after itself',
+    (ran) => PrimaryButton(key: _k('target'), onPressed: () => ran('target')),
+    'target',
+    'PrimaryButton',
+  ),
+  _Pairing(
+    'an ActionChip',
+    (ran) => ActionChip(
+      key: _k('target'),
+      label: const Text('chip'),
+      onPressed: () => ran('target'),
+    ),
+    'target',
+    'ActionChip',
+  ),
+  _Pairing(
+    'a FilterChip',
+    (ran) => FilterChip(
+      key: _k('target'),
+      label: const Text('chip'),
+      selected: false,
+      onSelected: (_) => ran('target'),
+    ),
+    'target',
+    'FilterChip',
+  ),
+  _Pairing(
+    'a Radio',
+    // RadioGroup replaces groupValue and onChanged from Flutter 3.35; the
+    // SDK still supports 3.19.
+    (ran) => Radio<int>(
+      key: _k('target'),
+      value: 1,
+      // ignore: deprecated_member_use
+      groupValue: 0,
+      // ignore: deprecated_member_use
+      onChanged: (_) => ran('target'),
+    ),
+    'target',
+    'Radio',
+  ),
+  _Pairing(
+    'a RadioListTile owns its radio',
+    (ran) => _wide(
+      RadioListTile<int>(
+        key: _k('target'),
+        value: 1,
+        // ignore: deprecated_member_use
+        groupValue: 0,
+        // ignore: deprecated_member_use
+        onChanged: (_) => ran('target'),
+        title: const Text('radio'),
+      ),
+    ),
+    'target',
+    'RadioListTile',
+  ),
+  _Pairing(
+    'a BackButton, not the IconButton it builds',
+    (ran) => BackButton(key: _k('target'), onPressed: () => ran('target')),
+    'target',
+    'BackButton',
+  ),
+];
 
 const _rawKey = ValueKey('raw');
 
@@ -833,6 +1107,27 @@ void main() {
 
         await expectResolvesLikeTap(t, p, ran, 'tile');
       });
+    });
+
+    // Real-tap oracle: the control whose callback ran must be the one
+    // resolved, under the name the control is reported by.
+    group('Semantics pairing', () {
+      for (final c in _pairings) {
+        testWidgets(c.title, (t) async {
+          final ran = <String>[];
+          await t.pumpWidget(app(c.build(ran.add)));
+          final p = t.getCenter(byId('target'));
+
+          final r = resolveAt(t, p);
+          await t.tapAt(p);
+          await t.pump(const Duration(seconds: 1));
+
+          expect(ran, [c.expected], reason: 'callback that ran');
+          expect(keyOf(r), c.expected);
+          expect(r!.name, c.name);
+          expect(r.enabled, isTrue);
+        });
+      }
     });
 
     testWidgets('an invisible control that keeps interactivity is a target',
