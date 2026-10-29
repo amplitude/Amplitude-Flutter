@@ -26,6 +26,12 @@ class ScrollStops {
 
   /// Starts tracking [position]. Calling it again for the same position does
   /// nothing.
+  ///
+  /// The listener is never removed. It lives as long as the position's
+  /// notifier, which the position disposes with itself, and [_watched] holds
+  /// positions weakly, so nothing here keeps a list alive. Removing it when
+  /// capture stops would need a strong list of every position watched. Its
+  /// cost while capture is off is one set insertion per scroll stop.
   void watch(ScrollPosition position) {
     if (_watched[position] ?? false) return;
     _watched[position] = true;
