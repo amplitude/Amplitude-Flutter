@@ -94,6 +94,45 @@ InteractionTarget? resolveAt(WidgetTester t, Offset at) =>
       PointerDownEvent(position: at, viewId: t.view.viewId),
     );
 
+/// Real-tap oracle. Resolves a pointer-down at [at] while everything is
+/// still mounted, expects the resolved element to match [resolvedTo], then
+/// taps there for real and expects exactly the callback [expected] to have
+/// run ([ran] records them). By default the resolver must pick the widget
+/// keyed [expected], or nothing when [expected] is null.
+Future<void> expectResolvesLikeTap(
+  WidgetTester t,
+  Offset at,
+  List<String> ran,
+  String? expected, {
+  Matcher? resolvedTo,
+}) async {
+  final resolved = resolveAt(t, at)?.element;
+  // Checked before tapping: the tap can close a menu and unmount it.
+  expect(
+    resolved,
+    resolvedTo ??
+        (expected == null ? isNull : same(t.element(byId(expected)))),
+    reason: 'resolved at $at',
+  );
+  ran.clear();
+  await t.tapAt(at);
+  await t.pumpAndSettle();
+  expect(ran, expected == null ? isEmpty : [expected], reason: 'ran at $at');
+}
+
+/// Matches [ancestor] or an element inside it.
+Matcher isAtOrInside(Element ancestor) => predicate<Element?>(
+      (e) {
+        var found = identical(e, ancestor);
+        e?.visitAncestorElements((a) {
+          found = found || identical(a, ancestor);
+          return !found;
+        });
+        return found;
+      },
+      'is $ancestor or inside it',
+    );
+
 Object? keyOf(InteractionTarget? r) =>
     (r?.element.widget.key as ValueKey?)?.value;
 
@@ -280,6 +319,36 @@ void main() {
           );
 
           expect(resolveAt(t, t.getCenter(find.text('plain text'))), isNull);
+        },
+      );
+
+      // The region's own detector is the first handler below it; one in its
+      // child is below that and still takes the tap.
+      testWidgets(
+        'a GestureDetector inside a SelectionArea is a target',
+        variant: TargetPlatformVariant(
+          {TargetPlatform.android, TargetPlatform.iOS},
+        ),
+        (t) async {
+          final ran = <String>[];
+          await t.pumpWidget(
+            app(
+              SelectionArea(
+                child: GestureDetector(
+                  key: const ValueKey('link'),
+                  onTap: () => ran.add('link'),
+                  child: const Text('link'),
+                ),
+              ),
+            ),
+          );
+
+          await expectResolvesLikeTap(
+            t,
+            t.getCenter(byId('link')),
+            ran,
+            'link',
+          );
         },
       );
     });
@@ -522,21 +591,6 @@ void main() {
     });
 
     group('nested handlers follow the gesture arena', () {
-      // Real-tap oracle: the callback that ran must be the one resolved.
-      Future<void> expectResolvesLikeTap(
-        WidgetTester t,
-        Offset p,
-        List<String> ran,
-        String expected,
-      ) async {
-        final resolved = keyOf(resolveAt(t, p));
-        ran.clear();
-        await t.tapAt(p);
-        await t.pump(const Duration(seconds: 1));
-        expect(ran, [expected], reason: 'callback that ran at $p');
-        expect(resolved, expected, reason: 'resolved at $p');
-      }
-
       testWidgets('a GestureDetector in a ListTile title wins', (t) async {
         final ran = <String>[];
         await t.pumpWidget(
@@ -649,19 +703,6 @@ void main() {
             ),
           ),
         );
-      }
-
-      Future<void> expectResolvesLikeTap(
-        WidgetTester t,
-        Offset p,
-        List<String> ran,
-        String? expected,
-      ) async {
-        ran.clear();
-        await t.tapAt(p);
-        final tapped = ran.isEmpty ? null : ran.single;
-        expect(tapped, expected, reason: 'tap at $p');
-        expect(keyOf(resolveAt(t, p)), tapped, reason: 'resolve at $p');
       }
 
       Offset globalOf(WidgetTester t, String id, Offset local) =>
@@ -818,52 +859,6 @@ void main() {
     });
 
     group('OverlayPortal content', () {
-      // Real-tap oracle: the expected callback must run, and the resolver
-      // must pick [target]. Taps at [target]'s centre unless [at] is given.
-      Future<void> expectTapResolvesTo(
-        WidgetTester t,
-        Finder target,
-        List<String> ran,
-        String expected, {
-        Offset? at,
-      }) async {
-        // Read before tapping: the tap can close the menu holding [target].
-        final element = target.evaluate().single;
-        final p = at ?? t.getCenter(target);
-        final resolved = resolveAt(t, p)?.element;
-        ran.clear();
-        await t.tapAt(p);
-        await t.pumpAndSettle();
-        expect(ran, [expected], reason: 'callback that ran at $p');
-        expect(resolved, same(element), reason: 'resolved at $p');
-      }
-
-      // Until controls are identified, a tap on a menu entry resolves to a
-      // gesture detector inside it; what matters here is that the walk
-      // reaches the menu at all.
-      Future<void> expectTapReaches(
-        WidgetTester t,
-        Finder entry,
-        List<String> ran,
-        String expected,
-      ) async {
-        final element = entry.evaluate().single;
-        final p = t.getCenter(entry);
-        final resolved = resolveAt(t, p)?.element;
-        // Checked before tapping: the tap closes the menu.
-        var inside = identical(resolved, element);
-        resolved?.visitAncestorElements((e) {
-          inside = inside || identical(e, element);
-          return !inside;
-        });
-        final description = '$resolved';
-        ran.clear();
-        await t.tapAt(p);
-        await t.pumpAndSettle();
-        expect(ran, [expected], reason: 'callback that ran at $p');
-        expect(inside, isTrue, reason: 'resolved to $description');
-      }
-
       Widget item(String id, List<String> ran) => MenuItemButton(
             key: ValueKey(id),
             onPressed: () => ran.add(id),
@@ -888,7 +883,13 @@ void main() {
         await t.pumpWidget(app(menu([item('copy', ran), item('paste', ran)])));
         await openMenu(t);
 
-        await expectTapReaches(t, byId('paste'), ran, 'paste');
+        await expectResolvesLikeTap(
+          t,
+          t.getCenter(byId('paste')),
+          ran,
+          'paste',
+          resolvedTo: isAtOrInside(t.element(byId('paste'))),
+        );
       });
 
       testWidgets('an item in an open submenu', (t) async {
@@ -908,7 +909,13 @@ void main() {
         await t.tap(find.text('More'));
         await t.pumpAndSettle();
 
-        await expectTapReaches(t, byId('deep'), ran, 'deep');
+        await expectResolvesLikeTap(
+          t,
+          t.getCenter(byId('deep')),
+          ran,
+          'deep',
+          resolvedTo: isAtOrInside(t.element(byId('deep'))),
+        );
       });
 
       testWidgets('a DropdownMenu entry', (t) async {
@@ -930,7 +937,13 @@ void main() {
         // itself; only the copy in the open menu is hit.
         final pear = find.widgetWithText(MenuItemButton, 'Pear').hitTestable();
 
-        await expectTapReaches(t, pear, ran, 'pear');
+        await expectResolvesLikeTap(
+          t,
+          t.getCenter(pear),
+          ran,
+          'pear',
+          resolvedTo: isAtOrInside(t.element(pear)),
+        );
       });
 
       testWidgets('an Autocomplete option', (t) async {
@@ -953,7 +966,13 @@ void main() {
             .ancestor(of: find.text('apricot'), matching: find.byType(InkWell))
             .first;
 
-        await expectTapReaches(t, apricot, ran, 'apricot');
+        await expectResolvesLikeTap(
+          t,
+          t.getCenter(apricot),
+          ran,
+          'apricot',
+          resolvedTo: isAtOrInside(t.element(apricot)),
+        );
       });
 
       testWidgets('content a nested page shows in the root Overlay',
@@ -994,7 +1013,7 @@ void main() {
         controller.show();
         await t.pump();
 
-        await expectTapResolvesTo(t, byId('root'), ran, 'root');
+        await expectResolvesLikeTap(t, t.getCenter(byId('root')), ran, 'root');
       });
 
       testWidgets('a page control beside an open menu', (t) async {
@@ -1024,7 +1043,7 @@ void main() {
         );
         await openMenu(t);
 
-        await expectTapResolvesTo(t, byId('page'), ran, 'page');
+        await expectResolvesLikeTap(t, t.getCenter(byId('page')), ran, 'page');
       });
 
       testWidgets('a translucent layer in portal content over a page control',
@@ -1056,13 +1075,7 @@ void main() {
         controller.show();
         await t.pump();
 
-        await expectTapResolvesTo(
-          t,
-          byId('layer'),
-          ran,
-          'layer',
-          at: t.getCenter(byId('page')),
-        );
+        await expectResolvesLikeTap(t, t.getCenter(byId('page')), ran, 'layer');
       });
     });
 
