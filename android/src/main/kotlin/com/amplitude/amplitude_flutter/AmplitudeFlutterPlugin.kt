@@ -282,7 +282,7 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         call.argument<String>("serverZone")
             ?.let { builder.serverZone = com.amplitude.core.ServerZone.valueOf(it.uppercase()) }
         call.argument<String>("serverUrl")?.let { builder.serverUrl = it }
-        call.argument<Int>("minTimeBetweenSessionsMillis")
+        call.argument<Number>("minTimeBetweenSessionsMillis")
             ?.let { builder.minTimeBetweenSessionsMillis = it.toLong() }
         // The Dart Configuration constructor resolves the effective autocapture
         // value: a map for AutocaptureOptions/AutocaptureEnabled (derived from
@@ -303,7 +303,7 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         }
         call.argument<Boolean>("enableCoppaControl")?.let { builder.enableCoppaControl = it }
         call.argument<Boolean>("flushEventsOnClose")?.let { builder.flushEventsOnClose = it }
-        call.argument<Int>("identifyBatchIntervalMillis")
+        call.argument<Number>("identifyBatchIntervalMillis")
             ?.let { builder.identifyBatchIntervalMillis = it.toLong() }
         call.argument<Boolean>("migrateLegacyData")?.let { builder.migrateLegacyData = it }
         call.argument<Boolean>("locationListening")?.let { builder.locationListening = it }
@@ -372,9 +372,10 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         }
         (args["user_id"] as? String)?.let { event.userId = it }
         (args["device_id"] as? String)?.let { event.deviceId = it }
-        (args["timestamp"] as? Int)?.let { event.timestamp = it.toLong() }
-        (args["event_id"] as? Int)?.let { event.eventId = it.toLong() }
-        (args["session_id"] as? Int)?.let { event.sessionId = it.toLong() }
+        // Flutter encodes Dart integers as Int or Long depending on their size.
+        (args["timestamp"] as? Number)?.let { event.timestamp = it.toLong() }
+        (args["event_id"] as? Number)?.let { event.eventId = it.toLong() }
+        (args["session_id"] as? Number)?.let { event.sessionId = it.toLong() }
         (args["insert_id"] as? String)?.let { event.insertId = it }
         (args["location_lat"] as? Double)?.let { event.locationLat = it }
         (args["location_lng"] as? Double)?.let { event.locationLng = it }
