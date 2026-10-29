@@ -3,9 +3,9 @@
 // composite-tile handling by Zohaib Farooqi and Wei Sun:
 // https://github.com/amplitude/Amplitude-Flutter/pull/317.
 import 'package:flutter/gestures.dart';
-import 'package:flutter/semantics.dart';
 import 'package:flutter/widgets.dart';
 
+import 'control_names.dart';
 import 'hit_path.dart';
 
 /// The Flutter control a pointer-down landed on.
@@ -116,161 +116,21 @@ class TargetResolver {
     );
   }
 
-  /// The element a control is reported as.
-  ///
-  /// A bare handler is reported as itself. Otherwise this is the component
-  /// that built the control's top mark: the first stateless or stateful
-  /// ancestor that isn't widgets-library plumbing, then up through the
-  /// components whose build returned it directly (from a private
-  /// `_IconButtonM3` to the public `IconButton`, from `InkWell` to the
-  /// `ListTile` that built it).
-  ///
-  /// The search passes only elements that don't lay anything out. A layout
-  /// widget (Center, Padding) or a branch first means the Semantics was
-  /// written inline in app code. If no mark of the control names it, the
-  /// control is reported as its handler.
+  /// The element a control is reported as: the component that built it.
+  /// A bare handler, or a control nothing names, is reported as its
+  /// handler.
   static Element _elementOf(_Unit unit) {
-    if (!unit.isControl) return unit.top.element;
-    // From the top mark first. When something a control doesn't build sits
-    // above it (an Autocomplete option's list wraps its Semantics in
-    // IndexedSemantics), a lower mark, such as the InkWell's own, can still
-    // name the control.
-    for (final mark in unit.marks) {
-      final found = _builderOf(mark.element);
-      if (found != null) return found;
-    }
-    return unit.marks
-            .where((m) => m.kind == _Kind.handler)
-            .firstOrNull
-            ?.element ??
+    final handler =
+        unit.marks.where((m) => m.kind == _Kind.handler).firstOrNull?.element;
+    if (!unit.isControl) return handler ?? unit.top.element;
+    return controlElementOf(unit.marks.map((m) => m.element)) ??
+        handler ??
         unit.top.element;
   }
 
-  /// The component that built [start], or null if a layout widget or a
-  /// branch comes first.
-  static Element? _builderOf(Element start) {
-    // The ancestors up to the first one with more than one child.
-    final up = <Element>[];
-    start.visitAncestorElements((a) {
-      up.add(a);
-      return _childCount(a) <= 1;
-    });
-    for (var i = 0; i < up.length; i++) {
-      if (_childCount(up[i]) > 1) return null;
-      if (_isNamedComponent(up[i])) return _outermostBuilder(up, i);
-      // GestureDetector's private _GestureSemantics is its own.
-      final builtByHandler = i + 1 < up.length &&
-          (up[i + 1].widget is GestureDetector ||
-              up[i + 1].widget is RawGestureDetector);
-      if (!_isPassThrough(up[i]) && !builtByHandler) return null;
-    }
-    return null;
-  }
-
-  /// From `up[i]`, up through the components whose build returned it
-  /// directly. A flagless `Semantics()` between two of them (PopupMenuButton
-  /// wraps its IconButton in one) is passed over.
-  static Element _outermostBuilder(List<Element> up, int i) {
-    while (i + 1 < up.length) {
-      if (_isNamedComponent(up[i + 1])) {
-        i++;
-      } else if (i + 2 < up.length &&
-          _isFlagless(up[i + 1].widget) &&
-          _isNamedComponent(up[i + 2])) {
-        i += 2;
-      } else {
-        break;
-      }
-    }
-    return up[i];
-  }
-
-  static bool _isNamedComponent(Element e) =>
-      (e is StatelessElement || e is StatefulElement) && !_isPlumbing(e.widget);
-
-  /// Widgets-library components that controls build around their parts.
-  static bool _isPlumbing(Widget w) =>
-      w is GestureDetector ||
-      w is RawGestureDetector ||
-      w is Focus ||
-      w is Actions ||
-      w is Shortcuts ||
-      w is FocusableActionDetector ||
-      w is ExcludeFocus ||
-      w is Builder ||
-      w is StatefulBuilder ||
-      w is ListenableBuilder ||
-      w is ValueListenableBuilder ||
-      w is KeyedSubtree ||
-      w is AnimatedDefaultTextStyle;
-
-  /// Elements between a control's component and its Semantics that don't lay
-  /// anything out: inherited and proxy elements, plumbing, and render
-  /// widgets that only route pointers or semantics, or only paint.
-  static bool _isPassThrough(Element e) {
-    if (e is ProxyElement) return true;
-    final w = e.widget;
-    return _isPlumbing(w) ||
-        w is MouseRegion ||
-        w is Listener ||
-        w is IgnorePointer ||
-        w is AbsorbPointer ||
-        w is TapRegion ||
-        w is Semantics ||
-        w is MergeSemantics ||
-        w is ExcludeSemantics ||
-        w is BlockSemantics ||
-        // CupertinoSwitch fades its toggleable with Opacity.
-        w is Opacity ||
-        w is FadeTransition ||
-        w is RepaintBoundary ||
-        w is CustomPaint ||
-        w is ClipRect ||
-        w is ClipRRect ||
-        w is ClipPath ||
-        w is DecoratedBox ||
-        w is ColoredBox;
-  }
-
-  static bool _isFlagless(Widget w) =>
-      w is Semantics &&
-      !_isControlBoundary(w.properties) &&
-      !_isTapAction(w.properties);
-
-  /// Obfuscated builds rename every type, the framework's included.
-  static final bool _obfuscated = '$Semantics' != 'Semantics';
-
-  static String _nameOf(Element element, _Unit unit) {
-    final w = element.widget;
-    if (!unit.isControl) {
-      return _obfuscated
-          ? (w is GestureDetector ? 'GestureDetector' : 'RawGestureDetector')
-          : _typeName(w);
-    }
-    if (_obfuscated ||
-        w is Semantics ||
-        w is GestureDetector ||
-        w is RawGestureDetector) {
-      return unit.role;
-    }
-    return _typeName(w);
-  }
-
-  /// The runtime type's name without type arguments (`DropdownButton<int>`
-  /// is `DropdownButton`). A private name drops its underscore and a `With…`
-  /// or `M2`/`M3` suffix: Flutter 3.19's `_ElevatedButtonWithIcon` is
-  /// `ElevatedButton`.
-  static String _typeName(Widget w) {
-    var name = w.runtimeType.toString();
-    final generic = name.indexOf('<');
-    if (generic > 0) name = name.substring(0, generic);
-    if (name.startsWith('_')) {
-      name = name.replaceFirst(RegExp('^_+'), '');
-      final m = RegExp(r'^(.+?)(With[A-Z]\w*|M[23])$').firstMatch(name);
-      if (m != null) name = m.group(1)!;
-    }
-    return name;
-  }
+  static String _nameOf(Element element, _Unit unit) => unit.isControl
+      ? controlNameOf(element, role: unit.role)
+      : handlerNameOf(element.widget);
 
   /// A GestureDetector a primary tap reaches, or a RawGestureDetector one
   /// would, other than the one a GestureDetector builds.
@@ -329,11 +189,7 @@ class TargetResolver {
     return false;
   }
 
-  static int _childCount(Element e) {
-    var n = 0;
-    e.visitChildElements((_) => n++);
-    return n;
-  }
+
 
   static bool _isAncestor(Element ancestor, Element element) {
     var found = false;
@@ -367,7 +223,7 @@ class _Pairing {
     final w = element.widget;
     _Mark? mark;
 
-    if (w is Semantics && _isControlBoundary(w.properties)) {
+    if (w is Semantics && isControlBoundary(w.properties)) {
       final p = w.properties;
       mark = _Mark(element, _Kind.boundary);
       final buildRoot = parent is StatelessElement || parent is StatefulElement;
@@ -395,7 +251,7 @@ class _Pairing {
         _start(mark, w);
         mark.openBelow = true;
       }
-    } else if (w is Semantics && _isTapAction(w.properties)) {
+    } else if (w is Semantics && isTapAction(w.properties)) {
       mark = _Mark(element, _Kind.action);
       if (adjacent && above.openBelow) {
         above.openBelow = false;
@@ -433,7 +289,7 @@ class _Pairing {
     _below[element] = _PathState(
       mark ?? above,
       (mark == null && state.branched) ||
-          TargetResolver._childCount(element) > 1,
+          childCount(element) > 1,
       mark?.kind == _Kind.merge ? mark!.unit : state.merge,
     );
   }
@@ -471,23 +327,6 @@ class _PathState {
   final bool branched;
   final _Unit? merge;
 }
-
-/// A Semantics a control builds around itself. `currentValueLength` marks a
-/// text field on Flutter 3.19, whose TextField sets no role flag; `expanded`
-/// marks DropdownButton and PopupMenuButton.
-bool _isControlBoundary(SemanticsProperties p) =>
-    p.button == true ||
-    p.toggled != null ||
-    p.checked != null ||
-    p.textField == true ||
-    p.currentValueLength != null ||
-    p.enabled != null ||
-    p.expanded != null;
-
-/// A Semantics with only a tap action: InkResponse's, around its
-/// GestureDetector.
-bool _isTapAction(SemanticsProperties p) =>
-    p.onTap != null || p.onLongPress != null;
 
 enum _Kind { boundary, action, merge, handler, container }
 
