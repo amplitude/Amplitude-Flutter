@@ -213,11 +213,24 @@ class TargetResolver {
 class _Pairing {
   final units = <_Unit>[];
 
-  /// What each visited element's children see on their path.
-  final _below = <Element, _PathState>{};
+  /// The path from the root to the element being visited, each with what
+  /// its children see. The walk is depth-first, so a visited element's
+  /// parent is on this path; OverlayPortal content's real parent isn't, and
+  /// the content starts a path of its own.
+  final _path = <(Element, _PathState)>[];
 
   void visit(Element element, Element? parent) {
-    final state = (parent == null ? null : _below[parent]) ?? _PathState.root;
+    var i = _path.length - 1;
+    while (i >= 0 && !identical(_path[i].$1, parent)) {
+      i--;
+    }
+    final _PathState state;
+    if (i >= 0) {
+      state = _path[i].$2;
+      _path.length = i + 1;
+    } else {
+      state = _PathState.root;
+    }
     final above = state.above;
     final adjacent = above != null && !state.branched;
     final w = element.widget;
@@ -286,12 +299,12 @@ class _Pairing {
       }
     }
 
-    _below[element] = _PathState(
+    _path.add((element, _PathState(
       mark ?? above,
       (mark == null && state.branched) ||
           childCount(element) > 1,
       mark?.kind == _Kind.merge ? mark!.unit : state.merge,
-    );
+    )));
   }
 
   void _start(_Mark mark, [Semantics? semantics]) {
