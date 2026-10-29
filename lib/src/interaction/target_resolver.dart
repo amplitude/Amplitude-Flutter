@@ -1,11 +1,10 @@
 // Adapted from PR #317 at a05e71683c4e6a30304d1219dad08d0b1e50d4fb.
-// Original target ranking, hit-path checks, hidden-widget pruning and
-// composite-tile handling by Zohaib Farooqi and Wei Sun:
+// Original target ranking by Zohaib Farooqi:
 // https://github.com/amplitude/Amplitude-Flutter/pull/317.
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 
-import 'scroll_stops.dart';
+import 'hit_path.dart';
 
 /// The Flutter control a pointer-down landed on.
 class InteractionTarget {
@@ -30,9 +29,8 @@ class InteractionTarget {
   final DeviceGestureSettings? gestureSettings;
 }
 
-/// Picks the gesture detector a pointer-down landed on by walking the
-/// element tree along Flutter's hit-test path and keeping the one the
-/// gesture arena would give the tap.
+/// Picks the gesture detector a pointer-down landed on: the one, of those
+/// on Flutter's hit-test path, that the gesture arena would give the tap.
 ///
 /// Known gaps:
 /// - It reports the gesture detector, not the control that built it: a tap
@@ -42,125 +40,30 @@ class InteractionTarget {
 class TargetResolver {
   const TargetResolver();
 
-  static final _scrollStops = ScrollStops();
-
   InteractionTarget? resolve(PointerDownEvent event) {
-    final result = HitTestResult();
-    WidgetsBinding.instance.hitTestInView(result, event.position, event.viewId);
-    // Position on the hit-test path, which is also the order recognizers
-    // join the gesture arena: a lower index was hit first, and the arena
-    // gives an unresolved tap to its first member.
-    final hitOrder = <RenderObject, int>{};
-    for (final entry in result.path) {
-      final target = entry.target;
-      if (target is RenderObject) {
-        hitOrder.putIfAbsent(target, () => hitOrder.length);
+    final path = HitPath.of(event);
+    final handlers = <Element>[];
+    path.walk((element, parent) {
+      if (_isActiveHandler(element.widget, parent) &&
+          !_ownedBySelectableRegion(element)) {
+        handlers.add(element);
       }
-    }
-    // Only subtrees containing something Flutter hit can hold the target.
-    // Following the hit path, rather than layout geometry, keeps content
-    // that a Transform or SlideTransition moved outside its box.
-    final searched = _hitPathAndAncestors(hitOrder.keys);
-    final units = <_Unit>[];
-    // OverlayPortal content already visited from its Overlay.
-    final portalContent = <Element>{};
+    });
 
-    void startUnit(_Mark mark) {
-      final unit = _Unit(mark);
-      units.add(unit);
-      unit.add(mark);
-    }
-
-    // [above] is the nearest mark above on this path, and [branched] whether
-    // an element with more than one child lies between it and here.
-    void visit(Element element, Element? parent, _Mark? above, bool branched) {
-      if (!element.mounted) return;
-      final w = element.widget;
-      if (w is View && w.view.viewId != event.viewId) return;
-      // A component element has no render object of its own; this is its
-      // nearest descendant render object. Pruning by the hit path also drops
-      // hidden and blocked branches (Offstage, IgnorePointer and the like)
-      // by their live render state. Their widget flags can be stale:
-      // Scrollable toggles its IgnorePointer's render object directly.
-      final ro = element.renderObject;
-      if (ro != null && !searched.contains(ro)) return;
-      // A press on a flinging list only stops it. Flutter's hit test ignored
-      // the content, but the hold re-enabled it before this route ran.
-      if (w is Scrollable && element is StatefulElement) {
-        final position = (element.state as ScrollableState).position;
-        _scrollStops.watch(position);
-        if (_scrollStops.stoppedInThisTask(position)) return;
-      }
-      final adjacent = above != null && !branched;
-      _Mark? mark;
-
-      if (w is SelectableRegion) {
-        // On Flutter 3.19 a SelectableRegion (what SelectionArea builds)
-        // wraps its child in a translucent RawGestureDetector with a plain
-        // tap recognizer that has onTapUp set. That detector is the
-        // region's internal, not a target: text under it reports nothing.
-        mark = _Mark(element, _Kind.container);
-        startUnit(mark);
-        mark.openBelow = true;
-      } else if (_isActiveHandler(w, parent)) {
-        // A handler under another handler is a target of its own: it is
-        // deeper in the arena and wins the tap.
-        mark = _Mark(element, _Kind.handler);
-        if (adjacent && above.openBelow) {
-          above.openBelow = false;
-          above.unit.add(mark);
-        } else {
-          startUnit(mark);
-        }
-      }
-
-      final childAbove = mark ?? above;
-      final childBranched =
-          (mark == null && branched) || _childCount(element) > 1;
-      // Portal content the tap hit is visited from its Overlay, before the
-      // overlay entries: the only ancestors visited before it are also its
-      // render ancestors, and it competes with page content by hit order, as
-      // in the gesture arena. It is a branch of its own. The walk skips it
-      // if it reaches it again through the page.
-      if (w is Overlay) {
-        for (final content in _hitPortalContent(element, searched)) {
-          if (portalContent.add(content)) {
-            visit(content, _parentOf(content), childAbove, true);
-          }
-        }
-      }
-      element.visitChildElements((child) {
-        if (portalContent.isEmpty || !portalContent.contains(child)) {
-          visit(child, element, childAbove, childBranched);
-        }
-      });
-    }
-
-    final root = WidgetsBinding.instance.rootElement;
-    if (root == null) return null;
-    visit(root, null, null, false);
-
-    Element? best;
-    var bestHitIndex = 0;
     // Between handlers in different branches, such as a translucent overlay
     // and the button beneath it, the one Flutter hit first wins, as it does
     // in the gesture arena. Between a handler and one nested inside it, the
-    // deeper one wins.
-    for (final unit in units) {
-      if (!unit.candidate) continue;
-      // Null when this tap couldn't reach the handler.
-      int? hitIndex;
-      for (final m in unit.marks) {
-        final i = hitOrder[m.element.renderObject];
-        if (i != null && (hitIndex == null || i < hitIndex)) hitIndex = i;
-      }
+    // deeper one wins. The walk lists ancestors before their descendants.
+    Element? best;
+    var bestHitIndex = 0;
+    for (final handler in handlers) {
+      final hitIndex = path.hitIndexOf(handler);
       if (hitIndex == null) continue;
-      final element = unit.top.element;
       final current = best;
       if (current == null ||
-          _isAncestor(current, element) ||
+          _isAncestor(current, handler) ||
           hitIndex < bestHitIndex) {
-        best = element;
+        best = handler;
         bestHitIndex = hitIndex;
       }
     }
@@ -186,12 +89,6 @@ class TargetResolver {
     if (_obfuscated) {
       return w is GestureDetector ? 'GestureDetector' : 'RawGestureDetector';
     }
-    return _typeName(w);
-  }
-
-  /// The runtime type's name without type arguments. A private name drops
-  /// its underscore.
-  static String _typeName(Widget w) {
     var name = w.runtimeType.toString();
     final generic = name.indexOf('<');
     if (generic > 0) name = name.substring(0, generic);
@@ -255,89 +152,26 @@ class TargetResolver {
     return false;
   }
 
-  static int _childCount(Element e) {
-    var n = 0;
-    e.visitChildElements((_) => n++);
-    return n;
-  }
-
-  static Element? _parentOf(Element e) {
-    Element? parent;
-    e.visitAncestorElements((a) {
-      parent = a;
-      return false;
-    });
-    return parent;
-  }
-
-  /// [hit] and all of their render-tree ancestors. Transforms hit-test
-  /// their children without adding themselves to the result, so the
-  /// ancestors are needed to reach what they hold.
-  Set<RenderObject> _hitPathAndAncestors(Iterable<RenderObject> hit) {
-    final searched = <RenderObject>{};
-    for (final target in hit) {
-      RenderObject? ro = target;
-      // Stops at the first one already added: its ancestors are in too.
-      while (ro != null && searched.add(ro)) {
-        ro = ro.parent;
+  /// On Flutter 3.19 a SelectableRegion (what SelectionArea builds) wraps
+  /// its child in a translucent RawGestureDetector with a plain tap
+  /// recognizer that has onTapUp set. That detector is the region's own,
+  /// not a target, so text under it reports nothing. It sits between the
+  /// region and the region's child; a handler inside the child is the
+  /// app's and stays a target.
+  static bool _ownedBySelectableRegion(Element handler) {
+    final below = <Widget>[handler.widget];
+    SelectableRegion? region;
+    handler.visitAncestorElements((a) {
+      final w = a.widget;
+      if (w is SelectableRegion) {
+        region = w;
+        return false;
       }
-    }
-    return searched;
-  }
-
-  /// The elements of OverlayPortal content in [overlay] that the tap hit.
-  ///
-  /// A portal's overlay child is a render child of the Overlay, painted right
-  /// after the overlay entry holding the portal, but its element stays under
-  /// the portal. Flutter can hit the overlay child without hitting that
-  /// entry, so the walk would prune the entry before reaching the content.
-  List<Element> _hitPortalContent(
-    Element overlay,
-    Set<RenderObject> searched,
-  ) {
-    Element? theater;
-    overlay.visitChildElements((e) => theater = e);
-    final entryOf = <RenderObject, Element>{};
-    theater?.visitChildElements((entry) {
-      final box = entry.renderObject;
-      if (box != null) entryOf[box] = entry;
+      below.add(w);
+      return true;
     });
-    final content = <Element>[];
-    Element? entry;
-    // In paint order: each entry, then the overlay children it hosts.
-    theater?.renderObject?.visitChildren((child) {
-      final next = entryOf[child];
-      final holder = entry;
-      if (next != null) {
-        entry = next;
-      } else if (holder != null && searched.contains(child)) {
-        final found = _overlayChild(holder, child);
-        if (found != null) content.add(found);
-      }
-    });
-    return content;
-  }
-
-  /// The element under [entry] whose render object is [box], an overlay
-  /// child. Flutter keeps an overlay child deeper in the render tree than
-  /// its OverlayPortal so the portal lays out first; nothing at [box]'s
-  /// depth or deeper can lead to the portal.
-  Element? _overlayChild(Element entry, RenderObject box) {
-    Element? found;
-    void search(Element e) {
-      if (found != null) return;
-      if (e is RenderObjectElement) {
-        if (identical(e.renderObject, box)) {
-          found = e;
-          return;
-        }
-        if (e.renderObject.depth >= box.depth) return;
-      }
-      e.visitChildElements(search);
-    }
-
-    search(entry);
-    return found;
+    final r = region;
+    return r != null && !below.any((w) => identical(w, r.child));
   }
 
   static bool _isAncestor(Element ancestor, Element element) {
@@ -348,38 +182,4 @@ class TargetResolver {
     });
     return found;
   }
-}
-
-enum _Kind { handler, container }
-
-/// A widget on the hit path that takes part in the gesture arena.
-class _Mark {
-  _Mark(this.element, this.kind);
-
-  final Element element;
-  final _Kind kind;
-  late _Unit unit;
-
-  /// Whether the next handler below, with no branch between, belongs to
-  /// this mark: a SelectableRegion's own detector.
-  bool openBelow = false;
-}
-
-/// One tap target, or a container and the detector it owns.
-class _Unit {
-  _Unit(this.top);
-
-  /// The first mark, the highest on the path.
-  final _Mark top;
-  final marks = <_Mark>[];
-  bool _container = false;
-
-  void add(_Mark mark) {
-    marks.add(mark);
-    mark.unit = this;
-    if (mark.kind == _Kind.container) _container = true;
-  }
-
-  /// A container owns what it builds but is never a target.
-  bool get candidate => !_container;
 }
