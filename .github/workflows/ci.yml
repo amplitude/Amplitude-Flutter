@@ -31,7 +31,7 @@ jobs:
         run: flutter test --platform chrome
 
   android-readiness:
-    name: Android readiness tests
+    name: Android regression tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -63,13 +63,13 @@ jobs:
         working-directory: example
         run: flutter build apk --config-only
 
-      # Only the readiness tests: AmplitudeFlutterPluginTest has a broken
+      # Target the regression suites: AmplitudeFlutterPluginTest has a broken
       # fixture (JSONObject cast to Map in getConfiguration) and fails on main.
-      - name: Run Android readiness tests
+      - name: Run Android regression tests
         working-directory: example/android
-        run: ./gradlew :amplitude_flutter:testDebugUnitTest --tests '*ReadinessTest' --console=plain
+        run: ./gradlew :amplitude_flutter:testDebugUnitTest --tests '*ReadinessTest' --tests '*EpochTest' --console=plain
 
-      - name: Summarize Android readiness tests
+      - name: Summarize Android regression tests
         if: always()
         run: |
           results=$(find . -path '*/test-results/testDebugUnitTest/*.xml')
