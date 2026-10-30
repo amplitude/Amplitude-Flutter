@@ -20,7 +20,7 @@ import 'package:flutter/widgets.dart';
 /// - Where an overscrolled ballistic doesn't ignore pointers (on 3.44,
 ///   `ScrollPosition.shouldIgnorePointer` is false out of range), a press
 ///   during the iOS or macOS bounce-back is dropped, although `onTap` ran.
-class ScrollStops {
+class FlingStops {
   final _watched = Expando<bool>();
   final _stopped = <ScrollPosition>{};
 

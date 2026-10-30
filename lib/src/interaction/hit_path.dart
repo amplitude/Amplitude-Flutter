@@ -4,7 +4,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 
-import 'scroll_stops.dart';
+import 'fling_stops.dart';
 
 /// What a pointer-down hit: Flutter's hit-test path for it, and a walk of
 /// the element tree along that path. Knows nothing about controls.
@@ -25,7 +25,7 @@ class HitPath {
     return HitPath._(event.viewId, hitOrder, _withAncestors(hitOrder.keys));
   }
 
-  static final _scrollStops = ScrollStops();
+  static final _flingStops = FlingStops();
 
   final int _viewId;
 
@@ -73,8 +73,8 @@ class HitPath {
       // the content, but the hold re-enabled it before this route ran.
       if (w is Scrollable && element is StatefulElement) {
         final position = (element.state as ScrollableState).position;
-        _scrollStops.watch(position);
-        if (_scrollStops.stoppedInThisTask(position)) return;
+        _flingStops.watch(position);
+        if (_flingStops.stoppedInThisTask(position)) return;
       }
       visit(element, parent);
       if (w is Overlay) {
