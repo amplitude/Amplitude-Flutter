@@ -126,7 +126,7 @@ class Configuration {
   /// See platform-specific documentation for more information.
   bool migrateLegacyData;
 
-  /// Applicable to Web and Android
+  /// Applicable to all platforms (iOS, Android, Web)
   ///
   /// The device ID to use for this device. If no deviceID is provided one will be generated automatically.
   String? deviceId;
