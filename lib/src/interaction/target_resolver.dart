@@ -189,8 +189,6 @@ class TargetResolver {
     return false;
   }
 
-
-
   static bool _isAncestor(Element ancestor, Element element) {
     var found = false;
     element.visitAncestorElements((e) {
@@ -299,12 +297,14 @@ class _Pairing {
       }
     }
 
-    _path.add((element, _PathState(
-      mark ?? above,
-      (mark == null && state.branched) ||
-          childCount(element) > 1,
-      mark?.kind == _Kind.merge ? mark!.unit : state.merge,
-    )));
+    _path.add((
+      element,
+      _PathState(
+        mark ?? above,
+        (mark == null && state.branched) || childCount(element) > 1,
+        mark?.kind == _Kind.merge ? mark!.unit : state.merge,
+      )
+    ));
   }
 
   void _start(_Mark mark, [Semantics? semantics]) {
