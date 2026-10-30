@@ -110,8 +110,7 @@ Future<void> expectResolvesLikeTap(
   // Checked before tapping: the tap can close a menu and unmount it.
   expect(
     resolved,
-    resolvedTo ??
-        (expected == null ? isNull : same(t.element(byId(expected)))),
+    resolvedTo ?? (expected == null ? isNull : same(t.element(byId(expected)))),
     reason: 'resolved at $at',
   );
   ran.clear();
@@ -153,7 +152,6 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('TargetResolver', () {
-
     testWidgets('sibling containment: the tapped button is reported',
         (t) async {
       await t.pumpWidget(
@@ -634,7 +632,6 @@ void main() {
 
         await expectResolvesLikeTap(t, t.getCenter(byId('gd')), ran, 'gd');
       });
-
     });
 
     testWidgets('an invisible control that keeps interactivity is a target',
@@ -975,8 +972,7 @@ void main() {
         );
       });
 
-      testWidgets('content a nested page shows in the root Overlay',
-          (t) async {
+      testWidgets('content a nested page shows in the root Overlay', (t) async {
         // The portal's entry belongs to the root Overlay, not the nested
         // Navigator's Overlay nearest to it.
         final ran = <String>[];
