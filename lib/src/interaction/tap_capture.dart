@@ -97,17 +97,39 @@ abstract class _TapConsumer {
   );
 }
 
+/// One consumer's share of an [_Attempt]: the snapshot it took at
+/// pointer-down, waiting to be delivered at release.
 class _Pending {
   _Pending(this.generation, this.deliver);
+
+  /// The consumer's generation at pointer-down. A [TapCapture.reset],
+  /// `configure` or `dispose` since then changes it, and the delivery is
+  /// dropped.
   final int generation;
+
+  /// Builds the observation from the release and hands it to the consumer.
   final void Function(PointerUpEvent) deliver;
 }
 
+/// An attempt at a tap: one pointer, from pointer-down until it is
+/// released or cancelled.
 class _Attempt {
   _Attempt(this.down, this.slop, this.consumers);
+
   final PointerDownEvent down;
+
+  /// How far the pointer may move from [down] and still be a tap: Flutter's
+  /// tap slop for the target's gesture settings, read at pointer-down.
   final double slop;
+
+  /// The consumers registered at pointer-down. A consumer added later gets
+  /// nothing for this attempt.
   final Map<_TapConsumer, _Pending> consumers;
+
+  /// Whether this can still become a tap. It turns false when the pointer
+  /// moves past [slop], another pointer goes down in the same view, or the
+  /// buttons change, and it never turns true again: a drag that comes back
+  /// within the slop is still not a tap.
   bool valid = true;
 }
 
@@ -115,7 +137,7 @@ class _Attempt {
 class _PointerObserver {
   static final instance = _PointerObserver();
   final _consumers = <_TapConsumer>{};
-  final _contacts = <int, _Attempt>{};
+  final _attempts = <int, _Attempt>{};
   final _slops = <DeviceGestureSettings?, double>{};
 
   void add(_TapConsumer consumer) {
@@ -127,12 +149,12 @@ class _PointerObserver {
 
   void remove(_TapConsumer consumer) {
     if (!_consumers.remove(consumer)) return;
-    for (final attempt in _contacts.values) {
+    for (final attempt in _attempts.values) {
       attempt.consumers.remove(consumer);
     }
     if (_consumers.isEmpty) {
       WidgetsBinding.instance.pointerRouter.removeGlobalRoute(_observe);
-      _contacts.clear();
+      _attempts.clear();
     }
   }
 
@@ -141,7 +163,7 @@ class _PointerObserver {
       if (event is PointerDownEvent) {
         _down(event);
       } else if (event is PointerMoveEvent) {
-        final attempt = _contacts[event.pointer];
+        final attempt = _attempts[event.pointer];
         if (attempt != null &&
             (event.buttons != kPrimaryButton ||
                 event.viewId != attempt.down.viewId ||
@@ -150,19 +172,19 @@ class _PointerObserver {
           attempt.valid = false;
         }
       } else if (event is PointerCancelEvent) {
-        _contacts.remove(event.pointer);
+        _attempts.remove(event.pointer);
       } else if (event is PointerUpEvent) {
         _up(event);
       }
     } catch (error, stack) {
-      _contacts.remove(event.pointer);
+      _attempts.remove(event.pointer);
       _report(error, stack);
     }
   }
 
   void _down(PointerDownEvent event) {
     var overlapping = false;
-    for (final attempt in _contacts.values) {
+    for (final attempt in _attempts.values) {
       if (attempt.down.viewId == event.viewId) {
         overlapping = true;
         attempt.valid = false;
@@ -191,7 +213,7 @@ class _PointerObserver {
     }
     // Recorded even when invalid or without a target, so an overlapping
     // down still invalidates it.
-    _contacts[event.pointer] = _Attempt(
+    _attempts[event.pointer] = _Attempt(
       event,
       _tapSlop(target?.gestureSettings),
       consumers,
@@ -212,7 +234,7 @@ class _PointerObserver {
       });
 
   void _up(PointerUpEvent event) {
-    final attempt = _contacts.remove(event.pointer);
+    final attempt = _attempts.remove(event.pointer);
     if (attempt == null ||
         !attempt.valid ||
         event.viewId != attempt.down.viewId ||
