@@ -266,4 +266,202 @@ void main() {
     expect(data.targetViewClass, 'GestureDetector');
     expect(data.accessibilityLabel, isNull);
   });
+
+  hierarchyAndScreenName();
+}
+
+class ProductCard extends StatelessWidget {
+  const ProductCard({super.key});
+
+  @override
+  Widget build(BuildContext context) => Card(
+        child: ListTile(
+          key: const ValueKey('user-42'),
+          title: const Text('Jane Doe'),
+          onTap: () {},
+          trailing: TextButton(
+              key: const Key('buy'),
+              onPressed: () {},
+              child: const Text('Buy')),
+        ),
+      );
+}
+
+class HomePage extends StatelessWidget {
+  const HomePage({super.key});
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(actions: [
+          IconButton(
+              key: const Key('action'),
+              onPressed: () {},
+              icon: const Icon(Icons.delete)),
+        ]),
+        body: ListView(children: [
+          const ProductCard(),
+          ElevatedButton(
+              key: const Key('save'),
+              onPressed: () {},
+              child: const Text('Save')),
+          ElevatedButton(
+            key: const Key('push'),
+            onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const DetailPage())),
+            child: const Text('Push'),
+          ),
+          ElevatedButton(
+            key: const Key('dialog'),
+            onPressed: () => showDialog<void>(
+              context: context,
+              builder: (_) => AlertDialog(actions: [
+                TextButton(
+                    key: const Key('ok'),
+                    onPressed: () {},
+                    child: const Text('OK')),
+              ]),
+            ),
+            child: const Text('Dialog'),
+          ),
+        ]),
+      );
+}
+
+class DetailPage extends StatelessWidget {
+  const DetailPage({super.key});
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        body: Center(
+          child: ElevatedButton(
+              key: const Key('detail'),
+              onPressed: () {},
+              child: const Text('Detail')),
+        ),
+      );
+}
+
+void hierarchyAndScreenName() {
+  group('Hierarchy', () {
+    testWidgets('keeps the components an app would recognize', (t) async {
+      await t.pumpWidget(const MaterialApp(home: HomePage()));
+      expect(dataAt(t, byId('save')).hierarchy,
+          'ElevatedButton → ListView → HomePage');
+      expect(dataAt(t, byId('buy')).hierarchy,
+          'TextButton → ListTile → Material → ProductCard → ListView → HomePage');
+      expect(dataAt(t, byId('action')).hierarchy,
+          'IconButton → NavigationToolbar → Material → AppBar → HomePage');
+    });
+
+    testWidgets('stops at the page of a pushed route or a dialog', (t) async {
+      await t.pumpWidget(const MaterialApp(home: HomePage()));
+      await t.tap(byId('dialog'));
+      await t.pumpAndSettle();
+      expect(dataAt(t, byId('ok')).hierarchy,
+          'TextButton → Material → AlertDialog');
+      Navigator.of(t.element(byId('ok'))).pop();
+      await t.pumpAndSettle();
+
+      await t.tap(byId('push'));
+      await t.pumpAndSettle();
+      expect(
+          dataAt(t, byId('detail')).hierarchy, 'ElevatedButton → DetailPage');
+    });
+
+    testWidgets('a page built without a route stops at the Overlay', (t) async {
+      await t.pumpWidget(Directionality(
+        textDirection: TextDirection.ltr,
+        child: Overlay(initialEntries: [
+          OverlayEntry(builder: (_) => const DetailPageBody()),
+        ]),
+      ));
+      expect(dataAt(t, byId('bare')).hierarchy,
+          'GestureDetector → DetailPageBody');
+      expect(dataAt(t, byId('bare')).screenName, isNull);
+    });
+
+    testWidgets('is cut at 1,024 characters, keeping the target', (t) async {
+      // A Padding between each wrapper and what it holds, so each is kept
+      // and the button is still reported as itself.
+      Widget nest(int depth) => depth == 0
+          ? ElevatedButton(
+              key: const Key('deep'), onPressed: () {}, child: const Text('Go'))
+          : LongNamedWrapperForHierarchyLimits(
+              child: Padding(padding: EdgeInsets.zero, child: nest(depth - 1)));
+      await t.pumpWidget(MaterialApp(home: Scaffold(body: nest(60))));
+      final hierarchy = dataAt(t, byId('deep')).hierarchy!;
+      expect(hierarchy.length, lessThanOrEqualTo(1024));
+      expect(hierarchy, startsWith('ElevatedButton → '));
+      expect(hierarchy.length,
+          greaterThan(1024 - ' → LongNamedWrapperForHierarchyLimits'.length));
+    });
+
+    testWidgets('is left out on obfuscated builds (Q10)', (t) async {
+      await t.pumpWidget(const MaterialApp(home: HomePage()));
+      final target = const TargetResolver().resolve(PointerDownEvent(
+          position: t.getCenter(byId('save')), viewId: t.view.viewId))!;
+      final data = ElementInteractionEventData.from(target, obfuscated: true);
+      expect(data.hierarchy, isNull);
+      expect(data.screenName, '/');
+    });
+  });
+
+  group('Screen Name', () {
+    testWidgets("is the route's name", (t) async {
+      await t.pumpWidget(MaterialApp(
+        initialRoute: '/checkout',
+        routes: {'/checkout': (_) => const DetailPage()},
+      ));
+      expect(dataAt(t, byId('detail')).screenName, '/checkout');
+    });
+
+    testWidgets("falls back to an unnamed route's page widget (Q27)",
+        (t) async {
+      await t.pumpWidget(const MaterialApp(home: HomePage()));
+      expect(dataAt(t, byId('save')).screenName, '/');
+      await t.tap(byId('push'));
+      await t.pumpAndSettle();
+      expect(dataAt(t, byId('detail')).screenName, 'DetailPage');
+      Navigator.of(t.element(byId('detail'))).pop();
+      await t.pumpAndSettle();
+
+      await t.tap(byId('dialog'));
+      await t.pumpAndSettle();
+      expect(dataAt(t, byId('ok')).screenName, 'AlertDialog');
+    });
+
+    testWidgets('has no fallback on obfuscated builds', (t) async {
+      await t.pumpWidget(const MaterialApp(home: HomePage()));
+      await t.tap(byId('push'));
+      await t.pumpAndSettle();
+      final target = const TargetResolver().resolve(PointerDownEvent(
+          position: t.getCenter(byId('detail')), viewId: t.view.viewId))!;
+      expect(
+          ElementInteractionEventData.from(target, obfuscated: true).screenName,
+          isNull);
+    });
+  });
+}
+
+class DetailPageBody extends StatelessWidget {
+  const DetailPageBody({super.key});
+
+  @override
+  Widget build(BuildContext context) => Center(
+        child: GestureDetector(
+          key: const Key('bare'),
+          behavior: HitTestBehavior.opaque,
+          onTap: () {},
+          child: const SizedBox(width: 40, height: 40),
+        ),
+      );
+}
+
+class LongNamedWrapperForHierarchyLimits extends StatelessWidget {
+  const LongNamedWrapperForHierarchyLimits({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => child;
 }

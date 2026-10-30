@@ -10,6 +10,7 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter/widgets.dart';
 
 import 'control_names.dart';
+import 'element_ancestry.dart';
 import 'target_resolver.dart';
 
 /// Controls whose text is sent as Target Text (decision Q29), by name, so
@@ -36,12 +37,26 @@ class ElementInteractionEventData {
     this.targetText,
     this.accessibilityLabel,
     this.accessibilityIdentifier,
+    this.hierarchy,
+    this.screenName,
   });
 
-  factory ElementInteractionEventData.from(InteractionTarget target) {
+  /// Reads [target]'s event data. [obfuscated] is only set by tests, to see
+  /// what an obfuscated build sends.
+  factory ElementInteractionEventData.from(
+    InteractionTarget target, {
+    bool? obfuscated,
+  }) {
+    obfuscated ??= isObfuscated;
     final own = _OwnContent(collectText: _sendsText(target))
       ..visit(target.element, _parentOf(target.element), inIcon: false);
     final around = _AncestorLabels.of(target.element);
+    // Registers the tapped element as dependent on its route, so it
+    // rebuilds when the route changes: about 2 rebuilds per navigation,
+    // measured acceptable (decision Q9).
+    final route = ModalRoute.of(target.element);
+    final ancestry = ElementAncestry.of(target, page: route?.subtreeContext);
+    final routeName = route?.settings.name;
     return ElementInteractionEventData(
       targetElement: WeakReference(target.element),
       targetViewClass: target.name,
@@ -49,6 +64,14 @@ class ElementInteractionEventData {
       accessibilityLabel:
           own.label ?? around.label ?? own.tooltip ?? around.tooltip,
       accessibilityIdentifier: own.identifier ?? around.identifier,
+      // Obfuscated names change and get reused between releases (Q10).
+      hierarchy: obfuscated ? null : ancestry.hierarchy,
+      // An unnamed route (most Navigator.push calls) falls back to its page
+      // widget's class, as iOS falls back to a view controller's type
+      // (Q27).
+      screenName: routeName != null && routeName.isNotEmpty
+          ? routeName
+          : (obfuscated ? null : ancestry.page),
     );
   }
 
@@ -71,6 +94,14 @@ class ElementInteractionEventData {
 
   /// A `Semantics.identifier`. Keys are never read: they often carry data.
   final String? accessibilityIdentifier;
+
+  /// The components around the control, target first, joined with `" → "`
+  /// as iOS and Android do: `TextButton → ListTile → Material → ProductCard
+  /// → ListView → HomePage`. Null on obfuscated builds.
+  final String? hierarchy;
+
+  /// The route's name, else the class of its page widget.
+  final String? screenName;
 }
 
 /// Whether [target] is one of [_textButtons], or an app component whose
