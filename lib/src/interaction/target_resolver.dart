@@ -134,7 +134,7 @@ class TargetResolver {
 
   /// A GestureDetector a primary tap reaches, or a RawGestureDetector one
   /// would, other than the one a GestureDetector builds.
-  static bool _isActiveHandler(Widget w, Element? parent) {
+  static bool isActiveHandler(Widget w, Element? parent) {
     if (w is GestureDetector) {
       return w.onTap != null ||
           w.onTapUp != null ||
@@ -286,7 +286,7 @@ class _Pairing {
       mark = _Mark(element, _Kind.container, regionChild: w.child);
       _start(mark);
       mark.openBelow = true;
-    } else if (TargetResolver._isActiveHandler(w, parent)) {
+    } else if (TargetResolver.isActiveHandler(w, parent)) {
       // A handler joins only an open boundary right above it. Below another
       // handler it is a control of its own: a GestureDetector in a button's
       // child is deeper in the arena and wins the tap.
