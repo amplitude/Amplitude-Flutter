@@ -399,8 +399,7 @@ Future<void> expectResolvesLikeTap(
   // Checked before tapping: the tap can close a menu and unmount it.
   expect(
     resolved,
-    resolvedTo ??
-        (expected == null ? isNull : same(t.element(byId(expected)))),
+    resolvedTo ?? (expected == null ? isNull : same(t.element(byId(expected)))),
     reason: 'resolved at $at',
   );
   ran.clear();
@@ -465,7 +464,6 @@ void main() {
       expect(keyOf(r), 'i');
     });
 
-
     testWidgets('a CheckboxListTile is reported, not its internals', (t) async {
       await t.pumpWidget(
         app(
@@ -490,7 +488,6 @@ void main() {
       );
     });
 
-
     testWidgets('a SwitchListTile is reported, not its internals', (t) async {
       await t.pumpWidget(
         app(
@@ -514,7 +511,6 @@ void main() {
         SwitchListTile,
       );
     });
-
 
     group('independent child in <tile>.<slot> wins', () {
       Widget independent() => IconButton(
@@ -569,7 +565,6 @@ void main() {
         });
       }
     });
-
 
     testWidgets('sibling containment: the tapped button is reported',
         (t) async {
@@ -1419,7 +1414,8 @@ void main() {
         await t.pumpWidget(app(menu([item('copy', ran), item('paste', ran)])));
         await openMenu(t);
 
-        await expectResolvesLikeTap(t, t.getCenter(byId('paste')), ran, 'paste');
+        await expectResolvesLikeTap(
+            t, t.getCenter(byId('paste')), ran, 'paste');
       });
 
       testWidgets('an item in an open submenu', (t) async {
@@ -1679,8 +1675,7 @@ void main() {
         );
       });
 
-      testWidgets('content a nested page shows in the root Overlay',
-          (t) async {
+      testWidgets('content a nested page shows in the root Overlay', (t) async {
         // The portal's entry belongs to the root Overlay, not the nested
         // Navigator's Overlay nearest to it.
         final ran = <String>[];
