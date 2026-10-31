@@ -1,6 +1,8 @@
 import 'package:amplitude_flutter/src/interaction/target_resolver.dart';
+import 'package:flutter/cupertino.dart' show CupertinoButton;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 int _countingBuilds = 0;
@@ -16,6 +18,293 @@ class _CountingGestureDetector extends GestureDetector {
     return super.build(context);
   }
 }
+
+/// Joins the hit path without ending it, as a translucent box with nothing
+/// hit beneath it does, and handles nothing.
+class _HitButNotHandled extends SingleChildRenderObjectWidget {
+  const _HitButNotHandled();
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderHitButNotHandled();
+}
+
+class _RenderHitButNotHandled extends RenderProxyBoxWithHitTestBehavior {
+  _RenderHitButNotHandled() : super(behavior: HitTestBehavior.translucent);
+}
+
+/// An app control: a Semantics button around a GestureDetector.
+class _FancyButton extends StatelessWidget {
+  const _FancyButton({super.key, required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        child: GestureDetector(
+          onTap: onTap,
+          child: const SizedBox(width: 80, height: 40, child: Text('Fancy')),
+        ),
+      );
+}
+
+/// An app wrapper whose build returns a Material button directly.
+class PrimaryButton extends StatelessWidget {
+  const PrimaryButton({super.key, required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) =>
+      ElevatedButton(onPressed: onPressed, child: const Text('Primary'));
+}
+
+/// One pairing case: tapping `target` must resolve to the widget keyed
+/// [expected] under [name].
+class _Pairing {
+  const _Pairing(this.title, this.build, this.expected, this.name);
+
+  final String title;
+
+  /// Builds the screen; `ran(key)` records which callback ran.
+  final Widget Function(void Function(String) ran) build;
+  final String expected;
+  final String name;
+}
+
+ValueKey<String> _k(String id) => ValueKey(id);
+
+Widget _wide(Widget child) => SizedBox(width: 320, child: child);
+
+final _pairings = <_Pairing>[
+  _Pairing(
+    'a GestureDetector around an enabled button loses to the button',
+    (ran) => GestureDetector(
+      key: _k('gd'),
+      onTap: () => ran('gd'),
+      child: ElevatedButton(
+        key: _k('target'),
+        onPressed: () => ran('target'),
+        child: const Text('Buy'),
+      ),
+    ),
+    'target',
+    'ElevatedButton',
+  ),
+  _Pairing(
+    'a GestureDetector around a disabled button takes the tap',
+    (ran) => GestureDetector(
+      key: _k('gd'),
+      onTap: () => ran('gd'),
+      child: const ElevatedButton(
+        key: ValueKey('target'),
+        onPressed: null,
+        child: Text('Buy'),
+      ),
+    ),
+    'gd',
+    'GestureDetector',
+  ),
+  _Pairing(
+    "a GestureDetector in a CupertinoButton's child wins",
+    (ran) => CupertinoButton(
+      onPressed: () => ran('button'),
+      child: GestureDetector(
+        key: _k('target'),
+        onTap: () => ran('target'),
+        child: const Text('inner'),
+      ),
+    ),
+    'target',
+    'GestureDetector',
+  ),
+  _Pairing(
+    "an ElevatedButton in a CupertinoButton's child wins",
+    (ran) => CupertinoButton(
+      onPressed: () => ran('button'),
+      child: ElevatedButton(
+        key: _k('target'),
+        onPressed: () => ran('target'),
+        child: const Text('inner'),
+      ),
+    ),
+    'target',
+    'ElevatedButton',
+  ),
+  _Pairing(
+    'an InkWell in a ListTile title wins',
+    (ran) => _wide(
+      ListTile(
+        onTap: () => ran('tile'),
+        title: InkWell(
+          key: _k('target'),
+          onTap: () => ran('target'),
+          child: const Text('link'),
+        ),
+      ),
+    ),
+    'target',
+    'InkWell',
+  ),
+  _Pairing(
+    'an ElevatedButton in a ListTile title wins',
+    (ran) => _wide(
+      ListTile(
+        onTap: () => ran('tile'),
+        title: ElevatedButton(
+          key: _k('target'),
+          onPressed: () => ran('target'),
+          child: const Text('go'),
+        ),
+      ),
+    ),
+    'target',
+    'ElevatedButton',
+  ),
+  _Pairing(
+    "a Checkbox in a plain ListTile's trailing wins",
+    (ran) => _wide(
+      ListTile(
+        onTap: () => ran('tile'),
+        title: const Text('row'),
+        trailing: Checkbox(
+          key: _k('target'),
+          value: false,
+          onChanged: (_) => ran('target'),
+        ),
+      ),
+    ),
+    'target',
+    'Checkbox',
+  ),
+  _Pairing(
+    'a Switch inside a GestureDetector wins',
+    (ran) => GestureDetector(
+      onTap: () => ran('gd'),
+      child: Switch(
+        key: _k('target'),
+        value: false,
+        onChanged: (_) => ran('target'),
+      ),
+    ),
+    'target',
+    'Switch',
+  ),
+  _Pairing(
+    'an enabled IconButton in a disabled ListTile wins',
+    (ran) => _wide(
+      ListTile(
+        enabled: false,
+        onTap: () => ran('tile'),
+        title: const Text('row'),
+        trailing: IconButton(
+          key: _k('target'),
+          onPressed: () => ran('target'),
+          icon: const Icon(Icons.delete),
+        ),
+      ),
+    ),
+    'target',
+    'IconButton',
+  ),
+  _Pairing(
+    'ExcludeSemantics does not hide a control',
+    (ran) => ExcludeSemantics(
+      child: ElevatedButton(
+        key: _k('target'),
+        onPressed: () => ran('target'),
+        child: const Text('Hidden'),
+      ),
+    ),
+    'target',
+    'ElevatedButton',
+  ),
+  _Pairing(
+    'an app component with a Semantics button is named after itself',
+    (ran) => _FancyButton(key: _k('target'), onTap: () => ran('target')),
+    'target',
+    'FancyButton',
+  ),
+  _Pairing(
+    'an inline Semantics button is reported as its handler, by role',
+    (ran) => Semantics(
+      button: true,
+      child: GestureDetector(
+        key: _k('target'),
+        behavior: HitTestBehavior.opaque,
+        onTap: () => ran('target'),
+        child: const SizedBox(width: 80, height: 40),
+      ),
+    ),
+    'target',
+    'Button',
+  ),
+  _Pairing(
+    'an app component whose build returns a button is named after itself',
+    (ran) => PrimaryButton(key: _k('target'), onPressed: () => ran('target')),
+    'target',
+    'PrimaryButton',
+  ),
+  _Pairing(
+    'an ActionChip',
+    (ran) => ActionChip(
+      key: _k('target'),
+      label: const Text('chip'),
+      onPressed: () => ran('target'),
+    ),
+    'target',
+    'ActionChip',
+  ),
+  _Pairing(
+    'a FilterChip',
+    (ran) => FilterChip(
+      key: _k('target'),
+      label: const Text('chip'),
+      selected: false,
+      onSelected: (_) => ran('target'),
+    ),
+    'target',
+    'FilterChip',
+  ),
+  _Pairing(
+    'a Radio',
+    // RadioGroup replaces groupValue and onChanged from Flutter 3.35; the
+    // SDK still supports 3.19.
+    (ran) => Radio<int>(
+      key: _k('target'),
+      value: 1,
+      // ignore: deprecated_member_use
+      groupValue: 0,
+      // ignore: deprecated_member_use
+      onChanged: (_) => ran('target'),
+    ),
+    'target',
+    'Radio',
+  ),
+  _Pairing(
+    'a RadioListTile owns its radio',
+    (ran) => _wide(
+      RadioListTile<int>(
+        key: _k('target'),
+        value: 1,
+        // ignore: deprecated_member_use
+        groupValue: 0,
+        // ignore: deprecated_member_use
+        onChanged: (_) => ran('target'),
+        title: const Text('radio'),
+      ),
+    ),
+    'target',
+    'RadioListTile',
+  ),
+  _Pairing(
+    'a BackButton, not the IconButton it builds',
+    (ran) => BackButton(key: _k('target'), onPressed: () => ran('target')),
+    'target',
+    'BackButton',
+  ),
+];
 
 const _rawKey = ValueKey('raw');
 
@@ -119,24 +408,16 @@ Future<void> expectResolvesLikeTap(
   expect(ran, expected == null ? isEmpty : [expected], reason: 'ran at $at');
 }
 
-/// Matches [ancestor] or an element inside it.
-Matcher isAtOrInside(Element ancestor) => predicate<Element?>(
-      (e) {
-        var found = identical(e, ancestor);
-        e?.visitAncestorElements((a) {
-          found = found || identical(a, ancestor);
-          return !found;
-        });
-        return found;
-      },
-      'is $ancestor or inside it',
-    );
-
 Object? keyOf(InteractionTarget? r) =>
     (r?.element.widget.key as ValueKey?)?.value;
 
+Type? typeOf(InteractionTarget? r) => r?.element.widget.runtimeType;
+
 Widget app(Widget child) =>
     MaterialApp(home: Scaffold(body: Center(child: child)));
+
+Widget keyedButton(String id) =>
+    ElevatedButton(key: ValueKey(id), onPressed: () {}, child: Text(id));
 
 /// A tap target: a keyed GestureDetector the size of a small button.
 Widget keyedDetector(String id) => GestureDetector(
@@ -152,6 +433,139 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('TargetResolver', () {
+    testWidgets('a concrete control beats its internal handlers', (t) async {
+      await t.pumpWidget(app(keyedButton('b')));
+
+      final r = resolveAt(t, t.getCenter(byId('b')));
+
+      expect(typeOf(r), ElevatedButton);
+    });
+
+    testWidgets('a control nested inside another control wins', (t) async {
+      await t.pumpWidget(
+        app(
+          SizedBox(
+            width: 300,
+            child: ListTile(
+              onTap: () {},
+              title: const Text('Row'),
+              trailing: IconButton(
+                key: const ValueKey('i'),
+                onPressed: () {},
+                icon: const Icon(Icons.delete),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final r = resolveAt(t, t.getCenter(byId('i')));
+
+      expect(keyOf(r), 'i');
+    });
+
+    testWidgets('a CheckboxListTile is reported, not its internals', (t) async {
+      await t.pumpWidget(
+        app(
+          SizedBox(
+            width: 300,
+            child: CheckboxListTile(
+              value: false,
+              onChanged: (_) {},
+              title: const Text('Title'),
+            ),
+          ),
+        ),
+      );
+
+      expect(
+        typeOf(resolveAt(t, t.getCenter(find.text('Title')))),
+        CheckboxListTile,
+      );
+      expect(
+        typeOf(resolveAt(t, t.getCenter(find.byType(Checkbox)))),
+        CheckboxListTile,
+      );
+    });
+
+    testWidgets('a SwitchListTile is reported, not its internals', (t) async {
+      await t.pumpWidget(
+        app(
+          SizedBox(
+            width: 300,
+            child: SwitchListTile(
+              value: false,
+              onChanged: (_) {},
+              title: const Text('Title'),
+            ),
+          ),
+        ),
+      );
+
+      expect(
+        typeOf(resolveAt(t, t.getCenter(find.text('Title')))),
+        SwitchListTile,
+      );
+      expect(
+        typeOf(resolveAt(t, t.getCenter(find.byType(Switch)))),
+        SwitchListTile,
+      );
+    });
+
+    group('independent child in <tile>.<slot> wins', () {
+      Widget independent() => IconButton(
+            key: const ValueKey('independent'),
+            onPressed: () {},
+            icon: const Icon(Icons.star),
+          );
+
+      for (final slot in ['title', 'subtitle', 'secondary']) {
+        Widget? only(String name) => slot == name ? independent() : null;
+
+        testWidgets('CheckboxListTile.$slot', (t) async {
+          await t.pumpWidget(
+            app(
+              SizedBox(
+                width: 300,
+                child: CheckboxListTile(
+                  value: false,
+                  onChanged: (_) {},
+                  title: only('title') ?? const Text('T'),
+                  subtitle: only('subtitle'),
+                  secondary: only('secondary'),
+                ),
+              ),
+            ),
+          );
+
+          final r = resolveAt(t, t.getCenter(byId('independent')));
+
+          expect(keyOf(r), 'independent');
+        });
+
+        testWidgets('SwitchListTile.$slot', (t) async {
+          await t.pumpWidget(
+            app(
+              SizedBox(
+                width: 300,
+                child: SwitchListTile(
+                  value: false,
+                  onChanged: (_) {},
+                  title: only('title') ?? const Text('T'),
+                  subtitle: only('subtitle'),
+                  secondary: only('secondary'),
+                ),
+              ),
+            ),
+          );
+
+          final r = resolveAt(t, t.getCenter(byId('independent')));
+
+          expect(keyOf(r), 'independent');
+        });
+      }
+    });
+
     testWidgets('sibling containment: the tapped button is reported',
         (t) async {
       await t.pumpWidget(
@@ -434,6 +848,17 @@ void main() {
       expect(resolveAt(t, behindBarrier), isNull);
     });
 
+    testWidgets('disabled buttons resolve with enabled false', (t) async {
+      await t.pumpWidget(
+        app(const ElevatedButton(onPressed: null, child: Text('off'))),
+      );
+
+      final r = resolveAt(t, t.getCenter(find.text('off')));
+
+      expect(typeOf(r), ElevatedButton);
+      expect(r!.enabled, isFalse);
+    });
+
     testWidgets('resolving does not subscribe the target to MediaQuery',
         (t) async {
       var insets = 0.0;
@@ -632,6 +1057,113 @@ void main() {
 
         await expectResolvesLikeTap(t, t.getCenter(byId('gd')), ran, 'gd');
       });
+
+      testWidgets("an InkWell in an ElevatedButton's child wins", (t) async {
+        final ran = <String>[];
+        await t.pumpWidget(
+          app(
+            ElevatedButton(
+              key: const ValueKey('btn'),
+              onPressed: () => ran.add('btn'),
+              child: InkWell(
+                key: const ValueKey('ink'),
+                onTap: () => ran.add('ink'),
+                child: const Text('ink'),
+              ),
+            ),
+          ),
+        );
+
+        await expectResolvesLikeTap(t, t.getCenter(byId('ink')), ran, 'ink');
+      });
+
+      testWidgets('a disabled control in an enabled tile credits the tile',
+          (t) async {
+        final ran = <String>[];
+        await t.pumpWidget(
+          app(
+            SizedBox(
+              width: 300,
+              child: ListTile(
+                key: const ValueKey('tile'),
+                onTap: () => ran.add('tile'),
+                title: const Text('Row'),
+                trailing: const IconButton(
+                  key: ValueKey('icon'),
+                  onPressed: null,
+                  icon: Icon(Icons.delete),
+                ),
+              ),
+            ),
+          ),
+        );
+        final p = t.getCenter(byId('icon'));
+
+        await expectResolvesLikeTap(t, p, ran, 'tile');
+        expect(resolveAt(t, p)!.enabled, isTrue);
+      });
+
+      testWidgets("a slot doesn't carry into its control's own internals",
+          (t) async {
+        // The `secondary` slot is moved over the tile's own checkbox, so
+        // the hit path runs through the slot first and then the checkbox.
+        // Leaving the slot must not leave the tile's internals: if it did,
+        // the checkbox the tile builds would be reported instead of the
+        // tile.
+        final ran = <String>[];
+        Widget tile(Offset shift) => app(
+              SizedBox(
+                width: 300,
+                child: CheckboxListTile(
+                  key: const ValueKey('tile'),
+                  value: false,
+                  onChanged: (_) => ran.add('tile'),
+                  title: const Text('Title'),
+                  secondary: Transform.translate(
+                    offset: shift,
+                    child: const SizedBox(
+                      key: ValueKey('shifted'),
+                      width: 24,
+                      height: 24,
+                      child: _HitButNotHandled(),
+                    ),
+                  ),
+                ),
+              ),
+            );
+        await t.pumpWidget(tile(Offset.zero));
+        final shift =
+            t.getCenter(find.byType(Checkbox)) - t.getCenter(byId('shifted'));
+        await t.pumpWidget(tile(shift));
+        final p = t.getCenter(find.byType(Checkbox));
+        final hitPath = t.hitTestOnBinding(p).path.map((e) => e.target);
+        expect(
+            hitPath, contains(t.renderObject(find.byType(_HitButNotHandled))));
+        expect(hitPath, contains(t.renderObject(find.byType(Checkbox))));
+
+        await expectResolvesLikeTap(t, p, ran, 'tile');
+      });
+    });
+
+    // Real-tap oracle: the control whose callback ran must be the one
+    // resolved, under the name the control is reported by.
+    group('Semantics pairing', () {
+      for (final c in _pairings) {
+        testWidgets(c.title, (t) async {
+          final ran = <String>[];
+          await t.pumpWidget(app(c.build(ran.add)));
+          final p = t.getCenter(byId('target'));
+
+          final r = resolveAt(t, p);
+          await t.tapAt(p);
+          await t.pump(const Duration(seconds: 1));
+
+          expect(ran, [c.expected], reason: 'callback that ran');
+          expect(keyOf(r), c.expected);
+          expect(r!.name, c.name);
+          expect(r.enabled, isTrue);
+        });
+      }
     });
 
     testWidgets('an invisible control that keeps interactivity is a target',
@@ -856,9 +1388,11 @@ void main() {
     });
 
     group('OverlayPortal content', () {
-      Widget item(String id, List<String> ran) => MenuItemButton(
+      Widget item(String id, List<String> ran, {Widget? trailingIcon}) =>
+          MenuItemButton(
             key: ValueKey(id),
             onPressed: () => ran.add(id),
+            trailingIcon: trailingIcon,
             child: Text(id),
           );
 
@@ -881,12 +1415,7 @@ void main() {
         await openMenu(t);
 
         await expectResolvesLikeTap(
-          t,
-          t.getCenter(byId('paste')),
-          ran,
-          'paste',
-          resolvedTo: isAtOrInside(t.element(byId('paste'))),
-        );
+            t, t.getCenter(byId('paste')), ran, 'paste');
       });
 
       testWidgets('an item in an open submenu', (t) async {
@@ -906,13 +1435,187 @@ void main() {
         await t.tap(find.text('More'));
         await t.pumpAndSettle();
 
+        await expectResolvesLikeTap(t, t.getCenter(byId('deep')), ran, 'deep');
+      });
+
+      testWidgets("a control in a menu item's trailingIcon wins", (t) async {
+        final ran = <String>[];
+        await t.pumpWidget(
+          app(
+            menu([
+              item(
+                'row',
+                ran,
+                trailingIcon: IconButton(
+                  key: const ValueKey('pin'),
+                  onPressed: () => ran.add('pin'),
+                  icon: const Icon(Icons.push_pin),
+                ),
+              ),
+            ]),
+          ),
+        );
+        await openMenu(t);
+
+        await expectResolvesLikeTap(t, t.getCenter(byId('pin')), ran, 'pin');
+      });
+
+      testWidgets('a disabled menu item resolves with enabled false',
+          (t) async {
+        await t.pumpWidget(
+          app(
+            menu([
+              const MenuItemButton(
+                key: ValueKey('off'),
+                onPressed: null,
+                child: Text('off'),
+              ),
+            ]),
+          ),
+        );
+        await openMenu(t);
+
+        final r = resolveAt(t, t.getCenter(byId('off')));
+
+        expect(keyOf(r), 'off');
+        expect(r!.name, 'MenuItemButton');
+        expect(r.enabled, isFalse);
+      });
+
+      testWidgets('a SubmenuButton resolves to the TextButton it builds',
+          (t) async {
+        final ran = <String>[];
+        await t.pumpWidget(
+          app(
+            menu([
+              SubmenuButton(
+                key: const ValueKey('more'),
+                onOpen: () => ran.add('more'),
+                menuChildren: [item('deep', ran)],
+                child: const Text('More'),
+              ),
+            ]),
+          ),
+        );
+        await openMenu(t);
+        // A known gap: the MenuAnchor between them hides that the submenu
+        // built this TextButton.
+        final button = find.descendant(
+          of: byId('more'),
+          matching: find.byType(TextButton),
+        );
+
         await expectResolvesLikeTap(
           t,
-          t.getCenter(byId('deep')),
+          t.getCenter(button),
           ran,
-          'deep',
-          resolvedTo: isAtOrInside(t.element(byId('deep'))),
+          'more',
+          resolvedTo: same(t.element(button)),
         );
+      });
+
+      // Menu toggles pass their key on to the MenuItemButton they build, so
+      // these tests find them by type.
+      testWidgets('a CheckboxMenuButton in an open menu', (t) async {
+        final ran = <String>[];
+        await t.pumpWidget(
+          app(
+            menu([
+              CheckboxMenuButton(
+                value: false,
+                onChanged: (_) => ran.add('bold'),
+                child: const Text('Bold'),
+              ),
+            ]),
+          ),
+        );
+        await openMenu(t);
+        final toggle = find.byType(CheckboxMenuButton);
+        // The checkbox it shows ignores pointers, so the item takes the tap.
+        final box = t.getCenter(find.byType(Checkbox));
+
+        await expectResolvesLikeTap(
+          t,
+          t.getCenter(toggle),
+          ran,
+          'bold',
+          resolvedTo: same(t.element(toggle)),
+        );
+        await openMenu(t);
+        await expectResolvesLikeTap(
+          t,
+          box,
+          ran,
+          'bold',
+          resolvedTo: same(t.element(toggle)),
+        );
+      });
+
+      testWidgets('a RadioMenuButton in an open menu', (t) async {
+        final ran = <String>[];
+        await t.pumpWidget(
+          app(
+            menu([
+              RadioMenuButton<String>(
+                value: 'left',
+                // RadioGroup replaces groupValue and onChanged from Flutter
+                // 3.35; the SDK still supports 3.19.
+                // ignore: deprecated_member_use
+                groupValue: 'right',
+                // ignore: deprecated_member_use
+                onChanged: (_) => ran.add('left'),
+                child: const Text('Left'),
+              ),
+            ]),
+          ),
+        );
+        await openMenu(t);
+
+        await expectResolvesLikeTap(
+          t,
+          t.getCenter(find.byType(RadioMenuButton<String>)),
+          ran,
+          'left',
+          resolvedTo: same(t.element(find.byType(RadioMenuButton<String>))),
+        );
+      });
+
+      testWidgets('menu items are named after themselves', (t) async {
+        await t.pumpWidget(
+          app(
+            menu([
+              const CheckboxMenuButton(
+                value: false,
+                onChanged: null,
+                child: Text('check'),
+              ),
+              RadioMenuButton<String>(
+                value: 'a',
+                // ignore: deprecated_member_use
+                groupValue: 'b',
+                // ignore: deprecated_member_use
+                onChanged: (_) {},
+                child: const Text('radio'),
+              ),
+              MenuItemButton(onPressed: () {}, child: const Text('plain')),
+            ]),
+          ),
+        );
+        await openMenu(t);
+
+        final check =
+            resolveAt(t, t.getCenter(find.byType(CheckboxMenuButton)));
+        final radio =
+            resolveAt(t, t.getCenter(find.byType(RadioMenuButton<String>)));
+        final plain = resolveAt(t, t.getCenter(find.text('plain')));
+
+        expect(typeOf(check), CheckboxMenuButton);
+        expect(check!.name, 'CheckboxMenuButton');
+        expect(check.enabled, isFalse);
+        expect(typeOf(radio), RadioMenuButton<String>);
+        expect(radio!.name, 'RadioMenuButton');
+        expect(radio.enabled, isTrue);
+        expect(plain!.name, 'MenuItemButton');
       });
 
       testWidgets('a DropdownMenu entry', (t) async {
@@ -939,7 +1642,7 @@ void main() {
           t.getCenter(pear),
           ran,
           'pear',
-          resolvedTo: isAtOrInside(t.element(pear)),
+          resolvedTo: same(t.element(pear)),
         );
       });
 
@@ -968,7 +1671,7 @@ void main() {
           t.getCenter(apricot),
           ran,
           'apricot',
-          resolvedTo: isAtOrInside(t.element(apricot)),
+          resolvedTo: same(t.element(apricot)),
         );
       });
 
