@@ -1,3 +1,10 @@
+## [4.8.2](https://github.com/amplitude/Amplitude-Flutter/compare/v4.8.1...v4.8.2) (2026-11-03)
+
+
+### Bug Fixes
+
+* **android:** preserve 64-bit event values and configuration durations ([#330](https://github.com/amplitude/Amplitude-Flutter/issues/330)) ([6f20e8d](https://github.com/amplitude/Amplitude-Flutter/commit/6f20e8db09098b5ef58487bd6e1f3fd860eefaee))
+
 ## [4.8.1](https://github.com/amplitude/Amplitude-Flutter/compare/v4.8.0...v4.8.1) (2026-10-21)
 
 
