@@ -8,6 +8,7 @@ import 'events/revenue.dart';
 import 'configuration.dart';
 import 'events/base_event.dart';
 import 'events/group_identify_event.dart';
+import 'src/interaction/flutter_element_interactions.dart';
 
 class Amplitude {
   Configuration configuration;
@@ -42,6 +43,7 @@ class Amplitude {
   Amplitude(this.configuration, [MethodChannel? methodChannel]) {
     _channel = methodChannel ?? _channel;
     isBuilt = _init();
+    FlutterElementInteractions.register(configuration);
   }
 
   /// Private method to initialize and return a `Future<bool>`
