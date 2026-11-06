@@ -4,6 +4,8 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 
+import 'fling_stops.dart';
+
 /// Every tap handler under [event], with its position on Flutter's
 /// hit-test path.
 ///
@@ -12,6 +14,9 @@ import 'package:flutter/widgets.dart';
 /// come in element-tree order, each before the handlers nested in it. A
 /// lower hit index was hit first, which is also the order recognizers join
 /// the gesture arena.
+///
+/// The walk starts [FlingStops] watching each list it passes, so a later
+/// press that stops one of them can be told apart.
 List<(Element handler, int hitIndex)> tapHandlersHitBy(
   PointerDownEvent event,
 ) {
@@ -165,6 +170,13 @@ class _HitPath {
       // IgnorePointer's render object directly.
       final ro = element.renderObject;
       if (ro != null && !_searched.contains(ro)) return;
+      // A press on a flinging list only stops it. Flutter's hit test ignored
+      // the content, but the hold re-enabled it before this route ran.
+      if (w is Scrollable && element is StatefulElement) {
+        final position = (element.state as ScrollableState).position;
+        FlingStops.instance.watch(position);
+        if (FlingStops.instance.stoppedInThisTask(position)) return;
+      }
       visit(element, parent);
       if (w is Overlay) {
         for (final content in _hitPortalContent(element)) {
