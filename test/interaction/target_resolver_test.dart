@@ -1,3 +1,4 @@
+import 'package:amplitude_flutter/src/interaction/fling_stops.dart';
 import 'package:amplitude_flutter/src/interaction/target_resolver.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -92,6 +93,7 @@ class _SharedRawButtonState extends State<_SharedRawButton> {
 InteractionTarget? resolveAt(WidgetTester t, Offset at) =>
     TargetResolver.resolve(
       PointerDownEvent(position: at, viewId: t.view.viewId),
+      flingStops: FlingStops(),
     );
 
 /// Real-tap oracle. Resolves a pointer-down at [at] while everything is

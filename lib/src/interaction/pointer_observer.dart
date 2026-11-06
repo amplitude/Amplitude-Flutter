@@ -1,6 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 
+import 'fling_stops.dart';
 import 'target_resolver.dart';
 
 /// Called with the control a tap landed on, at release.
@@ -32,6 +33,11 @@ class PointerObserver {
   final _listeners = <TapListener>[];
   final _attempts = <int, _Attempt>{};
   final _slops = <DeviceGestureSettings?, double>{};
+
+  /// Lists that stopped scrolling during the current dispatch. It has to
+  /// outlive any one press: it watches a list from the first press that
+  /// reaches it, so it can tell when a later press stops it.
+  final _flingStops = FlingStops();
 
   /// Calls [listener] for each tap from now on. Returns a function that
   /// stops it.
@@ -93,7 +99,7 @@ class PointerObserver {
     // gesture settings give the slop.
     InteractionTarget? target;
     try {
-      target = TargetResolver.resolve(event);
+      target = TargetResolver.resolve(event, flingStops: _flingStops);
     } catch (error, stack) {
       _report(error, stack);
     }

@@ -4,6 +4,8 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 
+import 'fling_stops.dart';
+
 /// Every tap handler under [event], with its position on Flutter's
 /// hit-test path.
 ///
@@ -12,12 +14,16 @@ import 'package:flutter/widgets.dart';
 /// come in element-tree order, each before the handlers nested in it. A
 /// lower hit index was hit first, which is also the order recognizers join
 /// the gesture arena.
+///
+/// [flingStops] starts watching each list the walk passes, so a later press
+/// that stops one of them can be told apart.
 List<(Element handler, int hitIndex)> tapHandlersHitBy(
-  PointerDownEvent event,
-) {
+  PointerDownEvent event, {
+  required FlingStops flingStops,
+}) {
   final path = _HitPath(event);
   final handlers = <(Element, int)>[];
-  path.walk((element, parent) {
+  path.walk(flingStops, (element, parent) {
     if (!_isActiveHandler(element.widget, parent) ||
         _ownedBySelectableRegion(element)) {
       return;
@@ -150,7 +156,10 @@ class _HitPath {
   /// walk may never visit. The only ancestors visited before the content are
   /// also its render ancestors, so it competes with page content by hit
   /// order, as in the gesture arena.
-  void walk(void Function(Element element, Element? parent) visit) {
+  void walk(
+    FlingStops flingStops,
+    void Function(Element element, Element? parent) visit,
+  ) {
     final root = WidgetsBinding.instance.rootElement;
     if (root == null) return;
     final portalContent = <Element>{};
@@ -165,6 +174,13 @@ class _HitPath {
       // IgnorePointer's render object directly.
       final ro = element.renderObject;
       if (ro != null && !_searched.contains(ro)) return;
+      // A press on a flinging list only stops it. Flutter's hit test ignored
+      // the content, but the hold re-enabled it before this route ran.
+      if (w is Scrollable && element is StatefulElement) {
+        final position = (element.state as ScrollableState).position;
+        flingStops.watch(position);
+        if (flingStops.stoppedInThisTask(position)) return;
+      }
       visit(element, parent);
       if (w is Overlay) {
         for (final content in _hitPortalContent(element)) {

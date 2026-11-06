@@ -4,6 +4,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 
+import 'fling_stops.dart';
 import 'tap_handlers.dart';
 
 /// The Flutter control a pointer-down landed on.
@@ -34,14 +35,18 @@ class InteractionTarget {
 /// - A control that handles gestures in its render object is not reported:
 ///   Slider, and CupertinoSwitch on Flutter 3.19.
 abstract final class TargetResolver {
-  static InteractionTarget? resolve(PointerDownEvent event) {
+  static InteractionTarget? resolve(
+    PointerDownEvent event, {
+    required FlingStops flingStops,
+  }) {
     // Between handlers in different branches, such as a translucent overlay
     // and the button beneath it, the one Flutter hit first wins, as it does
     // in the gesture arena. Between a handler and one nested inside it, the
     // deeper one wins. Handlers come ancestors first.
     Element? best;
     var bestHitIndex = 0;
-    for (final (handler, hitIndex) in tapHandlersHitBy(event)) {
+    for (final (handler, hitIndex)
+        in tapHandlersHitBy(event, flingStops: flingStops)) {
       final current = best;
       if (current == null ||
           _isAncestor(current, handler) ||
