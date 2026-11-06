@@ -58,7 +58,7 @@ void main() {
         final stop = FlutterElementInteractions.register(config(autocapture));
         expect(stop, isNotNull);
         addTearDown(stop!);
-        expect(await logsOfTap(t), ['Amplitude: tap on GestureDetector']);
+        expect(await logsOfTap(t), ['Amplitude: tap on ElevatedButton']);
       });
     }
 
@@ -84,6 +84,6 @@ void main() {
   testWidgets('an Amplitude instance with element interactions logs taps',
       (t) async {
     Amplitude(config(const AutocaptureEnabled()), MockMethodChannel());
-    expect(await logsOfTap(t), ['Amplitude: tap on GestureDetector']);
+    expect(await logsOfTap(t), ['Amplitude: tap on ElevatedButton']);
   });
 }
