@@ -34,7 +34,10 @@ abstract final class FlutterElementInteractions {
 
   static void _onTap(InteractionTarget target) {
     assert(() {
-      debugPrint('Amplitude: tap on ${target.name}');
+      debugPrint(
+        'Amplitude: tap on ${target.name}'
+        '${target.enabled ? '' : ' (disabled)'}',
+      );
       return true;
     }());
   }
