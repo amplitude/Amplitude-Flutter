@@ -13,6 +13,7 @@ import 'src/interaction/flutter_element_interactions.dart';
 class Amplitude {
   Configuration configuration;
   MethodChannel _channel = const MethodChannel('amplitude_flutter');
+  FlutterElementInteractions? _elementInteractions;
 
   /// Whether the platform SDK has completed initialization successfully.
   ///
@@ -43,7 +44,11 @@ class Amplitude {
   Amplitude(this.configuration, [MethodChannel? methodChannel]) {
     _channel = methodChannel ?? _channel;
     isBuilt = _init();
-    FlutterElementInteractions.register(configuration);
+    _elementInteractions = FlutterElementInteractions.register(
+      configuration,
+      isBuilt: isBuilt,
+      track: track,
+    );
   }
 
   /// Private method to initialize and return a `Future<bool>`
@@ -219,6 +224,7 @@ class Amplitude {
   /// amplitude.setUserId('user Id');
   /// ```
   Future<void> setUserId(String? userId) async {
+    _elementInteractions?.resetIdentity();
     Map<String, String?> properties = {};
     properties['setUserId'] = userId;
 
@@ -244,6 +250,7 @@ class Amplitude {
   /// amplitude.setDeviceId('device Id');
   /// ```
   Future<void> setDeviceId(String? deviceId) async {
+    _elementInteractions?.resetIdentity();
     Map<String, String?> properties = {};
     properties['setDeviceId'] = deviceId;
 
@@ -265,7 +272,12 @@ class Amplitude {
   ///
   /// Set setOptOut to true to disable logging for a specific user.
   /// Set setOptOut to false to re-enable logging.
+  ///
+  /// Also updates [Configuration.optOut], as the iOS and Android SDKs'
+  /// optOut setters update their configuration.
   Future<void> setOptOut(bool enabled) async {
+    configuration.optOut = enabled;
+    _elementInteractions?.setOptOut(enabled);
     Map<String, bool> properties = {};
     properties['setOptOut'] = enabled;
 
@@ -277,6 +289,7 @@ class Amplitude {
   ///
   /// Note different devices on different platforms should have different device Ids.
   Future<void> reset() async {
+    _elementInteractions?.resetIdentity();
     return await _channel
         .invokeMethod('reset', {'instanceName': configuration.instanceName});
   }
