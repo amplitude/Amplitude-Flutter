@@ -431,6 +431,23 @@ void main() {
       expect(out, hasLength(2));
     });
 
+    testWidgets('disabled targets are delivered with enabled false', (t) async {
+      final out = <InteractionTarget>[];
+      addTearDown(PointerObserver.instance.subscribe(out.add));
+      await t.pumpWidget(
+        app(
+          const ElevatedButton(
+            key: ValueKey('off'),
+            onPressed: null,
+            child: Text('Off'),
+          ),
+        ),
+      );
+      await t.tap(byId('off'));
+      expect(out.single.element, same(t.element(byId('off'))));
+      expect(out.single.enabled, false);
+    });
+
     testWidgets('capture never disposes a recognizer the app shares',
         (t) async {
       observeKeys();

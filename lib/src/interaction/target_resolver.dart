@@ -6,29 +6,71 @@ import 'package:flutter/widgets.dart';
 import 'hit_controls.dart';
 import 'interaction_target.dart';
 
-/// Picks the gesture detector a pointer-down landed on: the one, of those
-/// on Flutter's hit-test path, that the gesture arena would give the tap.
+/// Picks the control a pointer-down landed on: the one, of those on
+/// Flutter's hit-test path, that the gesture arena would give the tap.
+///
+/// It knows no Material or Cupertino type, so it reads Flutter's own
+/// controls, `material_ui`, `cupertino_ui` and app controls the same way.
+/// It reads widget configuration, never the semantics tree, so it works
+/// with semantics off.
 ///
 /// Known gaps:
-/// - It reports the gesture detector, not the control that built it: a tap
-///   on an ElevatedButton resolves to its InkWell's GestureDetector.
+/// - A control that builds no Semantics is reported as its gesture
+///   detector: CupertinoListTile as its GestureDetector.
 /// - A control that handles gestures in its render object is not reported:
 ///   Slider, and CupertinoSwitch on Flutter 3.19.
+/// - On Flutter 3.19, a PopupMenuButton with a child is reported as its
+///   InkWell: nothing in its Semantics marks it as a control.
+/// - An item built straight into a Row (a TabBar tab, a NavigationBar
+///   destination) is reported as its InkWell or GestureDetector.
+/// - A SubmenuButton is reported as the TextButton it builds: the
+///   MenuAnchor it puts between them hides which component built it.
+/// - An app component whose build returns a control directly is reported
+///   as that component: a `PrimaryButton` returning an ElevatedButton.
+/// - Obfuscated builds name every control by its role.
 abstract final class TargetResolver {
   static InteractionTarget? resolve(PointerDownEvent event) {
-    // The control Flutter hit first wins, as it does in the gesture arena.
-    // Between branches, such as a translucent overlay and the button beneath
-    // it, that's the one on top. Between a control and one nested inside it,
-    // it's the nested one: Flutter hits the deeper render object first.
     HitControl? best;
     for (final control in controlsHitBy(event)) {
       final current = best;
-      if (current == null || control.hitIndex < current.hitIndex) {
-        best = control;
-      }
+      if (current == null || _beats(control, current)) best = control;
     }
     final target = best;
     if (target == null) return null;
-    return InteractionTarget(element: target.element, name: target.name);
+    return InteractionTarget(
+      element: target.element,
+      enabled: target.enabled,
+      name: target.name,
+    );
+  }
+
+  /// Whether [control] takes the tap from [best], which came before it.
+  ///
+  /// Between controls in different branches, such as a translucent overlay
+  /// and the button beneath it, the one Flutter hit first wins, as it does
+  /// in the gesture arena. Between a control and one nested inside it, the
+  /// deeper one wins, except that a disabled control builds no recognizer,
+  /// so it can't take a tap from an enabled ancestor. A control that says
+  /// nothing about being enabled (a dropdown's selected item) is inert and
+  /// never displaces an ancestor.
+  static bool _beats(HitControl control, HitControl best) {
+    if (!_isAncestor(best.element, control.element)) {
+      return control.hitIndex < best.hitIndex;
+    }
+    return control.enabled || (!best.enabled && control.saysEnabled);
+  }
+
+  /// Whether [ancestor] is above [element]. An element's depth is stored,
+  /// so this climbs only to [ancestor]'s depth, never to the root.
+  static bool _isAncestor(Element ancestor, Element element) {
+    var steps = element.depth - ancestor.depth;
+    if (steps <= 0) return false;
+    var found = false;
+    element.visitAncestorElements((e) {
+      if (--steps > 0) return true;
+      found = identical(e, ancestor);
+      return false;
+    });
+    return found;
   }
 }
