@@ -16,7 +16,10 @@ List<HitControl> controlsHitBy(
   final path = _HitPath(event);
   final controls = <HitControl>[];
   path.walk((element, parent) {
-    if (!_isActiveHandler(element.widget, parent)) return;
+    if (!_isActiveHandler(element.widget, parent) ||
+        _ownedBySelectableRegion(element)) {
+      return;
+    }
     final hitIndex = path.hitIndexOf(element);
     if (hitIndex != null) controls.add(HitControl._(element, hitIndex));
   });
@@ -106,6 +109,28 @@ bool _acceptsPrimaryTap(RawGestureDetector w) {
     }
   }
   return false;
+}
+
+/// On Flutter 3.19 a SelectableRegion (what SelectionArea builds) wraps
+/// its child in a translucent RawGestureDetector with a plain tap
+/// recognizer that has onTapUp set. That detector is the region's own,
+/// not a target, so text under it reports nothing. It sits between the
+/// region and the region's child; a handler inside the child is the
+/// app's and stays a target.
+bool _ownedBySelectableRegion(Element handler) {
+  final below = <Widget>[handler.widget];
+  SelectableRegion? region;
+  handler.visitAncestorElements((a) {
+    final w = a.widget;
+    if (w is SelectableRegion) {
+      region = w;
+      return false;
+    }
+    below.add(w);
+    return true;
+  });
+  final r = region;
+  return r != null && !below.any((w) => identical(w, r.child));
 }
 
 /// What a pointer-down hit: Flutter's hit-test path for it, and a walk of
