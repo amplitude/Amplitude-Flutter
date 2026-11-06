@@ -170,9 +170,16 @@ class _HitPath {
   /// Calls [visit] for each element in the subtrees the tap hit, each
   /// before its children. [visit]'s `parent` is the element's parent, or
   /// null for the root.
+  ///
+  /// OverlayPortal content is visited from its Overlay, before the overlay
+  /// entries, with its real parent: that parent lives in the page, which the
+  /// walk may never visit. The only ancestors visited before the content are
+  /// also its render ancestors, so it competes with page content by hit
+  /// order, as in the gesture arena.
   void walk(void Function(Element element, Element? parent) visit) {
     final root = WidgetsBinding.instance.rootElement;
     if (root == null) return;
+    final portalContent = <Element>{};
 
     void step(Element element, Element? parent) {
       if (!element.mounted) return;
@@ -185,7 +192,18 @@ class _HitPath {
       final ro = element.renderObject;
       if (ro != null && !_searched.contains(ro)) return;
       visit(element, parent);
-      element.visitChildElements((child) => step(child, element));
+      if (w is Overlay) {
+        for (final content in _hitPortalContent(element)) {
+          if (portalContent.add(content)) step(content, _parentOf(content));
+        }
+      }
+      element.visitChildElements((child) {
+        // The walk skips portal content if it reaches it again through the
+        // page.
+        if (portalContent.isEmpty || !portalContent.contains(child)) {
+          step(child, element);
+        }
+      });
     }
 
     step(root, null);
@@ -204,5 +222,66 @@ class _HitPath {
       }
     }
     return searched;
+  }
+
+  /// The elements of OverlayPortal content in [overlay] that the tap hit.
+  ///
+  /// A portal's overlay child is a render child of the Overlay, painted right
+  /// after the overlay entry holding the portal, but its element stays under
+  /// the portal. Flutter can hit the overlay child without hitting that
+  /// entry, so the walk would prune the entry before reaching the content.
+  List<Element> _hitPortalContent(Element overlay) {
+    Element? theater;
+    overlay.visitChildElements((e) => theater = e);
+    final entryOf = <RenderObject, Element>{};
+    theater?.visitChildElements((entry) {
+      final box = entry.renderObject;
+      if (box != null) entryOf[box] = entry;
+    });
+    final content = <Element>[];
+    Element? entry;
+    // In paint order: each entry, then the overlay children it hosts.
+    theater?.renderObject?.visitChildren((child) {
+      final next = entryOf[child];
+      final holder = entry;
+      if (next != null) {
+        entry = next;
+      } else if (holder != null && _searched.contains(child)) {
+        final found = _overlayChild(holder, child);
+        if (found != null) content.add(found);
+      }
+    });
+    return content;
+  }
+
+  /// The element under [entry] whose render object is [box], an overlay
+  /// child. Flutter keeps an overlay child deeper in the render tree than
+  /// its OverlayPortal so the portal lays out first; nothing at [box]'s
+  /// depth or deeper can lead to the portal.
+  static Element? _overlayChild(Element entry, RenderObject box) {
+    Element? found;
+    void search(Element e) {
+      if (found != null) return;
+      if (e is RenderObjectElement) {
+        if (identical(e.renderObject, box)) {
+          found = e;
+          return;
+        }
+        if (e.renderObject.depth >= box.depth) return;
+      }
+      e.visitChildElements(search);
+    }
+
+    search(entry);
+    return found;
+  }
+
+  static Element? _parentOf(Element e) {
+    Element? parent;
+    e.visitAncestorElements((a) {
+      parent = a;
+      return false;
+    });
+    return parent;
   }
 }
