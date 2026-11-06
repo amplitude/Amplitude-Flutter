@@ -302,6 +302,52 @@ void main() {
           expect(r, isNull);
         },
       );
+
+      // On Flutter 3.19 a SelectableRegion builds a translucent
+      // RawGestureDetector whose plain tap recognizer has onTapUp set.
+      testWidgets(
+        'plain text inside a SelectionArea reports nothing',
+        variant: TargetPlatformVariant(
+          {TargetPlatform.android, TargetPlatform.iOS},
+        ),
+        (t) async {
+          await t.pumpWidget(
+            app(const SelectionArea(child: Text('plain text'))),
+          );
+
+          expect(resolveAt(t, t.getCenter(find.text('plain text'))), isNull);
+        },
+      );
+
+      // The region's own detector is the first handler below it; one in its
+      // child is below that and still takes the tap.
+      testWidgets(
+        'a GestureDetector inside a SelectionArea is a target',
+        variant: TargetPlatformVariant(
+          {TargetPlatform.android, TargetPlatform.iOS},
+        ),
+        (t) async {
+          final ran = <String>[];
+          await t.pumpWidget(
+            app(
+              SelectionArea(
+                child: GestureDetector(
+                  key: const ValueKey('link'),
+                  onTap: () => ran.add('link'),
+                  child: const Text('link'),
+                ),
+              ),
+            ),
+          );
+
+          await expectResolvesLikeTap(
+            t,
+            t.getCenter(byId('link')),
+            ran,
+            'link',
+          );
+        },
+      );
     });
 
     testWidgets('only the active IndexedStack child is reported', (t) async {
