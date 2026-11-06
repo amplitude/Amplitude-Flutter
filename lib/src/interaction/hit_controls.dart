@@ -4,12 +4,17 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 
+import 'fling_stops.dart';
+
 /// Every control under [event] that could take the tap, in element-tree
 /// order: each before the controls nested in it.
 ///
 /// For now a control is a tap handler: a GestureDetector with a tap
 /// callback, or a RawGestureDetector whose tap recognizer would take a
 /// primary tap.
+///
+/// The walk starts [FlingStops] watching each list it passes, so a later
+/// press that stops one of them can be told apart.
 List<HitControl> controlsHitBy(
   PointerDownEvent event,
 ) {
@@ -191,6 +196,13 @@ class _HitPath {
       // IgnorePointer's render object directly.
       final ro = element.renderObject;
       if (ro != null && !_searched.contains(ro)) return;
+      // A press on a flinging list only stops it. Flutter's hit test ignored
+      // the content, but the hold re-enabled it before this route ran.
+      if (w is Scrollable && element is StatefulElement) {
+        final position = (element.state as ScrollableState).position;
+        FlingStops.instance.watch(position);
+        if (FlingStops.instance.stoppedInThisTask(position)) return;
+      }
       visit(element, parent);
       if (w is Overlay) {
         for (final content in _hitPortalContent(element)) {
