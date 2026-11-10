@@ -184,6 +184,8 @@ class AmplitudeFlutterPluginTest {
     fun shouldInit() {
         val methodCall = MethodCall("init", testConfigurationMap)
         plugin.onMethodCall(methodCall, result)
+        // The init reply is posted to the main looper once the native build completes.
+        awaitInitialized()
 
         verify(exactly = 1) { result.success("init called..") }
     }
