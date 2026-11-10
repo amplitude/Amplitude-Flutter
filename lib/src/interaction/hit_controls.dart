@@ -200,8 +200,8 @@ class _HitPath {
       // the content, but the hold re-enabled it before this route ran.
       if (w is Scrollable && element is StatefulElement) {
         final position = (element.state as ScrollableState).position;
-        FlingStops.instance.watch(position);
         if (FlingStops.instance.stoppedInThisTask(position)) return;
+        FlingStops.instance.watch(position);
       }
       visit(element, parent);
       if (w is Overlay) {
