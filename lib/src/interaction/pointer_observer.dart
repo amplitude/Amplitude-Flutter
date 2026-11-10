@@ -95,8 +95,8 @@ class PointerObserver {
     } catch (error, stack) {
       _report(error, stack);
     }
-    // Recorded even when invalid or without a target, so an overlapping
-    // down still invalidates it.
+    // Recorded even when it can't become a tap, so a second pointer that
+    // lands during it isn't reported as a tap either.
     _attempts[event.pointer] = _Attempt(
       event,
       target,
