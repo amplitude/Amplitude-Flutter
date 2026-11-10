@@ -11,6 +11,7 @@ import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -169,7 +170,8 @@ class AmplitudeFlutterPluginTest {
 
     private fun awaitInitialized() {
         val amp = AmplitudeFlutterPlugin.getAmplitudeInstanceById("\$default_instance")!!
-        runBlocking { amp.isBuilt.await() }
+        // Bounded so a stuck native build fails the test instead of hanging CI.
+        runBlocking { withTimeout(15_000) { amp.isBuilt.await() } }
         shadowOf(Looper.getMainLooper()).idle()
     }
 
