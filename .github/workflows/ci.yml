@@ -90,10 +90,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3
 
+      - name: Set Xcode 26.6
+        run: sudo xcode-select -switch /Applications/Xcode_26.6.app
+
       - name: Setup Flutter
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: 'stable'
+          flutter-version: '3.47.9'
+          cache: true
 
       # The plugin integrates via CocoaPods (podspec + Podfile). Newer Flutter
       # enables Swift Package Manager by default, which fails on this project
@@ -119,17 +124,45 @@ jobs:
         working-directory: example/ios
         run: pod install
 
+      # Boot before xcodebuild so a slow or failed boot is retried and
+      # reported here rather than stalling the test step.
+      - name: Boot iOS simulator
+        id: simulator
+        uses: amplitude/actions/simulator-action@820754f06b23ec4138c65c07dae4131a46011020 # v0
+        with:
+          model: 'iPhone 17'
+          os: 'iOS'
+          os_version: '^26'
+          wait_for_boot: true
+          shutdown_after_job: true
+
       - name: Run plugin unit tests
         working-directory: example/ios
         run: |
-          # Pick any available iPhone simulator so we don't pin a device
-          # name/OS that a future runner image may not ship.
-          UDID=$(xcrun simctl list devices available --json \
-            | python3 -c "import json,sys; devs=json.load(sys.stdin)['devices']; print(next(d['udid'] for rt in devs for d in devs[rt] if d.get('isAvailable') and d['name'].startswith('iPhone')))")
-          echo "Using simulator $UDID"
           xcodebuild test \
             -workspace Runner.xcworkspace \
             -scheme Runner \
-            -destination "id=$UDID" \
+            -destination "platform=iOS Simulator,id=${{ steps.simulator.outputs.udid }}" \
+            -resultBundlePath "$RUNNER_TEMP/ios-unit-tests.xcresult" \
             -parallel-testing-enabled NO \
             CODE_SIGNING_ALLOWED=NO
+
+      - name: Summarize iOS unit tests
+        if: always()
+        run: |
+          results="$RUNNER_TEMP/ios-unit-tests.xcresult"
+          if [ ! -d "$results" ]; then
+            echo "No test results found"
+            exit 1
+          fi
+          xcrun xcresulttool get test-results summary --path "$results" --compact \
+            | jq -r '"\(.passedTests) passed, \(.failedTests) failed, \(.skippedTests) skipped (\(.result))"' \
+            | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload iOS test results
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ios-unit-tests-xcresult
+          path: ${{ runner.temp }}/ios-unit-tests.xcresult
+          if-no-files-found: ignore
