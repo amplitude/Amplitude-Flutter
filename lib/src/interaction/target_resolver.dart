@@ -34,11 +34,16 @@ abstract final class TargetResolver {
     return InteractionTarget(element: target.element, name: target.name);
   }
 
+  /// Whether [ancestor] is above [element]. An element's depth is stored,
+  /// so this climbs only to [ancestor]'s depth, never to the root.
   static bool _isAncestor(Element ancestor, Element element) {
+    var steps = element.depth - ancestor.depth;
+    if (steps <= 0) return false;
     var found = false;
     element.visitAncestorElements((e) {
+      if (--steps > 0) return true;
       found = identical(e, ancestor);
-      return !found;
+      return false;
     });
     return found;
   }
