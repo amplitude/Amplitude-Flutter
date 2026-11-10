@@ -1,17 +1,19 @@
 // Adapted from PR #317 at a05e71683c4e6a30304d1219dad08d0b1e50d4fb.
-// Original hit-path checks and hidden-widget pruning by Zohaib Farooqi and
-// Wei Sun: https://github.com/amplitude/Amplitude-Flutter/pull/317.
+// Original hit-path checks, hidden-widget pruning and composite-tile
+// handling by Zohaib Farooqi and Wei Sun:
+// https://github.com/amplitude/Amplitude-Flutter/pull/317.
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 
+import 'control_names.dart';
 import 'fling_stops.dart';
 
 /// Every control under [event] that could take the tap, in element-tree
 /// order: each before the controls nested in it.
 ///
-/// For now a control is a tap handler: a GestureDetector with a tap
-/// callback, or a RawGestureDetector whose tap recognizer would take a
-/// primary tap.
+/// A control is made of the marks the walk pairs up on the hit path: the
+/// Semantics boundary a control builds, its tap action, and its gesture
+/// detector. A bare gesture detector with no Semantics is a control too.
 ///
 /// The walk starts [FlingStops] watching each list it passes, so a later
 /// press that stops one of them can be told apart.
@@ -19,44 +21,60 @@ List<HitControl> controlsHitBy(
   PointerDownEvent event,
 ) {
   final path = _HitPath(event);
+  final pairing = _Pairing();
+  path.walk(pairing.visit);
   final controls = <HitControl>[];
-  path.walk((element, parent) {
-    if (!_isActiveHandler(element.widget, parent) ||
-        _ownedBySelectableRegion(element)) {
-      return;
+  for (final unit in pairing.units) {
+    if (!unit.candidate) continue;
+    // Null when this tap couldn't reach the control.
+    int? hitIndex;
+    for (final m in unit.marks) {
+      final i = path.hitIndexOf(m.element);
+      if (i != null && (hitIndex == null || i < hitIndex)) hitIndex = i;
     }
-    final hitIndex = path.hitIndexOf(element);
-    if (hitIndex != null) controls.add(HitControl._(element, hitIndex));
-  });
+    if (hitIndex == null) continue;
+    controls.add(HitControl._(unit, _elementOf(unit), hitIndex));
+  }
   return controls;
 }
 
 /// A control under a pointer-down.
 class HitControl {
-  HitControl._(this.element, this.hitIndex);
+  HitControl._(this._unit, this.element, this.hitIndex);
 
-  /// The element the control is reported as: its gesture detector.
+  final _Unit _unit;
+
+  /// The element the control is reported as: the component that built it,
+  /// or its gesture detector when it has no Semantics or nothing names it.
   final Element element;
 
-  /// Its position on the hit-test path. A lower index was hit first, which
-  /// is also the order recognizers join the gesture arena.
+  /// Its first position on the hit-test path. A lower index was hit first,
+  /// which is also the order recognizers join the gesture arena.
   final int hitIndex;
 
-  /// Its gesture detector's class name (`GestureDetector`).
-  String get name => _nameOf(element.widget);
+  /// Whether it accepts input now.
+  bool get enabled => _unit.enabled;
+
+  /// Whether any of its Semantics says it is enabled or disabled. One that
+  /// says nothing (a dropdown's selected item) is inert.
+  bool get saysEnabled => _unit.explicitEnabled != null;
+
+  /// Its class name (`ElevatedButton`), or its role (`Button`) on obfuscated
+  /// builds and for a Semantics written inline in app code.
+  String get name => _unit.isControl
+      ? controlNameOf(element, role: _unit.role)
+      : handlerNameOf(element.widget);
 }
 
-/// Obfuscated builds rename every type, the framework's included.
-final bool _obfuscated = '$GestureDetector' != 'GestureDetector';
-
-String _nameOf(Widget w) {
-  if (_obfuscated) {
-    return w is GestureDetector ? 'GestureDetector' : 'RawGestureDetector';
-  }
-  var name = w.runtimeType.toString();
-  final generic = name.indexOf('<');
-  if (generic > 0) name = name.substring(0, generic);
-  return name.replaceFirst(RegExp('^_+'), '');
+/// The element a control is reported as: the component that built it. A
+/// bare handler, or a control nothing names, is reported as its handler.
+Element _elementOf(_Unit unit) {
+  final handler =
+      unit.marks.where((m) => m.kind == _Kind.handler).firstOrNull?.element;
+  if (!unit.isControl) return handler ?? unit.top.element;
+  return controlElementOf(unit.marks.map((m) => m.element)) ??
+      handler ??
+      unit.top.element;
 }
 
 /// A GestureDetector a primary tap reaches, or a RawGestureDetector one
@@ -114,28 +132,6 @@ bool _acceptsPrimaryTap(RawGestureDetector w) {
     }
   }
   return false;
-}
-
-/// On Flutter 3.19 a SelectableRegion (what SelectionArea builds) wraps
-/// its child in a translucent RawGestureDetector with a plain tap
-/// recognizer that has onTapUp set. That detector is the region's own,
-/// not a target, so text under it reports nothing. It sits between the
-/// region and the region's child; a handler inside the child is the
-/// app's and stays a target.
-bool _ownedBySelectableRegion(Element handler) {
-  final below = <Widget>[handler.widget];
-  SelectableRegion? region;
-  handler.visitAncestorElements((a) {
-    final w = a.widget;
-    if (w is SelectableRegion) {
-      region = w;
-      return false;
-    }
-    below.add(w);
-    return true;
-  });
-  final r = region;
-  return r != null && !below.any((w) => identical(w, r.child));
 }
 
 /// What a pointer-down hit: Flutter's hit-test path for it, and a walk of
@@ -295,5 +291,237 @@ class _HitPath {
       return false;
     });
     return parent;
+  }
+}
+
+/// Pairs the marks on the hit path into controls, as [_HitPath.walk] visits
+/// each element after its parent.
+///
+/// A mark is a Semantics boundary a control builds (button, toggled,
+/// checked, enabled, textField or expanded), InkResponse's tap action, a
+/// MergeSemantics, a SelectableRegion, or an active gesture detector. Each
+/// boundary pairs with at most one thing next to it, so a control's own
+/// handler joins it while a developer's handler in its child stays a
+/// control of its own.
+class _Pairing {
+  final units = <_Unit>[];
+
+  /// The path from the root to the element being visited, each with what
+  /// its children see. The walk is depth-first, so a visited element's
+  /// parent is on this path; OverlayPortal content's real parent isn't, and
+  /// the content starts a path of its own.
+  final _path = <(Element, _PathState)>[];
+
+  void visit(Element element, Element? parent) {
+    var i = _path.length - 1;
+    while (i >= 0 && !identical(_path[i].$1, parent)) {
+      i--;
+    }
+    final _PathState state;
+    if (i >= 0) {
+      state = _path[i].$2;
+      _path.length = i + 1;
+    } else {
+      state = _PathState.root;
+    }
+    final above = state.above;
+    final adjacent = above != null && !state.branched;
+    final w = element.widget;
+    _Mark? mark;
+
+    if (w is Semantics && isControlBoundary(w.properties)) {
+      final p = w.properties;
+      mark = _Mark(element, _Kind.boundary);
+      final buildRoot = parent is StatelessElement || parent is StatefulElement;
+      if (adjacent &&
+          (above.kind == _Kind.handler || above.kind == _Kind.boundary) &&
+          !buildRoot) {
+        // Below its own handler (a ListTile's InkWell, a CupertinoButton's
+        // detector, a toggle's), or the inner half of a checkbox: one
+        // control. A boundary that is the root of a component's build
+        // starts a control of its own, so a GestureDetector wrapped around
+        // a button stays a separate control.
+        above.unit.add(mark, w);
+      } else if (adjacent && above.openBelow) {
+        above.openBelow = false;
+        above.unit.add(mark, w);
+        mark.openBelow = true;
+      } else if (state.merge != null &&
+          (p.checked != null || p.toggled != null)) {
+        // A composite tile's checkbox or switch is the tile's own, even
+        // across the tile's slots. A button there (an IconButton in the
+        // title) is still a control of its own.
+        state.merge!.add(mark, w);
+        mark.openBelow = true;
+      } else {
+        _start(mark, w);
+        mark.openBelow = true;
+      }
+    } else if (w is Semantics && isTapAction(w.properties)) {
+      mark = _Mark(element, _Kind.action);
+      if (adjacent && above.openBelow) {
+        above.openBelow = false;
+        above.unit.add(mark, w);
+      } else {
+        _start(mark, w);
+      }
+      mark.openBelow = true;
+    } else if (w is MergeSemantics) {
+      mark = _Mark(element, _Kind.merge);
+      _start(mark);
+      mark.openBelow = true;
+    } else if (w is SelectableRegion) {
+      // On Flutter 3.19 a SelectableRegion (what SelectionArea builds)
+      // wraps its child in a translucent RawGestureDetector with a plain tap
+      // recognizer that has onTapUp set. That detector is the region's own,
+      // not a control: text under it reports nothing. The region claims the
+      // first handler below it unless that handler is in its child.
+      mark = _Mark(element, _Kind.container, regionChild: w.child);
+      _start(mark);
+      mark.openBelow = true;
+    } else if (_isActiveHandler(w, parent)) {
+      // A handler joins only an open boundary right above it. Below another
+      // handler it is a control of its own: a GestureDetector in a button's
+      // child is deeper in the arena and wins the tap.
+      mark = _Mark(element, _Kind.handler);
+      if (adjacent && above.openBelow && !_inRegionChild(above, element)) {
+        above.openBelow = false;
+        above.unit.add(mark);
+      } else {
+        _start(mark);
+      }
+    }
+
+    _path.add((
+      element,
+      _PathState(
+        mark ?? above,
+        (mark == null && state.branched) || childCount(element) > 1,
+        mark?.kind == _Kind.merge ? mark!.unit : state.merge,
+      )
+    ));
+  }
+
+  void _start(_Mark mark, [Semantics? semantics]) {
+    final unit = _Unit(mark);
+    units.add(unit);
+    unit.add(mark, semantics);
+  }
+
+  /// Whether [handler] is inside the child of the SelectableRegion [mark],
+  /// where it is the app's, not the region's own detector.
+  static bool _inRegionChild(_Mark mark, Element handler) {
+    final child = mark.regionChild;
+    if (child == null) return false;
+    var inside = identical(handler.widget, child);
+    handler.visitAncestorElements((a) {
+      if (identical(a, mark.element)) return false;
+      inside = inside || identical(a.widget, child);
+      return !inside;
+    });
+    return inside;
+  }
+}
+
+/// What an element's children see on their path: the nearest mark above,
+/// whether a branch lies between it and here, and the nearest MergeSemantics
+/// control above.
+class _PathState {
+  const _PathState(this.above, this.branched, this.merge);
+
+  static const root = _PathState(null, false, null);
+
+  final _Mark? above;
+  final bool branched;
+  final _Unit? merge;
+}
+
+enum _Kind { boundary, action, merge, handler, container }
+
+/// A widget on the hit path that helps make up a control.
+class _Mark {
+  _Mark(this.element, this.kind, {this.regionChild});
+
+  final Element element;
+  final _Kind kind;
+  late _Unit unit;
+
+  /// For a SelectableRegion, its child: what is inside it is the app's.
+  final Widget? regionChild;
+
+  /// Whether the next mark below, with no branch between, still pairs with
+  /// this one. Each boundary pairs with at most one thing below it.
+  bool openBelow = false;
+}
+
+/// One control: the marks that pair into it.
+class _Unit {
+  _Unit(this.top);
+
+  /// The first mark, the highest on the path.
+  final _Mark top;
+  final marks = <_Mark>[];
+  bool _boundary = false;
+  bool _action = false;
+  bool _merge = false;
+  bool _container = false;
+  bool _handler = false;
+  bool _button = false;
+  bool _toggle = false;
+  bool _checked = false;
+  bool _textField = false;
+
+  /// False if any of the control's Semantics says it is disabled, true if
+  /// one says it is enabled and none disagree, null if none say.
+  bool? explicitEnabled;
+
+  void add(_Mark mark, [Semantics? semantics]) {
+    marks.add(mark);
+    mark.unit = this;
+    switch (mark.kind) {
+      case _Kind.boundary:
+        _boundary = true;
+      case _Kind.action:
+        _action = true;
+      case _Kind.merge:
+        _merge = true;
+      case _Kind.handler:
+        _handler = true;
+      case _Kind.container:
+        _container = true;
+    }
+    final p = semantics?.properties;
+    if (p == null) return;
+    if (p.button == true) _button = true;
+    if (p.toggled != null) _toggle = true;
+    if (p.checked != null) _checked = true;
+    if (p.textField == true || p.currentValueLength != null) {
+      _textField = true;
+    }
+    if (p.enabled == false) {
+      explicitEnabled = false;
+    } else if (p.enabled == true && explicitEnabled == null) {
+      explicitEnabled = true;
+    }
+  }
+
+  /// A container owns what it builds but is never a target.
+  bool get candidate => !_container && (_boundary || _handler);
+
+  /// Built a Semantics for itself, as opposed to a bare handler.
+  bool get isControl => _boundary || _action || _merge;
+
+  /// A text field's recognizers aren't plain tap recognizers, so it has no
+  /// handler; it is enabled unless it says otherwise.
+  bool get enabled =>
+      explicitEnabled != false &&
+      (_handler || _textField || explicitEnabled == true);
+
+  String get role {
+    if (_textField) return 'TextField';
+    if (_toggle) return 'Switch';
+    if (_checked) return 'Checkbox';
+    if (_button) return 'Button';
+    return 'Control';
   }
 }
