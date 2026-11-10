@@ -41,6 +41,7 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 
     companion object {
         private const val methodChannelName = "amplitude_flutter"
+        private const val initializationErrorCode = "amplitude_init_failed"
 
         /**
          * Returns an Amplitude instance by its instance name.
@@ -113,7 +114,22 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                 AutocaptureOption.DEEP_LINKS in configuration.autocapture
             )
 
-            result.success("init called..")
+            // The instance is registered, so analytics calls proceed while the
+            // reply, which backs the Dart isBuilt future, waits for the build.
+            amplitude.isBuilt.invokeOnCompletion { exception ->
+                mainHandler.post {
+                    if (exception == null) {
+                        result.success("init called..")
+                    } else {
+                        amplitude.logger.warn("Amplitude build did not complete: ${exception.message}")
+                        result.error(
+                            initializationErrorCode,
+                            "Amplitude initialization failed.",
+                            exception.toString()
+                        )
+                    }
+                }
+            }
             return
         }
 
@@ -266,7 +282,7 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         call.argument<String>("serverZone")
             ?.let { builder.serverZone = com.amplitude.core.ServerZone.valueOf(it.uppercase()) }
         call.argument<String>("serverUrl")?.let { builder.serverUrl = it }
-        call.argument<Int>("minTimeBetweenSessionsMillis")
+        call.argument<Number>("minTimeBetweenSessionsMillis")
             ?.let { builder.minTimeBetweenSessionsMillis = it.toLong() }
         // The Dart Configuration constructor resolves the effective autocapture
         // value: a map for AutocaptureOptions/AutocaptureEnabled (derived from
@@ -287,7 +303,7 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         }
         call.argument<Boolean>("enableCoppaControl")?.let { builder.enableCoppaControl = it }
         call.argument<Boolean>("flushEventsOnClose")?.let { builder.flushEventsOnClose = it }
-        call.argument<Int>("identifyBatchIntervalMillis")
+        call.argument<Number>("identifyBatchIntervalMillis")
             ?.let { builder.identifyBatchIntervalMillis = it.toLong() }
         call.argument<Boolean>("migrateLegacyData")?.let { builder.migrateLegacyData = it }
         call.argument<Boolean>("locationListening")?.let { builder.locationListening = it }
@@ -356,9 +372,10 @@ class AmplitudeFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         }
         (args["user_id"] as? String)?.let { event.userId = it }
         (args["device_id"] as? String)?.let { event.deviceId = it }
-        (args["timestamp"] as? Int)?.let { event.timestamp = it.toLong() }
-        (args["event_id"] as? Int)?.let { event.eventId = it.toLong() }
-        (args["session_id"] as? Int)?.let { event.sessionId = it.toLong() }
+        // Flutter encodes Dart integers as Int or Long depending on their size.
+        (args["timestamp"] as? Number)?.let { event.timestamp = it.toLong() }
+        (args["event_id"] as? Number)?.let { event.eventId = it.toLong() }
+        (args["session_id"] as? Number)?.let { event.sessionId = it.toLong() }
         (args["insert_id"] as? String)?.let { event.insertId = it }
         (args["location_lat"] as? Double)?.let { event.locationLat = it }
         (args["location_lng"] as? Double)?.let { event.locationLng = it }

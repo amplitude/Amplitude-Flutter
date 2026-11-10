@@ -22,6 +22,20 @@ Checkout the [set up and editor](https://flutter.dev/docs/get-started/editor?tab
 
 You should then be able to run the Flutter project in `example/` which has the Amplitude Flutter SDK installed.
 
+## Running Tests
+
+Run the Dart unit tests with:
+
+`flutter test`
+
+Some tests exercise the web platform bindings (`dart:js_interop`) and are marked
+`@TestOn('chrome')`, so they are **skipped by the default VM run**. Run them on
+the Chrome platform:
+
+`flutter test --platform chrome`
+
+CI should run both so the web configuration path stays covered.
+
 ## Practices
 
 ### PR Commit Title Conventions

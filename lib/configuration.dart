@@ -245,26 +245,31 @@ class Configuration {
     this.fetchRemoteConfig = false,
     Autocapture? autocapture,
   })  : defaultTracking = defaultTracking ?? const DefaultTrackingOptions(),
-        autocapture = _resolveAutocapture(
-          autocapture,
-          defaultTracking ?? const DefaultTrackingOptions(),
-        ),
+        autocapture = _resolveAutocapture(autocapture, defaultTracking),
         trackingOptions = trackingOptions ?? TrackingOptions(),
         cookieOptions = cookieOptions ?? CookieOptions() {
     this.instanceName =
         instanceName.isEmpty ? Constants.defaultInstanceName : instanceName;
   }
 
-  /// Returns the [Autocapture] to use, deriving an [AutocaptureOptions] from
-  /// the deprecated `DefaultTrackingOptions` when `autocapture` was not passed.
+  /// Returns the [Autocapture] to use.
   ///
-  /// This is the single place where the `defaultTracking → autocapture` bridge
-  /// lives. Native plugins read only the resolved `autocapture` map.
+  /// Precedence:
+  /// 1. An explicit [autocapture] is used as-is.
+  /// 2. Otherwise, if the deprecated [defaultTracking] was explicitly provided,
+  ///    an [AutocaptureOptions] is derived from it so existing callers keep
+  ///    working (the single place where the `defaultTracking → autocapture`
+  ///    bridge lives).
+  /// 3. Otherwise, the default [AutocaptureOptions] is used, whose web capture
+  ///    options are all opt-in (off by default).
+  ///
+  /// Native plugins read only the resolved `autocapture` map.
   static Autocapture _resolveAutocapture(
     Autocapture? autocapture,
-    DefaultTrackingOptions defaultTracking,
+    DefaultTrackingOptions? defaultTracking,
   ) {
     if (autocapture != null) return autocapture;
+    if (defaultTracking == null) return const AutocaptureOptions();
     return AutocaptureOptions(
       sessions: defaultTracking.sessions,
       appLifecycles: defaultTracking.appLifecycles,
@@ -275,6 +280,8 @@ class Configuration {
       pageViews: defaultTracking.pageViews
           ? const PageViewsOptions()
           : const PageViewsDisabled(),
+      formInteractions: defaultTracking.formInteractions,
+      fileDownloads: defaultTracking.fileDownloads,
     );
   }
 

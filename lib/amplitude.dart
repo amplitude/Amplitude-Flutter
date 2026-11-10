@@ -13,7 +13,17 @@ class Amplitude {
   Configuration configuration;
   MethodChannel _channel = const MethodChannel('amplitude_flutter');
 
-  /// Whether the Amplitude instance has been successfully initialized
+  /// Whether the platform SDK has completed initialization successfully.
+  ///
+  /// Remains pending during initialization and resolves to false if the platform
+  /// reports an initialization error. Android waits for the native SDK's build,
+  /// web waits for the Browser SDK's initialization promise and resolves to
+  /// false after 10 seconds if it never settles (for example, when the SDK
+  /// script is blocked), and iOS/macOS reply after the Swift SDK's constructor
+  /// and initial setup complete.
+  ///
+  /// Analytics calls can be submitted while initialization is pending. Readiness
+  /// does not establish that an event has been persisted or uploaded.
   ///
   /// ```
   /// var amplitude = Amplitude(Configuration(apiKey: 'apiKey'));
@@ -37,7 +47,9 @@ class Amplitude {
   /// Private method to initialize and return a `Future<bool>`
   Future<bool> _init() async {
     try {
-      await _channel.invokeMethod('init', configuration.toMap());
+      // Each platform replies to init once its SDK is ready; analytics calls
+      // made meanwhile are not delayed.
+      await _channel.invokeMethod<void>('init', configuration.toMap());
       return true; // Initialization successful
     } catch (e) {
       print('Error initializing Amplitude: $e');

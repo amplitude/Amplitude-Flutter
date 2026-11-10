@@ -155,6 +155,40 @@ void main() {
             reason: 'pageViews=false on DTO should disable on derived AutocaptureOptions');
       });
 
+      test('autocapture derived from defaultTracking honors formInteractions/fileDownloads', () {
+        final config = Configuration(
+          apiKey: 'k',
+          defaultTracking: const DefaultTrackingOptions(
+            formInteractions: false,
+            fileDownloads: false,
+          ),
+        );
+
+        final ac = config.autocapture as AutocaptureOptions;
+        expect(ac.formInteractions, false);
+        expect(ac.fileDownloads, false);
+
+        final serialized = config.toMap()['autocapture'] as Map<String, dynamic>;
+        expect(serialized['formInteractions'], false);
+        expect(serialized['fileDownloads'], false);
+      });
+
+      test('defaultTracking with only mobile fields does not enable web capture',
+          () {
+        final config = Configuration(
+          apiKey: 'k',
+          defaultTracking: const DefaultTrackingOptions(appLifecycles: true),
+        );
+
+        final ac = config.autocapture as AutocaptureOptions;
+        expect(ac.appLifecycles, true);
+        // Web DOM-based capture stays opt-in: DefaultTrackingOptions now defaults
+        // formInteractions/fileDownloads to false, so the bridge doesn't enable
+        // them for callers that only set mobile fields.
+        expect(ac.formInteractions, false);
+        expect(ac.fileDownloads, false);
+      });
+
       test('defaults: no autocapture, no defaultTracking → minimal autocapture', () {
         final config = Configuration(apiKey: 'k');
 
@@ -163,7 +197,12 @@ void main() {
         expect(ac.appLifecycles, false);
         expect(ac.deepLinks, false);
         expect(ac.attribution, isA<AttributionOptions>());
-        expect(ac.pageViews, isA<PageViewsOptions>());
+        // Web capture is opt-in: with neither field passed the default
+        // AutocaptureOptions is used, whose web options are all off.
+        expect(ac.pageViews, isA<PageViewsDisabled>());
+        expect(ac.formInteractions, false);
+        expect(ac.fileDownloads, false);
+        expect(ac.pageUrlEnrichment, false);
       });
 
       test('AutocaptureDisabled is preserved (not overridden by defaultTracking)', () {

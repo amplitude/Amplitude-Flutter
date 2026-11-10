@@ -4,7 +4,7 @@ on: [pull_request]
 
 jobs:
   lint:
-    runs-on: macos-14-large
+    runs-on: macos-15-large
     steps:
       - name: Checkout
         uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3
