@@ -109,8 +109,14 @@ jobs:
             version: ''
             package-manager: spm
     steps:
+      # Check out into a directory named after the package. Flutter before the
+      # fix for flutter/flutter#186881 fails Swift Package Manager resolution
+      # when a path-dependency plugin's directory name differs from its package
+      # name (here: Amplitude-Flutter vs amplitude_flutter).
       - name: Checkout
         uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3
+        with:
+          path: amplitude_flutter
 
       - name: Set Xcode 26.6
         run: sudo xcode-select -switch /Applications/Xcode_26.6.app
@@ -134,8 +140,17 @@ jobs:
             flutter config --no-enable-swift-package-manager
           fi
 
+      # Flutter before 3.22 recognises only build.gradle, so it reads the
+      # example's build.gradle.kts project as the removed v1 Android embedding
+      # and fails pub get. An empty marker file restores detection; the iOS job
+      # never runs Gradle.
+      - name: Mark Android project for Flutter before 3.22
+        if: matrix.flutter == '3.19.0'
+        working-directory: amplitude_flutter/example/android
+        run: touch build.gradle
+
       - name: Install packages
-        working-directory: example
+        working-directory: amplitude_flutter/example
         run: flutter pub get
 
       # Download the iOS engine artifacts (Flutter.xcframework) that the Runner
@@ -145,11 +160,11 @@ jobs:
 
       # Generates ios/Flutter/Generated.xcconfig (defines FLUTTER_ROOT) without a build.
       - name: Generate iOS build config
-        working-directory: example
+        working-directory: amplitude_flutter/example
         run: flutter build ios --config-only --no-codesign --no-pub
 
       - name: Install CocoaPods
-        working-directory: example/ios
+        working-directory: amplitude_flutter/example/ios
         run: pod install
 
       # Create a fresh simulator from the newest installed iOS runtime and its
@@ -182,7 +197,7 @@ jobs:
           echo "Simulator: $device_type on $runtime_id" | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Run plugin unit tests
-        working-directory: example/ios
+        working-directory: amplitude_flutter/example/ios
         run: |
           xcodebuild test \
             -workspace Runner.xcworkspace \
