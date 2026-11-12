@@ -78,3 +78,149 @@ jobs:
           tests=$(grep -ho '<testsuite [^>]*' $results | grep -o ' tests="[0-9]*"' | grep -o '[0-9]*' | paste -sd+ - | bc)
           failures=$(grep -ho '<testsuite [^>]*' $results | grep -o ' failures="[0-9]*"' | grep -o '[0-9]*' | paste -sd+ - | bc)
           echo "$tests tests completed, $failures failed" | tee -a "$GITHUB_STEP_SUMMARY"
+
+  ios-unit-test:
+    name: iOS plugin unit tests (Flutter ${{ matrix.flutter }}, ${{ matrix.package-manager }})
+    runs-on: macos-26
+    # A run takes about 10 minutes; without a limit a hung simulator holds the macOS runner for 6 hours.
+    timeout-minutes: 30
+    # Flutter main breaks independently of this repo; report it without failing the PR.
+    continue-on-error: ${{ matrix.flutter == 'main' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Lowest supported: environment.flutter in pubspec.yaml. It predates
+          # Swift Package Manager support, so it uses CocoaPods.
+          - flutter: '3.19.0'
+            channel: stable
+            version: '3.19.0'
+            package-manager: cocoapods
+          # Flutter 3.44+ uses Swift Package Manager by default, so test what
+          # current apps get.
+          - flutter: stable
+            channel: stable
+            version: ''
+            package-manager: spm
+          - flutter: main
+            channel: main
+            version: ''
+            package-manager: spm
+    steps:
+      # Check out into a directory named after the package. Flutter before the
+      # fix for flutter/flutter#186881 fails Swift Package Manager resolution
+      # when a path-dependency plugin's directory name differs from its package
+      # name (here: Amplitude-Flutter vs amplitude_flutter).
+      - name: Checkout
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3
+        with:
+          path: amplitude_flutter
+
+      - name: Set Xcode 26.6
+        run: sudo xcode-select -switch /Applications/Xcode_26.6.app
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: ${{ matrix.channel }}
+          flutter-version: ${{ matrix.version }}
+          # The cache key for main never changes, so a cached main SDK would go stale.
+          cache: ${{ matrix.channel != 'main' }}
+
+      # Set the integration explicitly rather than relying on the version's
+      # default. Flutter before 3.24 has no such setting and always uses
+      # CocoaPods.
+      - name: Use ${{ matrix.package-manager }}
+        run: |
+          if [ "${{ matrix.package-manager }}" = spm ]; then
+            flutter config --enable-swift-package-manager
+          elif flutter config --help | grep -q 'enable-swift-package-manager'; then
+            flutter config --no-enable-swift-package-manager
+          fi
+
+      # Flutter before 3.22 recognises only build.gradle, so it reads the
+      # example's build.gradle.kts project as the removed v1 Android embedding
+      # and fails pub get. An empty marker file restores detection; the iOS job
+      # never runs Gradle.
+      - name: Mark Android project for Flutter before 3.22
+        if: matrix.flutter == '3.19.0'
+        working-directory: amplitude_flutter/example/android
+        run: touch build.gradle
+
+      - name: Install packages
+        working-directory: amplitude_flutter/example
+        run: flutter pub get
+
+      # Download the iOS engine artifacts (Flutter.xcframework) that the Runner
+      # project links against via $(FLUTTER_ROOT).
+      - name: Precache iOS artifacts
+        run: flutter precache --ios
+
+      # Generates ios/Flutter/Generated.xcconfig (defines FLUTTER_ROOT) without a build.
+      - name: Generate iOS build config
+        working-directory: amplitude_flutter/example
+        run: flutter build ios --config-only --no-codesign --no-pub
+
+      - name: Install CocoaPods
+        working-directory: amplitude_flutter/example/ios
+        run: pod install
+
+      # Create a fresh simulator from the newest installed iOS runtime and its
+      # newest iPhone, so no device name or OS version can disappear when the
+      # image changes. Boot it before xcodebuild so a failed boot is retried
+      # here rather than stalling the test step.
+      - name: Boot iOS simulator
+        id: simulator
+        timeout-minutes: 10
+        run: |
+          # The first simctl call on a fresh runner starts CoreSimulator and is slow.
+          xcrun simctl list > /dev/null
+          runtime=$(xcrun simctl list runtimes available --json \
+            | jq -ec '[.runtimes[] | select(.platform == "iOS")] | sort_by(.version | split(".") | map(tonumber)) | last')
+          runtime_id=$(jq -er '.identifier' <<< "$runtime")
+          device_type=$(jq -er '[.supportedDeviceTypes[] | select(.productFamily == "iPhone")] | first | .identifier' <<< "$runtime")
+          udid=$(xcrun simctl create "CI iPhone" "$device_type" "$runtime_id")
+          for attempt in 1 2 3; do
+            if xcrun simctl bootstatus "$udid" -b; then
+              break
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              echo "Simulator failed to boot after $attempt attempts"
+              exit 1
+            fi
+            echo "Boot attempt $attempt failed; retrying"
+            xcrun simctl shutdown "$udid" || true
+          done
+          echo "udid=$udid" >> "$GITHUB_OUTPUT"
+          echo "Simulator: $device_type on $runtime_id" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Run plugin unit tests
+        working-directory: amplitude_flutter/example/ios
+        run: |
+          xcodebuild test \
+            -workspace Runner.xcworkspace \
+            -scheme Runner \
+            -destination "platform=iOS Simulator,id=${{ steps.simulator.outputs.udid }}" \
+            -resultBundlePath "$RUNNER_TEMP/ios-unit-tests.xcresult" \
+            -parallel-testing-enabled NO \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Summarize iOS unit tests
+        if: always()
+        run: |
+          results="$RUNNER_TEMP/ios-unit-tests.xcresult"
+          if [ ! -d "$results" ]; then
+            echo "No test results found"
+            exit 1
+          fi
+          xcrun xcresulttool get test-results summary --path "$results" --compact \
+            | jq -r '"Flutter ${{ matrix.flutter }}: \(.passedTests) passed, \(.failedTests) failed, \(.skippedTests) skipped (\(.result))"' \
+            | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload iOS test results
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ios-unit-tests-xcresult-flutter-${{ matrix.flutter }}
+          path: ${{ runner.temp }}/ios-unit-tests.xcresult
+          if-no-files-found: ignore
