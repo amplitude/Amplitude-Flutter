@@ -63,11 +63,9 @@ jobs:
         working-directory: example
         run: flutter build apk --config-only
 
-      # Target the regression suites: AmplitudeFlutterPluginTest has a broken
-      # fixture (JSONObject cast to Map in getConfiguration) and fails on main.
       - name: Run Android regression tests
         working-directory: example/android
-        run: ./gradlew :amplitude_flutter:testDebugUnitTest --tests '*ReadinessTest' --tests '*EpochTest' --console=plain
+        run: ./gradlew :amplitude_flutter:testDebugUnitTest --console=plain
 
       - name: Summarize Android regression tests
         if: always()
