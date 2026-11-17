@@ -24,9 +24,15 @@ abstract final class AmplitudeExperimental {
   ///
   /// Each instance reads this once, when it's constructed, so set it
   /// before creating the instance. It can come from the app's own feature
-  /// flag service:
+  /// flag service.
+  ///
+  /// Capture needs the Flutter binding, as Amplitude's platform channel
+  /// does: create the instance after `runApp` or
+  /// `WidgetsFlutterBinding.ensureInitialized()`. Without the binding, the
+  /// constructor throws when capture is on.
   ///
   /// ```dart
+  /// WidgetsFlutterBinding.ensureInitialized();
   /// AmplitudeExperimental.mobileElementInteractions =
   ///     remoteConfig.getBool('amplitude_element_interactions');
   /// final amplitude = Amplitude(Configuration(
