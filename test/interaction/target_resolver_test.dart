@@ -1031,6 +1031,41 @@ void main() {
         expect(resolveAt(t, p)!.enabled, isTrue);
       });
 
+      testWidgets('a disabled control in a disabled tile is reported as itself',
+          (t) async {
+        // Neither takes the tap, so neither callback runs. The deeper
+        // control says it is disabled, so it is the one reported.
+        final ran = <String>[];
+        await t.pumpWidget(
+          app(
+            SizedBox(
+              width: 300,
+              child: ListTile(
+                key: const ValueKey('tile'),
+                enabled: false,
+                onTap: () => ran.add('tile'),
+                title: const Text('Row'),
+                trailing: IconButton(
+                  key: const ValueKey('icon'),
+                  onPressed: null,
+                  icon: const Icon(Icons.delete),
+                ),
+              ),
+            ),
+          ),
+        );
+        final p = t.getCenter(byId('icon'));
+
+        await expectResolvesLikeTap(
+          t,
+          p,
+          ran,
+          null,
+          resolvedTo: same(t.element(byId('icon'))),
+        );
+        expect(resolveAt(t, p)!.enabled, isFalse);
+      });
+
       testWidgets("a slot doesn't carry into its control's own internals",
           (t) async {
         // The `secondary` slot is moved over the tile's own checkbox, so
