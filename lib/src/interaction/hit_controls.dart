@@ -202,7 +202,9 @@ class _HitPath {
       visit(element, parent);
       if (w is Overlay) {
         for (final content in _hitPortalContent(element)) {
-          if (portalContent.add(content)) step(content, _parentOf(content));
+          if (portalContent.add(content)) {
+            step(content, _parentOf(content));
+          }
         }
       }
       element.visitChildElements((child) {
@@ -244,7 +246,9 @@ class _HitPath {
     final entryOf = <RenderObject, Element>{};
     theater?.visitChildElements((entry) {
       final box = entry.renderObject;
-      if (box != null) entryOf[box] = entry;
+      if (box != null) {
+        entryOf[box] = entry;
+      }
     });
     final content = <Element>[];
     Element? entry;
@@ -256,7 +260,9 @@ class _HitPath {
         entry = next;
       } else if (holder != null && _searched.contains(child)) {
         final found = _overlayChild(holder, child);
-        if (found != null) content.add(found);
+        if (found != null) {
+          content.add(found);
+        }
       }
     });
     return content;

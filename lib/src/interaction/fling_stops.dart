@@ -46,7 +46,9 @@ class FlingStops {
     scrolling.addListener(() {
       if (scrolling.value) return;
       // Cleared before the next event-loop task.
-      if (_stopped.isEmpty) scheduleMicrotask(_stopped.clear);
+      if (_stopped.isEmpty) {
+        scheduleMicrotask(_stopped.clear);
+      }
       _stopped.add(position);
     });
   }
