@@ -1,6 +1,5 @@
 // ignore_for_file: depend_on_referenced_packages
 import 'package:amplitude_flutter/amplitude.dart';
-// ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
 
 class AppState extends InheritedWidget {
