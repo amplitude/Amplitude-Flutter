@@ -20,7 +20,9 @@ import 'interaction_target.dart';
 class FlutterElementInteractions {
   FlutterElementInteractions._(this._isBuilt, this._track,
       {required bool optOut}) {
-    if (!optOut) _start();
+    if (!optOut) {
+      _start();
+    }
   }
 
   /// The capture for each instance name. The platform SDKs address

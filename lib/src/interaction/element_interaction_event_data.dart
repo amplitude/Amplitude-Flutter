@@ -166,7 +166,9 @@ class _OwnContent {
     }
     // Text's semanticsLabel is another reading of its visible text, so it
     // follows the Target Text rule rather than counting as a label.
-    if (w is Semantics && parent?.widget is! Text) _read(w.properties);
+    if (w is Semantics && parent?.widget is! Text) {
+      _read(w.properties);
+    }
     // An Icon's glyph is drawn as text; it is not the control's text.
     if (collectText && w is RichText && !inIcon) {
       text.add(w.text.toPlainText());
