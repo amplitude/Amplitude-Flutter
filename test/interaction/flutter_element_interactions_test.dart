@@ -2,6 +2,7 @@ import 'package:amplitude_flutter/amplitude.dart';
 import 'package:amplitude_flutter/autocapture/autocapture.dart';
 import 'package:amplitude_flutter/autocapture/element_interactions.dart';
 import 'package:amplitude_flutter/configuration.dart';
+import 'package:amplitude_flutter/experimental.dart';
 import 'package:amplitude_flutter/src/interaction/flutter_element_interactions.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -39,21 +40,62 @@ Future<List<String>> logsOfTap(WidgetTester t) async {
   return logs;
 }
 
+/// Configurations that enable element interactions.
+const capturing = <String, Autocapture>{
+  'AutocaptureEnabled': AutocaptureEnabled(),
+  'ElementInteractionsEnabled': AutocaptureOptions(
+    elementInteractions: ElementInteractionsEnabled(),
+  ),
+  'ElementInteractionsOptions': AutocaptureOptions(
+    elementInteractions: ElementInteractionsOptions(
+      cssSelectorAllowlist: ['button'],
+    ),
+  ),
+};
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  tearDown(() => AmplitudeExperimental.mobileElementInteractions = false);
 
+  test('mobile capture is off unless the app opts in', () {
+    expect(AmplitudeExperimental.mobileElementInteractions, isFalse);
+  });
+
+  group('without the opt-in', () {
+    setUp(() => AmplitudeExperimental.mobileElementInteractions = false);
+
+    for (final MapEntry(key: name, value: autocapture) in capturing.entries) {
+      testWidgets('$name starts nothing', (t) async {
+        expect(
+            FlutterElementInteractions.register(config(autocapture)), isNull);
+        expect(await logsOfTap(t), isEmpty);
+      });
+    }
+
+    testWidgets('an Amplitude instance with element interactions logs nothing',
+        (t) async {
+      Amplitude(config(const AutocaptureEnabled()), MockMethodChannel());
+      expect(await logsOfTap(t), isEmpty);
+    });
+  });
+
+  group('with the opt-in', () {
+    setUp(() => AmplitudeExperimental.mobileElementInteractions = true);
+
+    registerTests();
+
+    // Last: nothing unsubscribes this instance, so its listener stays for
+    // the rest of this file.
+    testWidgets('an Amplitude instance with element interactions logs taps',
+        skip: kIsWeb, (t) async {
+      Amplitude(config(const AutocaptureEnabled()), MockMethodChannel());
+      expect(await logsOfTap(t), ['Amplitude: tap on ElevatedButton']);
+    });
+  });
+}
+
+void registerTests() {
   group('FlutterElementInteractions.register', () {
-    final capturing = <String, Autocapture>{
-      'AutocaptureEnabled': const AutocaptureEnabled(),
-      'ElementInteractionsEnabled': const AutocaptureOptions(
-        elementInteractions: ElementInteractionsEnabled(),
-      ),
-      'ElementInteractionsOptions': const AutocaptureOptions(
-        elementInteractions: ElementInteractionsOptions(
-          cssSelectorAllowlist: ['button'],
-        ),
-      ),
-    };
     for (final MapEntry(key: name, value: autocapture) in capturing.entries) {
       testWidgets('$name logs each tap on iOS and Android', skip: kIsWeb,
           (t) async {
@@ -84,13 +126,5 @@ void main() {
         expect(await logsOfTap(t), isEmpty);
       });
     }
-  });
-
-  // Last: nothing unsubscribes this instance, so its listener stays for
-  // the rest of this file.
-  testWidgets('an Amplitude instance with element interactions logs taps',
-      skip: kIsWeb, (t) async {
-    Amplitude(config(const AutocaptureEnabled()), MockMethodChannel());
-    expect(await logsOfTap(t), ['Amplitude: tap on ElevatedButton']);
   });
 }
