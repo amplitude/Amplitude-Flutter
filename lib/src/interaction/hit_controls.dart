@@ -8,6 +8,29 @@ import 'package:flutter/widgets.dart';
 import 'control_names.dart';
 import 'fling_stops.dart';
 
+// How this file works
+//
+// controlsHitBy hit-tests a pointer-down (_HitPath), walks the elements on
+// the hit path from the root down, and groups what it finds into controls
+// (_ControlGrouper). TargetResolver then picks the one that takes the tap.
+//
+// - Mark (_Mark): an element that is evidence of a control. Its _Kind says
+//   which: a Semantics that marks a control (boundary), InkResponse's tap
+//   action (action), a MergeSemantics (merge), a SelectableRegion
+//   (container), or an active gesture detector (handler). Every other
+//   element is layout or paint, and the walk passes over it.
+// - Group (_Group): the marks that make up one control, such as a button's
+//   Semantics and its InkWell's detector. Each group the tap reaches
+//   becomes a HitControl.
+// - Above (_Above): what the walk knows about the path above an element:
+//   the nearest mark, whether a branch lies between it and the element,
+//   and the composite tile the element is in. A branch is an element with
+//   more than one child, such as a Row.
+// - Pairing: a mark usually joins the group of the mark right above it,
+//   when no branch lies between them and that mark is still open below.
+//   Otherwise it starts a group of its own. Each kind's method in
+//   _ControlGrouper holds its exceptions.
+
 /// Every control under [event] that could take the tap, in element-tree
 /// order: each before the controls nested in it.
 ///
@@ -24,27 +47,27 @@ List<HitControl> controlsHitBy(
   final grouper = _ControlGrouper();
   path.walk(grouper.visit);
   final controls = <HitControl>[];
-  for (final unit in grouper.units) {
-    if (!unit.candidate) continue;
+  for (final group in grouper.groups) {
+    if (!group.candidate) continue;
     // Null when this tap couldn't reach the control.
     int? hitIndex;
-    for (final m in unit.marks) {
+    for (final m in group.marks) {
       final i = path.hitIndexOf(m.element);
       if (i != null && (hitIndex == null || i < hitIndex)) {
         hitIndex = i;
       }
     }
     if (hitIndex == null) continue;
-    controls.add(HitControl._(unit, _elementOf(unit), hitIndex));
+    controls.add(HitControl._(group, _elementOf(group), hitIndex));
   }
   return controls;
 }
 
 /// A control under a pointer-down.
 class HitControl {
-  HitControl._(this._unit, this.element, this.hitIndex);
+  HitControl._(this._group, this.element, this.hitIndex);
 
-  final _Unit _unit;
+  final _Group _group;
 
   /// The element the control is reported as: the component that built it,
   /// or its gesture detector when it has no Semantics or nothing names it.
@@ -55,28 +78,28 @@ class HitControl {
   final int hitIndex;
 
   /// Whether it accepts input now.
-  bool get enabled => _unit.enabled;
+  bool get enabled => _group.enabled;
 
   /// Whether any of its Semantics says it is enabled or disabled. One that
   /// says nothing (a dropdown's selected item) is inert.
-  bool get saysEnabled => _unit.explicitEnabled != null;
+  bool get saysEnabled => _group.explicitEnabled != null;
 
   /// Its class name (`ElevatedButton`), or its role (`Button`) on obfuscated
   /// builds and for a Semantics written inline in app code.
-  String get name => _unit.isControl
-      ? controlNameOf(element, role: _unit.role)
+  String get name => _group.isControl
+      ? controlNameOf(element, role: _group.role)
       : handlerNameOf(element.widget);
 }
 
 /// The element a control is reported as: the component that built it. A
 /// bare handler, or a control nothing names, is reported as its handler.
-Element _elementOf(_Unit unit) {
+Element _elementOf(_Group group) {
   final handler =
-      unit.marks.where((m) => m.kind == _Kind.handler).firstOrNull?.element;
-  if (!unit.isControl) return handler ?? unit.top.element;
-  return controlElementOf(unit.marks.map((m) => m.element)) ??
+      group.marks.where((m) => m.kind == _Kind.handler).firstOrNull?.element;
+  if (!group.isControl) return handler ?? group.top.element;
+  return controlElementOf(group.marks.map((m) => m.element)) ??
       handler ??
-      unit.top.element;
+      group.top.element;
 }
 
 /// A GestureDetector a primary tap reaches, or a RawGestureDetector one
@@ -304,117 +327,148 @@ class _HitPath {
 }
 
 /// Groups the marks on the hit path into controls, as [_HitPath.walk] visits
-/// each element after its parent.
-///
-/// A mark is a Semantics boundary a control builds (button, toggled,
-/// checked, enabled, textField or expanded), InkResponse's tap action, a
-/// MergeSemantics, a SelectableRegion, or an active gesture detector. Each
-/// boundary pairs with at most one thing next to it, so a control's own
-/// handler joins it while a developer's handler in its child stays a
-/// control of its own.
+/// each element after its parent. [visit] finds what is above the element,
+/// asks [_markFor] whether the element is a mark, and records what its
+/// children will see. Each kind of mark has its own method below.
 class _ControlGrouper {
-  final units = <_Unit>[];
+  final groups = <_Group>[];
 
-  /// The path from the root to the element being visited, each with what
-  /// its children see. The walk is depth-first, so a visited element's
+  /// The path from the root to the element being visited, each with what is
+  /// above its children. The walk is depth-first, so a visited element's
   /// parent is on this path; OverlayPortal content's real parent isn't, and
   /// the content starts a path of its own.
-  final _path = <(Element, _PathState)>[];
+  final _path = <(Element, _Above)>[];
 
   void visit(Element element, Element? parent) {
+    final above = _aboveChildrenOf(parent);
+    final mark = _markFor(element, parent, above);
+    _path.add((element, above.forChildrenOf(element, mark)));
+  }
+
+  /// What is above [parent]'s children. Trims [_path] back to [parent], so
+  /// it holds only the current element's ancestors.
+  _Above _aboveChildrenOf(Element? parent) {
     var i = _path.length - 1;
     while (i >= 0 && !identical(_path[i].$1, parent)) {
       i--;
     }
-    final _PathState state;
-    if (i >= 0) {
-      state = _path[i].$2;
-      _path.length = i + 1;
-    } else {
-      state = _PathState.root;
-    }
-    final above = state.above;
-    final adjacent = above != null && !state.branched;
-    final w = element.widget;
-    _Mark? mark;
+    if (i < 0) return _Above.none;
+    _path.length = i + 1;
+    return _path[i].$2;
+  }
 
+  /// The mark [element] is, already in a group, or null if it is layout or
+  /// paint.
+  _Mark? _markFor(Element element, Element? parent, _Above above) {
+    final w = element.widget;
     if (w is Semantics && isControlBoundary(w.properties)) {
-      final p = w.properties;
-      mark = _Mark(element, _Kind.boundary);
-      final buildRoot = parent is StatelessElement || parent is StatefulElement;
-      if (adjacent &&
-          (above.kind == _Kind.handler || above.kind == _Kind.boundary) &&
-          !buildRoot) {
-        // Below its own handler (a ListTile's InkWell, a CupertinoButton's
-        // detector, a toggle's), or the inner half of a checkbox: one
-        // control. A boundary that is the root of a component's build
-        // starts a control of its own, so a GestureDetector wrapped around
-        // a button stays a separate control.
-        above.unit.add(mark, w);
-      } else if (adjacent && above.openBelow) {
-        above.openBelow = false;
-        above.unit.add(mark, w);
-        mark.openBelow = true;
-      } else if (state.merge != null &&
-          (p.checked != null || p.toggled != null)) {
-        // A composite tile's checkbox or switch is the tile's own, even
-        // across the tile's slots. A button there (an IconButton in the
-        // title) is still a control of its own.
-        state.merge!.add(mark, w);
-        mark.openBelow = true;
-      } else {
-        _start(mark, w);
-        mark.openBelow = true;
-      }
-    } else if (w is Semantics && isTapAction(w.properties)) {
-      mark = _Mark(element, _Kind.action);
-      if (adjacent && above.openBelow) {
-        above.openBelow = false;
-        above.unit.add(mark, w);
-      } else {
-        _start(mark, w);
-      }
-      mark.openBelow = true;
-    } else if (w is MergeSemantics) {
-      mark = _Mark(element, _Kind.merge);
-      _start(mark);
-      mark.openBelow = true;
-    } else if (w is SelectableRegion) {
+      return _boundary(element, w, parent, above);
+    }
+    if (w is Semantics && isTapAction(w.properties)) {
+      return _action(element, w, above);
+    }
+    if (w is MergeSemantics) {
+      return _startOpen(_Mark(element, _Kind.merge));
+    }
+    if (w is SelectableRegion) {
       // On Flutter 3.19 a SelectableRegion (what SelectionArea builds)
       // wraps its child in a translucent RawGestureDetector with a plain tap
       // recognizer that has onTapUp set. That detector is the region's own,
       // not a control: text under it reports nothing. The region claims the
       // first handler below it unless that handler is in its child.
-      mark = _Mark(element, _Kind.container, regionChild: w.child);
-      _start(mark);
-      mark.openBelow = true;
-    } else if (isActiveHandler(w, parent)) {
-      // A handler joins only an open boundary right above it. Below another
-      // handler it is a control of its own: a GestureDetector in a button's
-      // child is deeper in the arena and wins the tap.
-      mark = _Mark(element, _Kind.handler);
-      if (adjacent && above.openBelow && !_inRegionChild(above, element)) {
-        above.openBelow = false;
-        above.unit.add(mark);
-      } else {
-        _start(mark);
-      }
+      return _startOpen(
+        _Mark(element, _Kind.container, regionChild: w.child),
+      );
     }
+    if (isActiveHandler(w, parent)) return _handler(element, above);
+    return null;
+  }
 
-    _path.add((
-      element,
-      _PathState(
-        mark ?? above,
-        (mark == null && state.branched) || childCount(element) > 1,
-        mark?.kind == _Kind.merge ? mark!.unit : state.merge,
-      )
-    ));
+  /// A Semantics that marks a control: button, toggled, checked, enabled,
+  /// textField or expanded.
+  _Mark _boundary(
+    Element element,
+    Semantics w,
+    Element? parent,
+    _Above above,
+  ) {
+    final mark = _Mark(element, _Kind.boundary);
+    final adjacent = above.adjacent;
+    final buildRoot = parent is StatelessElement || parent is StatefulElement;
+    if (adjacent != null &&
+        (adjacent.kind == _Kind.handler || adjacent.kind == _Kind.boundary) &&
+        !buildRoot) {
+      // Below its own handler (a ListTile's InkWell, a CupertinoButton's
+      // detector, a toggle's), or the inner half of a checkbox: one
+      // control. A boundary that is the root of a component's build
+      // starts a control of its own, so a GestureDetector wrapped around
+      // a button stays a separate control.
+      adjacent.group.add(mark, w);
+      return mark;
+    }
+    final p = w.properties;
+    if (adjacent != null && adjacent.openBelow) {
+      _pair(adjacent, mark, w);
+    } else if (above.merge != null &&
+        (p.checked != null || p.toggled != null)) {
+      // A composite tile's checkbox or switch is the tile's own, even
+      // across the tile's slots. A button there (an IconButton in the
+      // title) is still a control of its own.
+      above.merge!.add(mark, w);
+    } else {
+      _start(mark, w);
+    }
+    mark.openBelow = true;
+    return mark;
+  }
+
+  /// InkResponse's tap action: tappable, without saying what it is.
+  _Mark _action(Element element, Semantics w, _Above above) {
+    final mark = _Mark(element, _Kind.action);
+    final adjacent = above.adjacent;
+    if (adjacent != null && adjacent.openBelow) {
+      _pair(adjacent, mark, w);
+    } else {
+      _start(mark, w);
+    }
+    mark.openBelow = true;
+    return mark;
+  }
+
+  /// An active gesture detector. It joins only an open mark right above it.
+  /// Below another handler it is a control of its own: a GestureDetector in
+  /// a button's child is deeper in the arena and wins the tap.
+  _Mark _handler(Element element, _Above above) {
+    final mark = _Mark(element, _Kind.handler);
+    final adjacent = above.adjacent;
+    if (adjacent != null &&
+        adjacent.openBelow &&
+        !_inRegionChild(adjacent, element)) {
+      _pair(adjacent, mark);
+    } else {
+      _start(mark);
+    }
+    return mark;
+  }
+
+  /// Starts a group with [mark], which then pairs with the next mark below.
+  _Mark _startOpen(_Mark mark) {
+    _start(mark);
+    mark.openBelow = true;
+    return mark;
   }
 
   void _start(_Mark mark, [Semantics? semantics]) {
-    final unit = _Unit(mark);
-    units.add(unit);
-    unit.add(mark, semantics);
+    final group = _Group(mark);
+    groups.add(group);
+    group.add(mark, semantics);
+  }
+
+  /// [mark] joins the group of the open mark [above] it, which then closes:
+  /// a mark pairs with at most one thing below it.
+  static void _pair(_Mark above, _Mark mark, [Semantics? semantics]) {
+    above.openBelow = false;
+    above.group.add(mark, semantics);
   }
 
   /// Whether [handler] is inside the child of the SelectableRegion [mark],
@@ -432,17 +486,32 @@ class _ControlGrouper {
   }
 }
 
-/// What an element's children see on their path: the nearest mark above,
-/// whether a branch lies between it and here, and the nearest MergeSemantics
-/// control above.
-class _PathState {
-  const _PathState(this.above, this.branched, this.merge);
+/// What the walk knows about the path above an element: the nearest mark,
+/// whether a branch (an element with more than one child, such as a Row)
+/// lies between that mark and here, and the composite tile, if any, the
+/// element is in.
+class _Above {
+  const _Above(this.mark, this.branched, this.merge);
 
-  static const root = _PathState(null, false, null);
+  static const none = _Above(null, false, null);
 
-  final _Mark? above;
+  final _Mark? mark;
   final bool branched;
-  final _Unit? merge;
+
+  /// The group of the nearest MergeSemantics above.
+  final _Group? merge;
+
+  /// [mark] when no branch lies between it and here, so a mark here can
+  /// pair with it; otherwise null.
+  _Mark? get adjacent => branched ? null : mark;
+
+  /// What is above the children of [element], which is [next] if it is a
+  /// mark.
+  _Above forChildrenOf(Element element, _Mark? next) => _Above(
+        next ?? mark,
+        (next == null && branched) || childCount(element) > 1,
+        next?.kind == _Kind.merge ? next!.group : merge,
+      );
 }
 
 enum _Kind { boundary, action, merge, handler, container }
@@ -453,7 +522,7 @@ class _Mark {
 
   final Element element;
   final _Kind kind;
-  late _Unit unit;
+  late _Group group;
 
   /// For a SelectableRegion, its child: what is inside it is the app's.
   final Widget? regionChild;
@@ -464,8 +533,8 @@ class _Mark {
 }
 
 /// One control: the marks that pair into it.
-class _Unit {
-  _Unit(this.top);
+class _Group {
+  _Group(this.top);
 
   /// The first mark, the highest on the path.
   final _Mark top;
@@ -486,7 +555,7 @@ class _Unit {
 
   void add(_Mark mark, [Semantics? semantics]) {
     marks.add(mark);
-    mark.unit = this;
+    mark.group = this;
     switch (mark.kind) {
       case _Kind.boundary:
         _boundary = true;
