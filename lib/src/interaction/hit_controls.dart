@@ -26,7 +26,9 @@ List<HitControl> controlsHitBy(
       return;
     }
     final hitIndex = path.hitIndexOf(element);
-    if (hitIndex != null) controls.add(HitControl._(element, hitIndex));
+    if (hitIndex != null) {
+      controls.add(HitControl._(element, hitIndex));
+    }
   });
   return controls;
 }
@@ -55,7 +57,9 @@ String _nameOf(Widget w) {
   }
   var name = w.runtimeType.toString();
   final generic = name.indexOf('<');
-  if (generic > 0) name = name.substring(0, generic);
+  if (generic > 0) {
+    name = name.substring(0, generic);
+  }
   return name.replaceFirst(RegExp('^_+'), '');
 }
 
@@ -206,7 +210,9 @@ class _HitPath {
       visit(element, parent);
       if (w is Overlay) {
         for (final content in _hitPortalContent(element)) {
-          if (portalContent.add(content)) step(content, _parentOf(content));
+          if (portalContent.add(content)) {
+            step(content, _parentOf(content));
+          }
         }
       }
       element.visitChildElements((child) {
@@ -248,7 +254,9 @@ class _HitPath {
     final entryOf = <RenderObject, Element>{};
     theater?.visitChildElements((entry) {
       final box = entry.renderObject;
-      if (box != null) entryOf[box] = entry;
+      if (box != null) {
+        entryOf[box] = entry;
+      }
     });
     final content = <Element>[];
     Element? entry;
@@ -260,7 +268,9 @@ class _HitPath {
         entry = next;
       } else if (holder != null && _searched.contains(child)) {
         final found = _overlayChild(holder, child);
-        if (found != null) content.add(found);
+        if (found != null) {
+          content.add(found);
+        }
       }
     });
     return content;
