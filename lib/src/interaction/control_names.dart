@@ -182,11 +182,15 @@ bool _isFlagless(Widget w) =>
 String _typeName(Widget w) {
   var name = w.runtimeType.toString();
   final generic = name.indexOf('<');
-  if (generic > 0) name = name.substring(0, generic);
+  if (generic > 0) {
+    name = name.substring(0, generic);
+  }
   if (name.startsWith('_')) {
     name = name.replaceFirst(RegExp('^_+'), '');
     final m = RegExp(r'^(.+?)(With[A-Z]\w*|M[23])$').firstMatch(name);
-    if (m != null) name = m.group(1)!;
+    if (m != null) {
+      name = m.group(1)!;
+    }
   }
   return name;
 }

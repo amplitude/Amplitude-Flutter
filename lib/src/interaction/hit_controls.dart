@@ -30,7 +30,9 @@ List<HitControl> controlsHitBy(
     int? hitIndex;
     for (final m in unit.marks) {
       final i = path.hitIndexOf(m.element);
-      if (i != null && (hitIndex == null || i < hitIndex)) hitIndex = i;
+      if (i != null && (hitIndex == null || i < hitIndex)) {
+        hitIndex = i;
+      }
     }
     if (hitIndex == null) continue;
     controls.add(HitControl._(unit, _elementOf(unit), hitIndex));
@@ -498,9 +500,9 @@ class _Unit {
     }
     final p = semantics?.properties;
     if (p == null) return;
-    if (p.button == true) _button = true;
-    if (p.toggled != null) _toggle = true;
-    if (p.checked != null) _checked = true;
+    _button |= p.button == true;
+    _toggle |= p.toggled != null;
+    _checked |= p.checked != null;
     if (p.textField == true || p.currentValueLength != null) {
       _textField = true;
     }

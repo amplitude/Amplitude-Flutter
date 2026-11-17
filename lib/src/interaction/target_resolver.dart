@@ -33,7 +33,9 @@ abstract final class TargetResolver {
     HitControl? best;
     for (final control in controlsHitBy(event)) {
       final current = best;
-      if (current == null || _beats(control, current)) best = control;
+      if (current == null || _beats(control, current)) {
+        best = control;
+      }
     }
     final target = best;
     if (target == null) return null;
