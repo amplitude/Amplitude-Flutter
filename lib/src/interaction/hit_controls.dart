@@ -83,11 +83,12 @@ Element _elementOf(_Unit unit) {
 /// would, other than the one a GestureDetector builds.
 bool isActiveHandler(Widget w, Element? parent) {
   if (w is GestureDetector) {
+    // The callbacks for which it builds a TapGestureRecognizer. Long-press
+    // and double-tap recognizers give up on a short press.
     return w.onTap != null ||
         w.onTapUp != null ||
         w.onTapDown != null ||
-        w.onLongPress != null ||
-        w.onDoubleTap != null;
+        w.onTapCancel != null;
   }
   if (w is RawGestureDetector) {
     if (parent?.widget is GestureDetector) return false;
