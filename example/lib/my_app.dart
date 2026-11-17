@@ -7,6 +7,7 @@ import 'package:amplitude_flutter/autocapture/element_interactions.dart';
 import 'package:amplitude_flutter/autocapture/page_views.dart';
 import 'package:amplitude_flutter/configuration.dart';
 import 'package:amplitude_flutter/constants.dart';
+import 'package:amplitude_flutter/experimental.dart';
 import 'package:amplitude_flutter/observers/amplitude_navigator_observer.dart';
 import 'package:flutter/material.dart';
 
@@ -45,6 +46,9 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    // Element interaction capture on iOS and Android is experimental and off
+    // unless the app opts in, before constructing the instance.
+    AmplitudeExperimental.mobileElementInteractions = true;
     analytics = Amplitude(Configuration(
         apiKey: widget.apiKey,
         logLevel: LogLevel.debug,
