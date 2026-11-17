@@ -47,10 +47,10 @@ class PrimaryButton extends StatelessWidget {
       ElevatedButton(onPressed: onPressed, child: const Text('Primary'));
 }
 
-/// One pairing case: tapping `target` must resolve to the widget keyed
+/// One real-tap case: tapping `target` must resolve to the widget keyed
 /// [expected] under [name].
-class _PairingCase {
-  const _PairingCase(this.title, this.build, this.expected, this.name);
+class _RealTapCase {
+  const _RealTapCase(this.title, this.build, this.expected, this.name);
 
   final String title;
 
@@ -64,8 +64,8 @@ ValueKey<String> _k(String id) => ValueKey(id);
 
 Widget _wide(Widget child) => SizedBox(width: 320, child: child);
 
-final _pairings = <_PairingCase>[
-  _PairingCase(
+final _realTaps = <_RealTapCase>[
+  _RealTapCase(
     'a GestureDetector around an enabled button loses to the button',
     (ran) => GestureDetector(
       key: _k('gd'),
@@ -79,7 +79,7 @@ final _pairings = <_PairingCase>[
     'target',
     'ElevatedButton',
   ),
-  _PairingCase(
+  _RealTapCase(
     'a GestureDetector around a disabled button takes the tap',
     (ran) => GestureDetector(
       key: _k('gd'),
@@ -93,7 +93,7 @@ final _pairings = <_PairingCase>[
     'gd',
     'GestureDetector',
   ),
-  _PairingCase(
+  _RealTapCase(
     "a GestureDetector in a CupertinoButton's child wins",
     (ran) => CupertinoButton(
       onPressed: () => ran('button'),
@@ -106,7 +106,7 @@ final _pairings = <_PairingCase>[
     'target',
     'GestureDetector',
   ),
-  _PairingCase(
+  _RealTapCase(
     "an ElevatedButton in a CupertinoButton's child wins",
     (ran) => CupertinoButton(
       onPressed: () => ran('button'),
@@ -119,7 +119,7 @@ final _pairings = <_PairingCase>[
     'target',
     'ElevatedButton',
   ),
-  _PairingCase(
+  _RealTapCase(
     'an InkWell in a ListTile title wins',
     (ran) => _wide(
       ListTile(
@@ -134,7 +134,7 @@ final _pairings = <_PairingCase>[
     'target',
     'InkWell',
   ),
-  _PairingCase(
+  _RealTapCase(
     'an ElevatedButton in a ListTile title wins',
     (ran) => _wide(
       ListTile(
@@ -149,7 +149,7 @@ final _pairings = <_PairingCase>[
     'target',
     'ElevatedButton',
   ),
-  _PairingCase(
+  _RealTapCase(
     "a Checkbox in a plain ListTile's trailing wins",
     (ran) => _wide(
       ListTile(
@@ -165,7 +165,7 @@ final _pairings = <_PairingCase>[
     'target',
     'Checkbox',
   ),
-  _PairingCase(
+  _RealTapCase(
     'a Switch inside a GestureDetector wins',
     (ran) => GestureDetector(
       onTap: () => ran('gd'),
@@ -178,7 +178,7 @@ final _pairings = <_PairingCase>[
     'target',
     'Switch',
   ),
-  _PairingCase(
+  _RealTapCase(
     'an enabled IconButton in a disabled ListTile wins',
     (ran) => _wide(
       ListTile(
@@ -195,7 +195,7 @@ final _pairings = <_PairingCase>[
     'target',
     'IconButton',
   ),
-  _PairingCase(
+  _RealTapCase(
     'ExcludeSemantics does not hide a control',
     (ran) => ExcludeSemantics(
       child: ElevatedButton(
@@ -207,13 +207,13 @@ final _pairings = <_PairingCase>[
     'target',
     'ElevatedButton',
   ),
-  _PairingCase(
+  _RealTapCase(
     'an app component with a Semantics button is named after itself',
     (ran) => _FancyButton(key: _k('target'), onTap: () => ran('target')),
     'target',
     'FancyButton',
   ),
-  _PairingCase(
+  _RealTapCase(
     'an inline Semantics button is reported as its handler, by role',
     (ran) => Semantics(
       button: true,
@@ -227,13 +227,13 @@ final _pairings = <_PairingCase>[
     'target',
     'Button',
   ),
-  _PairingCase(
+  _RealTapCase(
     'an app component whose build returns a button is named after itself',
     (ran) => PrimaryButton(key: _k('target'), onPressed: () => ran('target')),
     'target',
     'PrimaryButton',
   ),
-  _PairingCase(
+  _RealTapCase(
     'an ActionChip',
     (ran) => ActionChip(
       key: _k('target'),
@@ -243,7 +243,7 @@ final _pairings = <_PairingCase>[
     'target',
     'ActionChip',
   ),
-  _PairingCase(
+  _RealTapCase(
     'a FilterChip',
     (ran) => FilterChip(
       key: _k('target'),
@@ -254,7 +254,7 @@ final _pairings = <_PairingCase>[
     'target',
     'FilterChip',
   ),
-  _PairingCase(
+  _RealTapCase(
     'a Radio',
     // RadioGroup replaces groupValue and onChanged from Flutter 3.35; the
     // SDK still supports 3.19.
@@ -269,7 +269,7 @@ final _pairings = <_PairingCase>[
     'target',
     'Radio',
   ),
-  _PairingCase(
+  _RealTapCase(
     'a RadioListTile owns its radio',
     (ran) => _wide(
       RadioListTile<int>(
@@ -285,7 +285,7 @@ final _pairings = <_PairingCase>[
     'target',
     'RadioListTile',
   ),
-  _PairingCase(
+  _RealTapCase(
     'a BackButton, not the IconButton it builds',
     (ran) => BackButton(key: _k('target'), onPressed: () => ran('target')),
     'target',
@@ -1075,8 +1075,8 @@ void main() {
 
     // Real-tap oracle: the control whose callback ran must be the one
     // resolved, under the name the control is reported by.
-    group('Semantics pairing', () {
-      for (final c in _pairings) {
+    group('real taps resolve to the control that handles them', () {
+      for (final c in _realTaps) {
         testWidgets(c.title, (t) async {
           final ran = <String>[];
           await t.pumpWidget(app(c.build(ran.add)));
