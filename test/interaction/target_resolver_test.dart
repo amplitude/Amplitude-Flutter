@@ -49,8 +49,8 @@ class PrimaryButton extends StatelessWidget {
 
 /// One pairing case: tapping `target` must resolve to the widget keyed
 /// [expected] under [name].
-class _Pairing {
-  const _Pairing(this.title, this.build, this.expected, this.name);
+class _PairingCase {
+  const _PairingCase(this.title, this.build, this.expected, this.name);
 
   final String title;
 
@@ -64,8 +64,8 @@ ValueKey<String> _k(String id) => ValueKey(id);
 
 Widget _wide(Widget child) => SizedBox(width: 320, child: child);
 
-final _pairings = <_Pairing>[
-  _Pairing(
+final _pairings = <_PairingCase>[
+  _PairingCase(
     'a GestureDetector around an enabled button loses to the button',
     (ran) => GestureDetector(
       key: _k('gd'),
@@ -79,7 +79,7 @@ final _pairings = <_Pairing>[
     'target',
     'ElevatedButton',
   ),
-  _Pairing(
+  _PairingCase(
     'a GestureDetector around a disabled button takes the tap',
     (ran) => GestureDetector(
       key: _k('gd'),
@@ -93,7 +93,7 @@ final _pairings = <_Pairing>[
     'gd',
     'GestureDetector',
   ),
-  _Pairing(
+  _PairingCase(
     "a GestureDetector in a CupertinoButton's child wins",
     (ran) => CupertinoButton(
       onPressed: () => ran('button'),
@@ -106,7 +106,7 @@ final _pairings = <_Pairing>[
     'target',
     'GestureDetector',
   ),
-  _Pairing(
+  _PairingCase(
     "an ElevatedButton in a CupertinoButton's child wins",
     (ran) => CupertinoButton(
       onPressed: () => ran('button'),
@@ -119,7 +119,7 @@ final _pairings = <_Pairing>[
     'target',
     'ElevatedButton',
   ),
-  _Pairing(
+  _PairingCase(
     'an InkWell in a ListTile title wins',
     (ran) => _wide(
       ListTile(
@@ -134,7 +134,7 @@ final _pairings = <_Pairing>[
     'target',
     'InkWell',
   ),
-  _Pairing(
+  _PairingCase(
     'an ElevatedButton in a ListTile title wins',
     (ran) => _wide(
       ListTile(
@@ -149,7 +149,7 @@ final _pairings = <_Pairing>[
     'target',
     'ElevatedButton',
   ),
-  _Pairing(
+  _PairingCase(
     "a Checkbox in a plain ListTile's trailing wins",
     (ran) => _wide(
       ListTile(
@@ -165,7 +165,7 @@ final _pairings = <_Pairing>[
     'target',
     'Checkbox',
   ),
-  _Pairing(
+  _PairingCase(
     'a Switch inside a GestureDetector wins',
     (ran) => GestureDetector(
       onTap: () => ran('gd'),
@@ -178,7 +178,7 @@ final _pairings = <_Pairing>[
     'target',
     'Switch',
   ),
-  _Pairing(
+  _PairingCase(
     'an enabled IconButton in a disabled ListTile wins',
     (ran) => _wide(
       ListTile(
@@ -195,7 +195,7 @@ final _pairings = <_Pairing>[
     'target',
     'IconButton',
   ),
-  _Pairing(
+  _PairingCase(
     'ExcludeSemantics does not hide a control',
     (ran) => ExcludeSemantics(
       child: ElevatedButton(
@@ -207,13 +207,13 @@ final _pairings = <_Pairing>[
     'target',
     'ElevatedButton',
   ),
-  _Pairing(
+  _PairingCase(
     'an app component with a Semantics button is named after itself',
     (ran) => _FancyButton(key: _k('target'), onTap: () => ran('target')),
     'target',
     'FancyButton',
   ),
-  _Pairing(
+  _PairingCase(
     'an inline Semantics button is reported as its handler, by role',
     (ran) => Semantics(
       button: true,
@@ -227,13 +227,13 @@ final _pairings = <_Pairing>[
     'target',
     'Button',
   ),
-  _Pairing(
+  _PairingCase(
     'an app component whose build returns a button is named after itself',
     (ran) => PrimaryButton(key: _k('target'), onPressed: () => ran('target')),
     'target',
     'PrimaryButton',
   ),
-  _Pairing(
+  _PairingCase(
     'an ActionChip',
     (ran) => ActionChip(
       key: _k('target'),
@@ -243,7 +243,7 @@ final _pairings = <_Pairing>[
     'target',
     'ActionChip',
   ),
-  _Pairing(
+  _PairingCase(
     'a FilterChip',
     (ran) => FilterChip(
       key: _k('target'),
@@ -254,7 +254,7 @@ final _pairings = <_Pairing>[
     'target',
     'FilterChip',
   ),
-  _Pairing(
+  _PairingCase(
     'a Radio',
     // RadioGroup replaces groupValue and onChanged from Flutter 3.35; the
     // SDK still supports 3.19.
@@ -269,7 +269,7 @@ final _pairings = <_Pairing>[
     'target',
     'Radio',
   ),
-  _Pairing(
+  _PairingCase(
     'a RadioListTile owns its radio',
     (ran) => _wide(
       RadioListTile<int>(
@@ -285,7 +285,7 @@ final _pairings = <_Pairing>[
     'target',
     'RadioListTile',
   ),
-  _Pairing(
+  _PairingCase(
     'a BackButton, not the IconButton it builds',
     (ran) => BackButton(key: _k('target'), onPressed: () => ran('target')),
     'target',

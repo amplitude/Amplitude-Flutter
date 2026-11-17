@@ -21,10 +21,10 @@ List<HitControl> controlsHitBy(
   PointerDownEvent event,
 ) {
   final path = _HitPath(event);
-  final pairing = _Pairing();
-  path.walk(pairing.visit);
+  final grouper = _ControlGrouper();
+  path.walk(grouper.visit);
   final controls = <HitControl>[];
-  for (final unit in pairing.units) {
+  for (final unit in grouper.units) {
     if (!unit.candidate) continue;
     // Null when this tap couldn't reach the control.
     int? hitIndex;
@@ -302,7 +302,7 @@ class _HitPath {
   }
 }
 
-/// Pairs the marks on the hit path into controls, as [_HitPath.walk] visits
+/// Groups the marks on the hit path into controls, as [_HitPath.walk] visits
 /// each element after its parent.
 ///
 /// A mark is a Semantics boundary a control builds (button, toggled,
@@ -311,7 +311,7 @@ class _HitPath {
 /// boundary pairs with at most one thing next to it, so a control's own
 /// handler joins it while a developer's handler in its child stays a
 /// control of its own.
-class _Pairing {
+class _ControlGrouper {
   final units = <_Unit>[];
 
   /// The path from the root to the element being visited, each with what

@@ -33,7 +33,22 @@ abstract final class TargetResolver {
     HitControl? best;
     for (final control in controlsHitBy(event)) {
       final current = best;
-      if (current == null || _beats(control, current)) {
+      if (current == null) {
+        best = control;
+        continue;
+      }
+      // Between controls in different branches, such as a translucent
+      // overlay and the button beneath it, the one Flutter hit first wins,
+      // as it does in the gesture arena. Between a control and one nested
+      // inside it, the deeper one wins, except that a disabled control
+      // builds no recognizer, so it can't take a tap from an enabled
+      // ancestor. A control that says nothing about being enabled (a
+      // dropdown's selected item) is inert and never displaces an ancestor.
+      final nested = _isAncestor(current.element, control.element);
+      final wins = nested
+          ? control.enabled || (!current.enabled && control.saysEnabled)
+          : control.hitIndex < current.hitIndex;
+      if (wins) {
         best = control;
       }
     }
@@ -44,22 +59,6 @@ abstract final class TargetResolver {
       enabled: target.enabled,
       name: target.name,
     );
-  }
-
-  /// Whether [control] takes the tap from [best], which came before it.
-  ///
-  /// Between controls in different branches, such as a translucent overlay
-  /// and the button beneath it, the one Flutter hit first wins, as it does
-  /// in the gesture arena. Between a control and one nested inside it, the
-  /// deeper one wins, except that a disabled control builds no recognizer,
-  /// so it can't take a tap from an enabled ancestor. A control that says
-  /// nothing about being enabled (a dropdown's selected item) is inert and
-  /// never displaces an ancestor.
-  static bool _beats(HitControl control, HitControl best) {
-    if (!_isAncestor(best.element, control.element)) {
-      return control.hitIndex < best.hitIndex;
-    }
-    return control.enabled || (!best.enabled && control.saysEnabled);
   }
 
   /// Whether [ancestor] is above [element]. An element's depth is stored,
