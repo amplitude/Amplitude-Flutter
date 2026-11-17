@@ -5,6 +5,7 @@ import 'package:amplitude_flutter/autocapture/autocapture.dart';
 import 'package:amplitude_flutter/autocapture/element_interactions.dart';
 import 'package:amplitude_flutter/configuration.dart';
 import 'package:amplitude_flutter/events/base_event.dart';
+import 'package:amplitude_flutter/experimental.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -52,6 +53,8 @@ int trackCount(MockMethodChannel channel) =>
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  setUp(() => AmplitudeExperimental.mobileElementInteractions = true);
+  tearDown(() => AmplitudeExperimental.mobileElementInteractions = false);
 
   // Each Amplitude here captures taps until another one with the same
   // instance name replaces it; this one has capture off.
@@ -71,6 +74,17 @@ void main() {
   });
 
   group('on iOS and Android', skip: kIsWeb, () {
+    testWidgets("an app that didn't opt in sends nothing", (t) async {
+      AmplitudeExperimental.mobileElementInteractions = false;
+      final channel = channelReplyingTo(Completer<void>()..complete());
+      await Amplitude(config(), channel).isBuilt;
+      await t.pumpWidget(button());
+
+      await t.tap(find.byKey(const Key('b')));
+      await t.pump();
+      verifyNever(channel.invokeMethod('track', any));
+    });
+
     testWidgets('a tap made during init is tracked once init replies',
         (t) async {
       final ready = Completer<void>();

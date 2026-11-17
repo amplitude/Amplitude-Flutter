@@ -4,6 +4,7 @@ import 'package:amplitude_flutter/autocapture/autocapture.dart';
 import 'package:amplitude_flutter/autocapture/element_interactions.dart';
 import 'package:amplitude_flutter/configuration.dart';
 import 'package:amplitude_flutter/events/base_event.dart';
+import 'package:amplitude_flutter/experimental.dart';
 import 'package:amplitude_flutter/src/interaction/flutter_element_interactions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -52,6 +53,13 @@ String? textOf(BaseEvent e) =>
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  final optedIn = AmplitudeExperimental.mobileElementInteractions;
+  setUp(() => AmplitudeExperimental.mobileElementInteractions = true);
+  tearDown(() => AmplitudeExperimental.mobileElementInteractions = false);
+
+  test('mobile capture is off unless the app opts in', () {
+    expect(optedIn, isFalse);
+  });
 
   group('routing', () {
     final cases = <String, (Autocapture, bool)>{
@@ -83,6 +91,11 @@ void main() {
             capture([], configuration: config(autocapture: autocapture));
         // Web keeps the Browser SDK's DOM capture (Q8).
         expect(registered, mobile && !kIsWeb ? isNotNull : isNull);
+      });
+      test("$name doesn't capture taps without the opt-in", () {
+        AmplitudeExperimental.mobileElementInteractions = false;
+        expect(capture([], configuration: config(autocapture: autocapture)),
+            isNull);
       });
     }
   });

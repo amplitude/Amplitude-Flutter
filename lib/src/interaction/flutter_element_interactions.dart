@@ -6,6 +6,7 @@ import '../../autocapture/autocapture.dart';
 import '../../autocapture/element_interactions.dart';
 import '../../configuration.dart';
 import '../../events/base_event.dart';
+import '../../experimental.dart';
 import 'element_interaction_event.dart';
 import 'element_interaction_event_data.dart';
 import 'pointer_observer.dart';
@@ -28,8 +29,9 @@ class FlutterElementInteractions {
   static final _registered = <String, FlutterElementInteractions>{};
 
   /// Starts capturing taps for an instance with [configuration], replacing
-  /// any capture for its name. Returns null when its configuration doesn't
-  /// capture element interactions on this platform.
+  /// any capture for its name. Returns null unless the app opted in with
+  /// [AmplitudeExperimental.mobileElementInteractions] and its
+  /// configuration captures element interactions on this platform.
   static FlutterElementInteractions? register(
     Configuration configuration, {
     required Future<bool> isBuilt,
@@ -46,11 +48,13 @@ class FlutterElementInteractions {
   }
 
   /// Web keeps the Browser SDK's DOM capture until Flutter's own pointer
-  /// capture comes to web (Q8). On iOS and Android any element interaction
-  /// setting but disabled captures taps: CSS fields only apply to web, and
-  /// an app tuning them shouldn't silently lose mobile capture.
+  /// capture comes to web (Q8). On iOS and Android, once the app opted in,
+  /// any element interaction setting but disabled captures taps: CSS fields
+  /// only apply to web, and an app tuning them shouldn't silently lose
+  /// mobile capture.
   static bool _capturesTaps(Autocapture autocapture) =>
       !kIsWeb &&
+      AmplitudeExperimental.mobileElementInteractions &&
       switch (autocapture) {
         AutocaptureEnabled() => true,
         AutocaptureDisabled() => false,
