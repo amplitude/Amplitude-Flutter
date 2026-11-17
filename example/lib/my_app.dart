@@ -8,7 +8,6 @@ import 'package:amplitude_flutter/autocapture/page_views.dart';
 import 'package:amplitude_flutter/configuration.dart';
 import 'package:amplitude_flutter/constants.dart';
 import 'package:amplitude_flutter/observers/amplitude_navigator_observer.dart';
-// ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
 
 import 'app_state.dart';
