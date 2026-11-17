@@ -559,6 +559,83 @@ void main() {
 
         await expectResolvesLikeTap(t, t.getCenter(byId('gd')), ran, 'gd');
       });
+
+      // Only the tap callbacks build a TapGestureRecognizer. A long-press
+      // or double-tap recognizer gives up on a short press, so the tap goes
+      // to the handler around it.
+      final notTaps = <String, Widget Function(List<String> ran)>{
+        'onLongPress': (ran) => GestureDetector(
+              key: const ValueKey('inner'),
+              behavior: HitTestBehavior.opaque,
+              onLongPress: () => ran.add('inner'),
+              child: const SizedBox(width: 80, height: 40),
+            ),
+        'onDoubleTap': (ran) => GestureDetector(
+              key: const ValueKey('inner'),
+              behavior: HitTestBehavior.opaque,
+              onDoubleTap: () => ran.add('inner'),
+              child: const SizedBox(width: 80, height: 40),
+            ),
+      };
+      for (final MapEntry(key: name, value: inner) in notTaps.entries) {
+        testWidgets('a GestureDetector with only $name is not a target',
+            (t) async {
+          final ran = <String>[];
+          await t.pumpWidget(app(inner(ran)));
+
+          await expectResolvesLikeTap(t, t.getCenter(byId('inner')), ran, null);
+        });
+
+        testWidgets(
+            'a GestureDetector with only $name loses to an onTap '
+            'around it', (t) async {
+          final ran = <String>[];
+          await t.pumpWidget(
+            app(
+              GestureDetector(
+                key: const ValueKey('outer'),
+                onTap: () => ran.add('outer'),
+                child: inner(ran),
+              ),
+            ),
+          );
+
+          final at = t.getCenter(byId('inner'));
+          expect(keyOf(resolveAt(t, at)), 'outer');
+          await t.tapAt(at);
+          // A double-tap recognizer holds the arena until it times out.
+          await t.pump(kDoubleTapTimeout);
+          expect(ran, ['outer']);
+        });
+      }
+
+      // onTapCancel alone still builds a TapGestureRecognizer. Hit first,
+      // it wins the arena, so the onTap around it never runs.
+      testWidgets('a GestureDetector with only onTapCancel wins', (t) async {
+        final ran = <String>[];
+        await t.pumpWidget(
+          app(
+            GestureDetector(
+              key: const ValueKey('outer'),
+              onTap: () => ran.add('outer'),
+              child: GestureDetector(
+                key: const ValueKey('inner'),
+                behavior: HitTestBehavior.opaque,
+                onTapCancel: () => ran.add('inner cancelled'),
+                child: const SizedBox(width: 80, height: 40),
+              ),
+            ),
+          ),
+        );
+
+        await expectResolvesLikeTap(
+          t,
+          t.getCenter(byId('inner')),
+          ran,
+          null,
+          resolvedTo: same(t.element(byId('inner'))),
+        );
+      });
     });
 
     testWidgets('an invisible control that keeps interactivity is a target',
