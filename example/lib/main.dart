@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
-// ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 
