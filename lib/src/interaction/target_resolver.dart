@@ -46,7 +46,7 @@ abstract final class TargetResolver {
       // dropdown's selected item) is inert and never displaces an ancestor.
       final nested = _isAncestor(current.element, control.element);
       final wins = nested
-          ? control.enabled || (!current.enabled && control.saysEnabled)
+          ? control.enabled || (!current.enabled && control.hasExplicitEnabled)
           : control.hitIndex < current.hitIndex;
       if (wins) {
         best = control;
