@@ -1,6 +1,7 @@
-// Adapted from PR #317 at a05e71683c4e6a30304d1219dad08d0b1e50d4fb.
-// Original hit-path checks and hidden-widget pruning by Zohaib Farooqi and
-// Wei Sun: https://github.com/amplitude/Amplitude-Flutter/pull/317.
+// Adapted from PR #317 at a05e71683c4e6a30304d1219dad08d0b1e50d4fb:
+// checking candidates against Flutter's hit-test path, by Wei Sun, and
+// never reporting hidden widgets, by Zohaib Farooqi:
+// https://github.com/amplitude/Amplitude-Flutter/pull/317.
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 
