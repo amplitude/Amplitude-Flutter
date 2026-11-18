@@ -4,14 +4,10 @@
 /// [ElementInteractionsDisabled]/[ElementInteractionsEnabled], or use
 /// [ElementInteractionsOptions] for more granular control.
 ///
-/// **iOS and Android.** Any setting except [ElementInteractionsDisabled]
-/// sends an `[Amplitude] Element Interacted` event for each tap on a control,
-/// with no wrapper widget. Only strings the app's code sets are read: a
-/// Material or Cupertino button's text, `Semantics` labels, tooltips and
-/// `Semantics.identifier`. Taps on disabled controls, keyboard activations
-/// and accessibility actions are not sent. `[Amplitude] Hierarchy` is cut at
-/// 1,024 characters. On obfuscated builds controls are named by role
-/// (`Button`), and no Hierarchy or button text is sent.
+/// **iOS and Android (experimental).** Off unless the app opts in with
+/// `AmplitudeExperimental.mobileElementInteractions`, from
+/// `package:amplitude_flutter/experimental.dart`, which describes what is
+/// sent.
 ///
 /// **Web.** Clicks are captured by the Browser SDK, as configured by
 /// [ElementInteractionsOptions].
@@ -36,8 +32,9 @@ sealed class ElementInteractions {
 ///
 /// On web, element interactions (click tracking) go through the Browser SDK,
 /// configured by these options. Requires Browser SDK >= 2.10.0. On iOS and
-/// Android these options turn on tap capture (see [ElementInteractions]); the
-/// CSS and attribute options only apply to web.
+/// Android, once the app opts in (experimental), these options turn on tap
+/// capture (see [ElementInteractions]); the CSS and attribute options only
+/// apply to web.
 /// Refer to [docs](https://amplitude.com/docs/sdks/analytics/browser/browser-sdk-2#autocapture) for more details.
 ///
 /// **Flutter web requirement.** DOM-based capture only sees real DOM nodes.
@@ -175,7 +172,8 @@ class ElementInteractionsDisabled extends ElementInteractions {
 
 /// Enable autocapture ElementInteractions.
 ///
-/// On iOS and Android, captures taps (see [ElementInteractions]). On web,
+/// On iOS and Android, once the app opts in (experimental), captures taps
+/// (see [ElementInteractions]). On web,
 /// enables click tracking with the Flutter-aware
 /// [ElementInteractionsOptions.defaultCssSelectorAllowlist], so clicks on
 /// Flutter web widgets are captured. Use [ElementInteractionsOptions] if you need
