@@ -1,6 +1,3 @@
-// Adapted from PR #317 at a05e71683c4e6a30304d1219dad08d0b1e50d4fb.
-// Original composite-tile handling by Zohaib Farooqi and Wei Sun:
-// https://github.com/amplitude/Amplitude-Flutter/pull/317.
 import 'package:flutter/widgets.dart';
 
 import 'control_markers.dart';

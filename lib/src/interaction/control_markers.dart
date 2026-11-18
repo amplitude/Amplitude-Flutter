@@ -1,7 +1,3 @@
-// Adapted from PR #317 at a05e71683c4e6a30304d1219dad08d0b1e50d4fb.
-// Original hit-path checks by Zohaib Farooqi and Wei Sun:
-// https://github.com/amplitude/Amplitude-Flutter/pull/317.
-//
 // Which widgets are markers: the parts of a control that the hit walk looks
 // for. ControlGrouper (control_grouper.dart) pairs them into controls.
 import 'package:flutter/gestures.dart';
