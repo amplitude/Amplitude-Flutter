@@ -9,9 +9,9 @@
 import 'package:flutter/semantics.dart';
 import 'package:flutter/widgets.dart';
 
+import 'control_markers.dart';
 import 'control_names.dart';
 import 'element_ancestry.dart';
-import 'hit_controls.dart';
 import 'interaction_target.dart';
 
 /// Controls whose text is sent as Target Text (decision Q29), by name, so

@@ -12,28 +12,12 @@
 // right list. See the decision log, Q26 and Q28. The event data
 // (element_interaction_event_data.dart) reads the same lists to build
 // Hierarchy and to find the tapped control's own text.
-import 'package:flutter/semantics.dart';
 import 'package:flutter/widgets.dart';
 
-/// A Semantics a control builds around itself. `currentValueLength` marks a
-/// text field on Flutter 3.19, whose TextField sets no role flag; `expanded`
-/// marks DropdownButton and PopupMenuButton.
-bool isControlBoundary(SemanticsProperties p) =>
-    p.button == true ||
-    p.toggled != null ||
-    p.checked != null ||
-    p.textField == true ||
-    p.currentValueLength != null ||
-    p.enabled != null ||
-    p.expanded != null;
-
-/// A Semantics with only a tap action: InkResponse's, around its
-/// GestureDetector.
-bool isTapAction(SemanticsProperties p) =>
-    p.onTap != null || p.onLongPress != null;
+import 'control_markers.dart';
 
 /// The component that built a control, found from the elements that make
-/// it up ([marks], highest first), or null if none of them leads to one.
+/// it up ([markers], highest first), or null if none of them leads to one.
 ///
 /// This is the first stateless or stateful ancestor that isn't
 /// widgets-library plumbing, then up through the components whose build
@@ -42,13 +26,13 @@ bool isTapAction(SemanticsProperties p) =>
 ///
 /// The search passes only elements that don't lay anything out. A layout
 /// widget (Center, Padding) or a branch first means the Semantics was
-/// written inline in app code. It starts from the highest mark; when
+/// written inline in app code. It starts from the highest marker; when
 /// something the control doesn't build sits above it (an Autocomplete
-/// option's list wraps its Semantics in IndexedSemantics), a lower mark,
+/// option's list wraps its Semantics in IndexedSemantics), a lower marker,
 /// such as the InkWell's own, can still lead to the control.
-Element? controlElementOf(Iterable<Element> marks) {
-  for (final mark in marks) {
-    final found = _builderOf(mark);
+Element? controlElementOf(Iterable<Element> markers) {
+  for (final marker in markers) {
+    final found = _builderOf(marker);
     if (found != null) return found;
   }
   return null;
