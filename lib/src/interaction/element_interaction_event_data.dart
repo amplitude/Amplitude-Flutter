@@ -1,6 +1,6 @@
 // What an `[Amplitude] Element Interacted` event says about a tapped
-// control. Adapted from PR #317's label extraction and nested-label
-// exclusion, by Zohaib Farooqi and Wei Sun:
+// control. Follows the approach of PR #317's label extraction, by Zohaib
+// Farooqi, and its nested-label exclusion, by Wei Sun:
 // https://github.com/amplitude/Amplitude-Flutter/pull/317.
 //
 // Only strings a developer wrote are read (ADR-0004): a button's text,

@@ -1,6 +1,6 @@
 // Where a tapped control sits in the app: the `[Amplitude] Hierarchy`
-// value and the page used as a fallback Screen Name. Adapted from PR #317's
-// hierarchy, by Zohaib Farooqi and Wei Sun:
+// value and the page used as a fallback Screen Name. Follows the approach
+// of PR #317's hierarchy, by Zohaib Farooqi:
 // https://github.com/amplitude/Amplitude-Flutter/pull/317.
 import 'package:flutter/widgets.dart';
 
