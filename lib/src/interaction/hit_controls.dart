@@ -14,34 +14,34 @@ import 'fling_stops.dart';
 // through these, and two of them matter:
 //
 //   ElevatedButton
-//     Semantics(button: true)   <- a mark: says "a button, enabled"
+//     Semantics(button: true)   <- a marker: says "a button, enabled"
 //       Material, InkWell internals
-//         GestureDetector       <- a mark: receives the tap
-//           Padding, Text       (layout and paint, not marks)
+//         GestureDetector       <- a marker: receives the tap
+//           Padding, Text       (layout and paint, not markers)
 //
 // controlsHitBy hit-tests a pointer-down (_HitPath) and walks the elements
-// on the hit path from the root down. _ControlGrouper records each mark it
-// passes and groups the marks into controls. TargetResolver then picks the
+// on the hit path from the root down. _ControlGrouper records each marker it
+// passes and groups the markers into controls. TargetResolver then picks the
 // control that takes the tap.
 //
-// - Mark (_Mark): one widget of a control. Its _Kind names the widget it
-//   comes from: controlSemantics, tapAction, mergeSemantics,
+// - Marker (_ControlMarker): one widget of a control. Its _MarkerKind names
+//   the widget it comes from: controlSemantics, tapAction, mergeSemantics,
 //   selectableRegion or detector. Every other widget is skipped.
-// - Group (_Group): the marks that make up one control, such as the button's
-//   Semantics and its GestureDetector above. A group the tap reaches becomes
-//   a HitControl. Only candidate groups can be reported.
+// - Group (_MarkerGroup): the markers that make up one control, such as
+//   the button's Semantics and its GestureDetector above. A group the tap
+//   reaches becomes a HitControl. Only candidate groups can be reported.
 // - _PathAbove: what the walk knows about the path above the current
-//   element: the nearest mark, whether a Row, Column or Stack forks the path
-//   between that mark and here, and the tile the element is inside.
-// - Pairing: a mark joins the group of the mark directly above it when
-//   nothing forks between them and that mark can still pair below.
+//   element: the nearest marker, whether a Row, Column or Stack forks the path
+//   between that marker and here, and the tile the element is inside.
+// - Pairing: a marker joins the group of the marker directly above it when
+//   nothing forks between them and that marker can still pair below.
 //   Otherwise it starts a group of its own. Each kind's method in
 //   _ControlGrouper holds its exceptions.
 
 /// Every control under [event] that could take the tap, in element-tree
 /// order: each before the controls nested in it.
 ///
-/// A control is made of the marks the walk pairs up on the hit path: the
+/// A control is made of the markers the walk pairs up on the hit path: the
 /// Semantics a control builds, its tap action, and its gesture
 /// detector. A bare gesture detector with no Semantics is a control too.
 ///
@@ -58,7 +58,7 @@ List<HitControl> controlsHitBy(
     if (!group.candidate) continue;
     // Null when this tap couldn't reach the control.
     int? hitIndex;
-    for (final m in group.marks) {
+    for (final m in group.markers) {
       final i = path.hitIndexOf(m.element);
       if (i != null && (hitIndex == null || i < hitIndex)) {
         hitIndex = i;
@@ -74,7 +74,7 @@ List<HitControl> controlsHitBy(
 class HitControl {
   HitControl._(this._group, this.element, this.hitIndex);
 
-  final _Group _group;
+  final _MarkerGroup _group;
 
   /// The element the control is reported as: the component that built it,
   /// or its gesture detector when it has no Semantics or nothing names it.
@@ -93,18 +93,20 @@ class HitControl {
 
   /// Its class name (`ElevatedButton`), or its role (`Button`) on obfuscated
   /// builds and for a Semantics written inline in app code.
-  String get name => _group.isControl
+  String get name => _group.hasSemantics
       ? controlNameOf(element, role: _group.role)
       : handlerNameOf(element.widget);
 }
 
 /// The element a control is reported as: the component that built it. A
 /// bare handler, or a control nothing names, is reported as its handler.
-Element _elementOf(_Group group) {
-  final handler =
-      group.marks.where((m) => m.kind == _Kind.detector).firstOrNull?.element;
-  if (!group.isControl) return handler ?? group.top.element;
-  return controlElementOf(group.marks.map((m) => m.element)) ??
+Element _elementOf(_MarkerGroup group) {
+  final handler = group.markers
+      .where((m) => m.kind == _MarkerKind.detector)
+      .firstOrNull
+      ?.element;
+  if (!group.hasSemantics) return handler ?? group.top.element;
+  return controlElementOf(group.markers.map((m) => m.element)) ??
       handler ??
       group.top.element;
 }
@@ -333,12 +335,12 @@ class _HitPath {
   }
 }
 
-/// Groups the marks on the hit path into controls, as [_HitPath.walk] visits
+/// Groups the markers on the hit path into controls, as [_HitPath.walk] visits
 /// each element after its parent. [visit] finds what is above the element,
-/// asks [_markFor] whether the element is a mark, and records what its
-/// children will see. Each kind of mark has its own method below.
+/// asks [_markerFor] whether the element is a marker, and records what its
+/// children will see. Each kind of marker has its own method below.
 class _ControlGrouper {
-  final groups = <_Group>[];
+  final groups = <_MarkerGroup>[];
 
   /// The path from the root to the element being visited, each with what is
   /// above its children. The walk is depth-first, so a visited element's
@@ -348,8 +350,8 @@ class _ControlGrouper {
 
   void visit(Element element, Element? parent) {
     final above = _aboveChildrenOf(parent);
-    final mark = _markFor(element, parent, above);
-    _path.add((element, above.forChildrenOf(element, mark)));
+    final marker = _markerFor(element, parent, above);
+    _path.add((element, above.forChildrenOf(element, marker)));
   }
 
   /// What is above [parent]'s children. Trims [_path] back to [parent], so
@@ -364,9 +366,10 @@ class _ControlGrouper {
     return _path[i].$2;
   }
 
-  /// The mark [element] is, already in a group, or null if it is layout or
+  /// The marker [element] is, already in a group, or null if it is layout or
   /// paint.
-  _Mark? _markFor(Element element, Element? parent, _PathAbove above) {
+  _ControlMarker? _markerFor(
+      Element element, Element? parent, _PathAbove above) {
     final w = element.widget;
     if (w is Semantics && isControlBoundary(w.properties)) {
       return _controlSemantics(element, w, parent, above);
@@ -375,7 +378,7 @@ class _ControlGrouper {
       return _tapAction(element, w, above);
     }
     if (w is MergeSemantics) {
-      return _startOpen(_Mark(element, _Kind.mergeSemantics));
+      return _startOpen(_ControlMarker(element, _MarkerKind.mergeSemantics));
     }
     if (w is SelectableRegion) {
       // On Flutter 3.19 a SelectableRegion (what SelectionArea builds)
@@ -384,7 +387,8 @@ class _ControlGrouper {
       // not a control: text under it reports nothing. The region claims the
       // first handler below it unless that handler is in its child.
       return _startOpen(
-        _Mark(element, _Kind.selectableRegion, regionChild: w.child),
+        _ControlMarker(element, _MarkerKind.selectableRegion,
+            regionChild: w.child),
       );
     }
     if (isActiveHandler(w, parent)) return _detector(element, above);
@@ -393,102 +397,103 @@ class _ControlGrouper {
 
   /// A Semantics that marks a control: button, toggled, checked, enabled,
   /// textField or expanded.
-  _Mark _controlSemantics(
+  _ControlMarker _controlSemantics(
     Element element,
     Semantics w,
     Element? parent,
     _PathAbove above,
   ) {
-    final mark = _Mark(element, _Kind.controlSemantics);
-    final markDirectlyAbove = above.markDirectlyAbove;
+    final marker = _ControlMarker(element, _MarkerKind.controlSemantics);
+    final markerDirectlyAbove = above.markerDirectlyAbove;
     final buildRoot = parent is StatelessElement || parent is StatefulElement;
-    if (markDirectlyAbove != null &&
-        (markDirectlyAbove.kind == _Kind.detector ||
-            markDirectlyAbove.kind == _Kind.controlSemantics) &&
+    if (markerDirectlyAbove != null &&
+        (markerDirectlyAbove.kind == _MarkerKind.detector ||
+            markerDirectlyAbove.kind == _MarkerKind.controlSemantics) &&
         !buildRoot) {
       // Below its own handler (a ListTile's InkWell, a CupertinoButton's
       // detector, a toggle's), or the inner half of a checkbox: one
       // control. A Semantics that is the root of a component's build
       // starts a control of its own, so a GestureDetector wrapped around
       // a button stays a separate control.
-      markDirectlyAbove.group.add(mark, w);
-      return mark;
+      markerDirectlyAbove.group.add(marker, w);
+      return marker;
     }
     final p = w.properties;
-    if (markDirectlyAbove != null && markDirectlyAbove.canPairBelow) {
-      _pair(markDirectlyAbove, mark, w);
+    if (markerDirectlyAbove != null && markerDirectlyAbove.canPairBelow) {
+      _pair(markerDirectlyAbove, marker, w);
     } else if (above.enclosingTile != null &&
         (p.checked != null || p.toggled != null)) {
       // A composite tile's checkbox or switch is the tile's own, even
       // across the tile's slots. A button there (an IconButton in the
       // title) is still a control of its own.
-      above.enclosingTile!.add(mark, w);
+      above.enclosingTile!.add(marker, w);
     } else {
-      _start(mark, w);
+      _start(marker, w);
     }
-    mark.canPairBelow = true;
-    return mark;
+    marker.canPairBelow = true;
+    return marker;
   }
 
   /// InkResponse's tap action: tappable, without saying what it is.
-  _Mark _tapAction(Element element, Semantics w, _PathAbove above) {
-    final mark = _Mark(element, _Kind.tapAction);
-    final markDirectlyAbove = above.markDirectlyAbove;
-    if (markDirectlyAbove != null && markDirectlyAbove.canPairBelow) {
-      _pair(markDirectlyAbove, mark, w);
+  _ControlMarker _tapAction(Element element, Semantics w, _PathAbove above) {
+    final marker = _ControlMarker(element, _MarkerKind.tapAction);
+    final markerDirectlyAbove = above.markerDirectlyAbove;
+    if (markerDirectlyAbove != null && markerDirectlyAbove.canPairBelow) {
+      _pair(markerDirectlyAbove, marker, w);
     } else {
-      _start(mark, w);
+      _start(marker, w);
     }
-    mark.canPairBelow = true;
-    return mark;
+    marker.canPairBelow = true;
+    return marker;
   }
 
-  /// An active gesture detector. It joins only a mark directly above it that
+  /// An active gesture detector. It joins only a marker directly above it that
   /// can still pair below. Below another detector it is a control of its
   /// own: a GestureDetector in a button's child is deeper in the arena and
   /// wins the tap.
-  _Mark _detector(Element element, _PathAbove above) {
-    final mark = _Mark(element, _Kind.detector);
-    final markDirectlyAbove = above.markDirectlyAbove;
-    if (markDirectlyAbove != null &&
-        markDirectlyAbove.canPairBelow &&
-        !_inRegionChild(markDirectlyAbove, element)) {
-      _pair(markDirectlyAbove, mark);
+  _ControlMarker _detector(Element element, _PathAbove above) {
+    final marker = _ControlMarker(element, _MarkerKind.detector);
+    final markerDirectlyAbove = above.markerDirectlyAbove;
+    if (markerDirectlyAbove != null &&
+        markerDirectlyAbove.canPairBelow &&
+        !_inRegionChild(markerDirectlyAbove, element)) {
+      _pair(markerDirectlyAbove, marker);
     } else {
-      _start(mark);
+      _start(marker);
     }
-    return mark;
+    return marker;
   }
 
-  /// Starts a group with [mark], which can then pair with the mark directly
+  /// Starts a group with [marker], which can then pair with the marker directly
   /// below it.
-  _Mark _startOpen(_Mark mark) {
-    _start(mark);
-    mark.canPairBelow = true;
-    return mark;
+  _ControlMarker _startOpen(_ControlMarker marker) {
+    _start(marker);
+    marker.canPairBelow = true;
+    return marker;
   }
 
-  void _start(_Mark mark, [Semantics? semantics]) {
-    final group = _Group(mark);
+  void _start(_ControlMarker marker, [Semantics? semantics]) {
+    final group = _MarkerGroup(marker);
     groups.add(group);
-    group.add(mark, semantics);
+    group.add(marker, semantics);
   }
 
-  /// [mark] joins the group of [markAbove], which then can't pair below
-  /// again: a mark pairs with at most one thing below it.
-  static void _pair(_Mark markAbove, _Mark mark, [Semantics? semantics]) {
-    markAbove.canPairBelow = false;
-    markAbove.group.add(mark, semantics);
+  /// [marker] joins the group of [markerAbove], which then can't pair below
+  /// again: a marker pairs with at most one thing below it.
+  static void _pair(_ControlMarker markerAbove, _ControlMarker marker,
+      [Semantics? semantics]) {
+    markerAbove.canPairBelow = false;
+    markerAbove.group.add(marker, semantics);
   }
 
-  /// Whether [handler] is inside the child of the SelectableRegion [mark],
+  /// Whether [handler] is inside the child of the SelectableRegion [marker],
   /// where it is the app's, not the region's own detector.
-  static bool _inRegionChild(_Mark mark, Element handler) {
-    final child = mark.regionChild;
+  static bool _inRegionChild(_ControlMarker marker, Element handler) {
+    final child = marker.regionChild;
     if (child == null) return false;
     var inside = identical(handler.widget, child);
     handler.visitAncestorElements((a) {
-      if (identical(a, mark.element)) return false;
+      if (identical(a, marker.element)) return false;
       inside = inside || identical(a.widget, child);
       return !inside;
     });
@@ -499,36 +504,41 @@ class _ControlGrouper {
 /// What the walk knows about the path above an element. [_ControlGrouper.visit]
 /// builds one per element and hands it to the element's children.
 class _PathAbove {
-  const _PathAbove(this.nearestMark, this.forkedSinceMark, this.enclosingTile);
+  const _PathAbove(
+      this.nearestMarker, this.forkedSinceMarker, this.enclosingTile);
 
   static const none = _PathAbove(null, false, null);
 
-  /// The closest mark higher up the path.
-  final _Mark? nearestMark;
+  /// The closest marker higher up the path.
+  final _ControlMarker? nearestMarker;
 
   /// Whether a widget with several children (a Row, Column or Stack) sits
-  /// between [nearestMark] and here. A fork means the element is in one of
-  /// several slots, not directly under the mark.
-  final bool forkedSinceMark;
+  /// between [nearestMarker] and here. A fork means the element is in one of
+  /// several slots, not directly under the marker.
+  final bool forkedSinceMarker;
 
   /// The group of the MergeSemantics the element is inside, such as a
   /// CheckboxListTile. The tile claims the checkbox or switch below it.
-  final _Group? enclosingTile;
+  final _MarkerGroup? enclosingTile;
 
-  /// [nearestMark] when nothing forks between it and here, otherwise null.
-  /// Only this mark can be paired with.
-  _Mark? get markDirectlyAbove => forkedSinceMark ? null : nearestMark;
+  /// [nearestMarker] when nothing forks between it and here, otherwise null.
+  /// Only this marker can be paired with.
+  _ControlMarker? get markerDirectlyAbove =>
+      forkedSinceMarker ? null : nearestMarker;
 
-  /// What is above the children of [element], which is [mark] if it is one.
-  _PathAbove forChildrenOf(Element element, _Mark? mark) => _PathAbove(
-        mark ?? nearestMark,
-        (mark == null && forkedSinceMark) || childCount(element) > 1,
-        mark?.kind == _Kind.mergeSemantics ? mark!.group : enclosingTile,
+  /// What is above the children of [element], which is [marker] if it is one.
+  _PathAbove forChildrenOf(Element element, _ControlMarker? marker) =>
+      _PathAbove(
+        marker ?? nearestMarker,
+        (marker == null && forkedSinceMarker) || childCount(element) > 1,
+        marker?.kind == _MarkerKind.mergeSemantics
+            ? marker!.group
+            : enclosingTile,
       );
 }
 
-/// Which widget a mark comes from.
-enum _Kind {
+/// Which widget a marker comes from.
+enum _MarkerKind {
   /// A Semantics that marks a control: button, toggled, checked, enabled,
   /// textField or expanded.
   controlSemantics,
@@ -547,29 +557,29 @@ enum _Kind {
 }
 
 /// A widget on the hit path that helps make up a control.
-class _Mark {
-  _Mark(this.element, this.kind, {this.regionChild});
+class _ControlMarker {
+  _ControlMarker(this.element, this.kind, {this.regionChild});
 
   final Element element;
-  final _Kind kind;
-  late _Group group;
+  final _MarkerKind kind;
+  late _MarkerGroup group;
 
   /// For a SelectableRegion, its child: what is inside it is the app's.
   final Widget? regionChild;
 
-  /// This mark hasn't paired with anything below it yet, so the next mark
-  /// directly under it can join its group. Each mark pairs with at most one
+  /// This marker hasn't paired with anything below it yet, so the next marker
+  /// directly under it can join its group. Each marker pairs with at most one
   /// thing below it.
   bool canPairBelow = false;
 }
 
-/// One control: the marks that pair into it.
-class _Group {
-  _Group(this.top);
+/// One control: the markers that pair into it.
+class _MarkerGroup {
+  _MarkerGroup(this.top);
 
-  /// The first mark, the highest on the path.
-  final _Mark top;
-  final marks = <_Mark>[];
+  /// The first marker, the highest on the path.
+  final _ControlMarker top;
+  final markers = <_ControlMarker>[];
   bool _controlSemantics = false;
   bool _tapAction = false;
   bool _mergeSemantics = false;
@@ -584,19 +594,19 @@ class _Group {
   /// one says it is enabled and none disagree, null if none say.
   bool? explicitEnabled;
 
-  void add(_Mark mark, [Semantics? semantics]) {
-    marks.add(mark);
-    mark.group = this;
-    switch (mark.kind) {
-      case _Kind.controlSemantics:
+  void add(_ControlMarker marker, [Semantics? semantics]) {
+    markers.add(marker);
+    marker.group = this;
+    switch (marker.kind) {
+      case _MarkerKind.controlSemantics:
         _controlSemantics = true;
-      case _Kind.tapAction:
+      case _MarkerKind.tapAction:
         _tapAction = true;
-      case _Kind.mergeSemantics:
+      case _MarkerKind.mergeSemantics:
         _mergeSemantics = true;
-      case _Kind.detector:
+      case _MarkerKind.detector:
         _detector = true;
-      case _Kind.selectableRegion:
+      case _MarkerKind.selectableRegion:
         _selectableRegion = true;
     }
     final p = semantics?.properties;
@@ -618,7 +628,7 @@ class _Group {
   bool get candidate => !_selectableRegion && (_controlSemantics || _detector);
 
   /// Built a Semantics for itself, as opposed to a bare handler.
-  bool get isControl => _controlSemantics || _tapAction || _mergeSemantics;
+  bool get hasSemantics => _controlSemantics || _tapAction || _mergeSemantics;
 
   /// A text field's recognizers aren't plain tap recognizers, so it has no
   /// handler; it is enabled unless it says otherwise.
