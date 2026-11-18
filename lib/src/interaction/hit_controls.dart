@@ -111,7 +111,7 @@ Element _elementOf(_Group group) {
 
 /// A GestureDetector a primary tap reaches, or a RawGestureDetector one
 /// would, other than the one a GestureDetector builds.
-bool _isActiveHandler(Widget w, Element? parent) {
+bool isActiveHandler(Widget w, Element? parent) {
   if (w is GestureDetector) {
     // The callbacks for which it builds a TapGestureRecognizer. Long-press
     // and double-tap recognizers give up on a short press.
@@ -387,7 +387,7 @@ class _ControlGrouper {
         _Mark(element, _Kind.selectableRegion, regionChild: w.child),
       );
     }
-    if (_isActiveHandler(w, parent)) return _detector(element, above);
+    if (isActiveHandler(w, parent)) return _detector(element, above);
     return null;
   }
 
