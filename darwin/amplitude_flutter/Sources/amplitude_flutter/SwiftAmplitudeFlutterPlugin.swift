@@ -273,6 +273,9 @@ internal var pluginInstance: SwiftAmplitudeFlutterPlugin?
         if let identifyBatchIntervalMillis = args["identifyBatchIntervalMillis"] as? Int {
             configuration.identifyBatchIntervalMillis = identifyBatchIntervalMillis
         }
+        if let deviceId = args["deviceId"] as? String {
+            configuration.deviceId = deviceId
+        }
 
         return configuration
     }
