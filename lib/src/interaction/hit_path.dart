@@ -42,69 +42,66 @@ class HitPath {
   int? hitIndexOf(Element element) => _hitOrder[element.renderObject];
 
   /// Calls [visit] for each element in the subtrees the tap hit, each
-  /// before its children. [visit]'s `parent` is the element's parent, or
-  /// null for the root.
+  /// before its children, from the root down.
+  ///
+  /// [visit] gets the element, its parent (null for the root) and what its
+  /// parent's visit returned ([top] for the root), and returns what the
+  /// element's children get.
   ///
   /// OverlayPortal content is visited from its Overlay, before the overlay
-  /// entries, with its real parent: that parent lives in the page, which the
-  /// walk may never visit. The only ancestors visited before the content are
-  /// also its render ancestors, so it competes with page content by hit
-  /// order, as in the gesture arena.
-  void walk(void Function(Element element, Element? parent) visit) {
+  /// entries, with its real parent and [top]: that parent lives in the
+  /// page, which the walk may never visit. The only ancestors visited
+  /// before the content are also its render ancestors, so it competes with
+  /// page content by hit order, as in the gesture arena.
+  void walk<T>(
+    T top,
+    T Function(Element element, Element? parent, T above) visit,
+  ) {
     final root = WidgetsBinding.instance.rootElement;
     if (root == null) return;
+    // Portal content already visited from its Overlay, to skip if the walk
+    // reaches it again through the page.
     final portalContent = <Element>{};
 
-    void step(Element element, Element? parent) {
-      if (!element.mounted) return;
-      final w = element.widget;
-      if (w is View && w.view.viewId != _viewId) return;
-      // Pruning by the hit path also drops hidden and blocked branches
-      // (Offstage, IgnorePointer and the like) by their live render state.
-      // Their widget flags can be stale: Scrollable toggles its
-      // IgnorePointer's render object directly.
-      final ro = element.renderObject;
-      if (ro != null && !_searched.contains(ro)) return;
-      // A press on a flinging list only stops it. Flutter's hit test ignored
-      // the content, but the hold re-enabled it before this route ran.
-      if (w is Scrollable && element is StatefulElement) {
-        final position = (element.state as ScrollableState).position;
-        if (FlingStops.instance.stoppedInThisTask(position)) return;
-        FlingStops.instance.watch(position);
-      }
-      visit(element, parent);
-      if (w is Overlay) {
+    void step(Element element, Element? parent, T above) {
+      if (!_reaches(element)) return;
+      final below = visit(element, parent, above);
+      if (element.widget is Overlay) {
         for (final content in _hitPortalContent(element)) {
           if (portalContent.add(content)) {
-            step(content, _parentOf(content));
+            step(content, _parentOf(content), top);
           }
         }
       }
       element.visitChildElements((child) {
-        // The walk skips portal content if it reaches it again through the
-        // page.
-        if (portalContent.isEmpty || !portalContent.contains(child)) {
-          step(child, element);
+        if (!portalContent.contains(child)) {
+          step(child, element, below);
         }
       });
     }
 
-    step(root, null);
+    step(root, null, top);
   }
 
-  /// [hit] and all of their render-tree ancestors. Transforms hit-test
-  /// their children without adding themselves to the result, so the
-  /// ancestors are needed to reach what they hold.
-  static Set<RenderObject> _withAncestors(Iterable<RenderObject> hit) {
-    final searched = <RenderObject>{};
-    for (final target in hit) {
-      RenderObject? ro = target;
-      // Stops at the first one already added: its ancestors are in too.
-      while (ro != null && searched.add(ro)) {
-        ro = ro.parent;
-      }
+  /// Whether the tap can have hit anything in [element]'s subtree.
+  bool _reaches(Element element) {
+    if (!element.mounted) return false;
+    final w = element.widget;
+    if (w is View && w.view.viewId != _viewId) return false;
+    // Pruning by the hit path also drops hidden and blocked branches
+    // (Offstage, IgnorePointer and the like) by their live render state.
+    // Their widget flags can be stale: Scrollable toggles its
+    // IgnorePointer's render object directly.
+    final ro = element.renderObject;
+    if (ro != null && !_searched.contains(ro)) return false;
+    // A press on a flinging list only stops it. Flutter's hit test ignored
+    // the content, but the hold re-enabled it before this route ran.
+    if (w is Scrollable && element is StatefulElement) {
+      final position = (element.state as ScrollableState).position;
+      if (FlingStops.instance.stoppedInThisTask(position)) return false;
+      FlingStops.instance.watch(position);
     }
-    return searched;
+    return true;
   }
 
   /// The elements of OverlayPortal content in [overlay] that the tap hit.
@@ -140,35 +137,50 @@ class HitPath {
     });
     return content;
   }
+}
 
-  /// The element under [entry] whose render object is [box], an overlay
-  /// child. Flutter keeps an overlay child deeper in the render tree than
-  /// its OverlayPortal so the portal lays out first; nothing at [box]'s
-  /// depth or deeper can lead to the portal.
-  static Element? _overlayChild(Element entry, RenderObject box) {
-    Element? found;
-    void search(Element e) {
-      if (found != null) return;
-      if (e is RenderObjectElement) {
-        if (identical(e.renderObject, box)) {
-          found = e;
-          return;
-        }
-        if (e.renderObject.depth >= box.depth) return;
-      }
-      e.visitChildElements(search);
+/// [hit] and all of their render-tree ancestors. Transforms hit-test their
+/// children without adding themselves to the result, so the ancestors are
+/// needed to reach what they hold.
+Set<RenderObject> _withAncestors(Iterable<RenderObject> hit) {
+  final searched = <RenderObject>{};
+  for (final target in hit) {
+    RenderObject? ro = target;
+    // Stops at the first one already added: its ancestors are in too.
+    while (ro != null && searched.add(ro)) {
+      ro = ro.parent;
     }
+  }
+  return searched;
+}
 
-    search(entry);
-    return found;
+/// The element under [entry] whose render object is [box], an overlay
+/// child. Flutter keeps an overlay child deeper in the render tree than its
+/// OverlayPortal so the portal lays out first; nothing at [box]'s depth or
+/// deeper can lead to the portal.
+Element? _overlayChild(Element entry, RenderObject box) {
+  Element? found;
+  void search(Element e) {
+    if (found != null) return;
+    if (e is RenderObjectElement) {
+      if (identical(e.renderObject, box)) {
+        found = e;
+        return;
+      }
+      if (e.renderObject.depth >= box.depth) return;
+    }
+    e.visitChildElements(search);
   }
 
-  static Element? _parentOf(Element e) {
-    Element? parent;
-    e.visitAncestorElements((a) {
-      parent = a;
-      return false;
-    });
-    return parent;
-  }
+  search(entry);
+  return found;
+}
+
+Element? _parentOf(Element e) {
+  Element? parent;
+  e.visitAncestorElements((a) {
+    parent = a;
+    return false;
+  });
+  return parent;
 }

@@ -18,7 +18,7 @@ import 'interaction_target.dart';
 //
 // 1. HitPath (hit_path.dart) hit-tests the pointer-down and walks the
 //    elements on the hit path from the root down.
-// 2. ControlGrouper (control_grouper.dart) pairs the markers the walk
+// 2. groupControls (control_grouper.dart) pairs the markers the walk
 //    passes into groups, one per control, each with its first position on
 //    the hit path.
 // 3. resolve picks the group the gesture arena would give the tap.
@@ -47,11 +47,8 @@ import 'interaction_target.dart';
 /// - Obfuscated builds name every control by its role.
 abstract final class TargetResolver {
   static InteractionTarget? resolve(PointerDownEvent event) {
-    final path = HitPath(event);
-    final grouper = ControlGrouper(path.hitIndexOf);
-    path.walk(grouper.visit);
     MarkerGroup? best;
-    for (final control in grouper.groups) {
+    for (final control in groupControls(HitPath(event))) {
       if (!control.candidate || control.hitIndex == null) continue;
       if (best == null || _takesTapFrom(control, best)) {
         best = control;

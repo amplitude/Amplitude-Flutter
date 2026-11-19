@@ -2,12 +2,12 @@ import 'package:flutter/widgets.dart';
 
 import 'control_markers.dart';
 import 'control_names.dart';
+import 'hit_path.dart';
 
 // How grouping works
 //
-// ControlGrouper is handed each element on the hit path, from the root
-// down (HitPath walks it), and pairs the markers it finds into groups, one
-// per control.
+// groupControls walks the hit path from the root down and pairs the
+// markers it finds into groups, one per control.
 //
 // - Marker (_ControlMarker): one widget of a control. Its _MarkerKind names
 //   the widget it comes from: controlSemantics, tapAction, mergeSemantics,
@@ -22,45 +22,29 @@ import 'control_names.dart';
 // - Pairing: a marker joins the group of the marker directly above it when
 //   nothing forks between them and that marker can still pair below.
 //   Otherwise it starts a group of its own. Each kind's method in
-//   ControlGrouper holds its exceptions.
+//   _ControlGrouper holds its exceptions.
+
+/// The controls on [path]: the markers the walk passes, paired into
+/// groups, in element-tree order, each before the controls nested in it.
+List<MarkerGroup> groupControls(HitPath path) {
+  final grouper = _ControlGrouper(path.hitIndexOf);
+  path.walk(_PathAbove.none, grouper.visit);
+  return grouper.groups;
+}
 
 /// Groups the markers on the hit path into controls, as the walk visits
-/// each element after its parent. [visit] finds what is above the element,
-/// asks [_markerFor] whether the element is a marker, and records what its
-/// children will see. Each kind of marker has its own method below.
-class ControlGrouper {
-  /// [hitIndexOf] gives an element's position on the hit-test path, or
-  /// null if the tap didn't hit it.
-  ControlGrouper(this._hitIndexOf);
+/// each element after its parent. [visit] asks [_markerFor] whether the
+/// element is a marker and returns what its children see. Each kind of
+/// marker has its own method below.
+class _ControlGrouper {
+  _ControlGrouper(this._hitIndexOf);
 
   final int? Function(Element element) _hitIndexOf;
-
-  /// Every control the walk found, in element-tree order: each before the
-  /// controls nested in it.
   final groups = <MarkerGroup>[];
 
-  /// The path from the root to the element being visited, each with what is
-  /// above its children. The walk is depth-first, so a visited element's
-  /// parent is on this path; OverlayPortal content's real parent isn't, and
-  /// the content starts a path of its own.
-  final _path = <(Element, _PathAbove)>[];
-
-  void visit(Element element, Element? parent) {
-    final above = _aboveChildrenOf(parent);
+  _PathAbove visit(Element element, Element? parent, _PathAbove above) {
     final marker = _markerFor(element, parent, above);
-    _path.add((element, above.forChildrenOf(element, marker)));
-  }
-
-  /// What is above [parent]'s children. Trims [_path] back to [parent], so
-  /// it holds only the current element's ancestors.
-  _PathAbove _aboveChildrenOf(Element? parent) {
-    var i = _path.length - 1;
-    while (i >= 0 && !identical(_path[i].$1, parent)) {
-      i--;
-    }
-    if (i < 0) return _PathAbove.none;
-    _path.length = i + 1;
-    return _path[i].$2;
+    return above.forChildrenOf(element, marker);
   }
 
   /// The marker [element] is, already in a group, or null if it is layout or
@@ -177,25 +161,25 @@ class ControlGrouper {
 
   /// [marker] joins the group of [markerAbove], which then can't pair below
   /// again: a marker pairs with at most one thing below it.
-  static void _pair(_ControlMarker markerAbove, _ControlMarker marker,
+  void _pair(_ControlMarker markerAbove, _ControlMarker marker,
       [Semantics? semantics]) {
     markerAbove.canPairBelow = false;
     markerAbove.group._add(marker, semantics);
   }
+}
 
-  /// Whether [handler] is inside the child of the SelectableRegion [marker],
-  /// where it is the app's, not the region's own detector.
-  static bool _inRegionChild(_ControlMarker marker, Element handler) {
-    final child = marker.regionChild;
-    if (child == null) return false;
-    var inside = identical(handler.widget, child);
-    handler.visitAncestorElements((a) {
-      if (identical(a, marker.element)) return false;
-      inside = inside || identical(a.widget, child);
-      return !inside;
-    });
-    return inside;
-  }
+/// Whether [handler] is inside the child of the SelectableRegion [marker],
+/// where it is the app's, not the region's own detector.
+bool _inRegionChild(_ControlMarker marker, Element handler) {
+  final child = marker.regionChild;
+  if (child == null) return false;
+  var inside = identical(handler.widget, child);
+  handler.visitAncestorElements((a) {
+    if (identical(a, marker.element)) return false;
+    inside = inside || identical(a.widget, child);
+    return !inside;
+  });
+  return inside;
 }
 
 /// One control: the markers that pair into it.
