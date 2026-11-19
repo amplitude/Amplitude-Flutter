@@ -188,17 +188,12 @@ void main() {
       expect(out.single, 'navigate');
     });
 
-    testWidgets('cancel, overlapping pointers and button changes reject',
-        (t) async {
+    testWidgets('cancel and button changes reject', (t) async {
       final out = observeKeys();
       await t.pumpWidget(app(control('button', () {})));
       final point = t.getCenter(byId('button'));
-      var a = await t.startGesture(point, pointer: 1);
+      final a = await t.startGesture(point, pointer: 1);
       await a.cancel();
-      a = await t.startGesture(point, pointer: 2);
-      final b = await t.startGesture(point, pointer: 3);
-      await a.up();
-      await b.up();
       expect(out, isEmpty);
       final mouse = await t.startGesture(
         point,
@@ -215,6 +210,86 @@ void main() {
       );
       await mouse.up();
       expect(out, isEmpty);
+    });
+
+    group('several pointers', () {
+      Widget twoControls(List<String> ran) => app(
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                control('a', () => ran.add('a')),
+                control('b', () => ran.add('b')),
+              ],
+            ),
+          );
+
+      testWidgets('two fingers on one control are one tap', (t) async {
+        final out = observeKeys();
+        final ran = <String>[];
+        await t.pumpWidget(twoControls(ran));
+        final point = t.getCenter(byId('a'));
+        final first = await t.startGesture(point, pointer: 1);
+        final second =
+            await t.startGesture(point + const Offset(4, 0), pointer: 2);
+        await second.up();
+        await first.up();
+        // Flutter's tap recognizer follows only the first pointer.
+        expect(ran, ['a']);
+        expect(out, ['a']);
+      });
+
+      testWidgets('taps on two controls at once are both reported', (t) async {
+        final out = observeKeys();
+        final ran = <String>[];
+        await t.pumpWidget(twoControls(ran));
+        final a = await t.startGesture(t.getCenter(byId('a')), pointer: 1);
+        final b = await t.startGesture(t.getCenter(byId('b')), pointer: 2);
+        await a.up();
+        await b.up();
+        expect(ran, ['a', 'b']);
+        expect(out, ran);
+      });
+
+      testWidgets('holding one control does not stop a tap on another',
+          (t) async {
+        final out = observeKeys();
+        final ran = <String>[];
+        await t.pumpWidget(twoControls(ran));
+        final a = await t.startGesture(t.getCenter(byId('a')), pointer: 1);
+        await t.pump(const Duration(seconds: 1));
+        final b = await t.startGesture(t.getCenter(byId('b')), pointer: 2);
+        await b.up();
+        await t.pump(const Duration(seconds: 1));
+        await a.up();
+        expect(ran, ['b', 'a']);
+        expect(out, ran);
+      });
+
+      testWidgets('a press on empty space does not stop a tap', (t) async {
+        final out = observeKeys();
+        final ran = <String>[];
+        await t.pumpWidget(twoControls(ran));
+        final empty = await t.startGesture(const Offset(5, 5), pointer: 1);
+        final b = await t.startGesture(t.getCenter(byId('b')), pointer: 2);
+        await b.up();
+        await empty.up();
+        expect(ran, ['b']);
+        expect(out, ran);
+      });
+
+      testWidgets('a drag on one control does not stop a tap on another',
+          (t) async {
+        final out = observeKeys();
+        final ran = <String>[];
+        await t.pumpWidget(twoControls(ran));
+        final a = await t.startGesture(t.getCenter(byId('a')), pointer: 1);
+        final b = await t.startGesture(t.getCenter(byId('b')), pointer: 2);
+        await a.moveBy(const Offset(kTouchSlop + 2, 0));
+        await a.up();
+        await b.up();
+        expect(ran, ['b']);
+        expect(out, ran);
+      });
     });
 
     testWidgets('a long hold is still a tap', (t) async {

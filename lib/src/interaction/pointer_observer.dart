@@ -8,8 +8,11 @@ import 'target_resolver.dart';
 /// a tap on a control.
 ///
 /// A tap is one primary pointer that goes down and up in the same view,
-/// never moving past Flutter's tap slop, with no other pointer down in that
-/// view meanwhile. There is no time limit, so a long hold counts.
+/// never moving past Flutter's tap slop. There is no time limit, so a long
+/// hold counts. Each pointer is judged on its own, as Flutter gives each
+/// its own gesture arena: holding one control doesn't stop a tap on
+/// another. A pointer that lands on a control another pointer is already
+/// pressing isn't a tap: a tap recognizer follows only the first.
 ///
 /// The control is resolved at pointer-down, as Flutter binds a pointer to
 /// what it hit then and reuses that for the rest of the gesture. Listeners
@@ -80,13 +83,6 @@ class PointerObserver {
   }
 
   void _down(PointerDownEvent event) {
-    var overlapping = false;
-    for (final attempt in _attempts.values) {
-      if (attempt.down.viewId == event.viewId) {
-        overlapping = true;
-        attempt.valid = false;
-      }
-    }
     // Resolved even for a press that can't become a tap: the slop comes
     // from the target's gesture settings.
     InteractionTarget? target;
@@ -95,13 +91,16 @@ class PointerObserver {
     } catch (error, stack) {
       _report(error, stack);
     }
-    // Recorded even when it can't become a tap, so a second pointer that
-    // lands during it isn't reported as a tap either.
+    final element = target?.element;
+    final alreadyPressed = element != null &&
+        _attempts.values.any((a) => identical(a.target?.element, element));
+    // Recorded even when it can't become a tap, so a later pointer on the
+    // same control isn't reported as a tap either.
     _attempts[event.pointer] = _Attempt(
       event,
       target,
-      _tapSlop(_gestureSettingsOf(target?.element)),
-    )..valid = !overlapping && event.buttons == kPrimaryButton;
+      _tapSlop(_gestureSettingsOf(element)),
+    )..valid = !alreadyPressed && event.buttons == kPrimaryButton;
   }
 
   /// Gesture settings of the nearest [MediaQuery] above [element], if any.
@@ -170,8 +169,9 @@ class _Attempt {
   /// tap slop for the target's gesture settings, read at pointer-down.
   final double slop;
 
-  /// Whether this can still become a tap. It turns false when the pointer
-  /// moves past [slop], another pointer goes down in the same view, or the
+  /// Whether this can still become a tap. It starts false for a press that
+  /// isn't the primary button or lands on a control another pointer is
+  /// pressing. It turns false when the pointer moves past [slop] or the
   /// buttons change, and it never turns true again: a drag that comes back
   /// within the slop is still not a tap.
   bool valid = true;
