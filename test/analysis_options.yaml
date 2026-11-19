@@ -1,0 +1,10 @@
+include: ../analysis_options.yaml
+
+# Flutter 3.50 deprecates package:flutter/material.dart in favor of
+# package:material_ui, which needs a newer Flutter than the SDK supports
+# (3.19). Tests and the example app build real Material widgets, so they
+# keep the import until that floor moves. lib/ stays under the root
+# options, so the SDK itself still can't use deprecated APIs.
+analyzer:
+  errors:
+    deprecated_member_use: ignore
