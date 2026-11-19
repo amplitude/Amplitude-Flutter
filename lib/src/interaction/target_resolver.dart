@@ -69,6 +69,12 @@ abstract final class TargetResolver {
   /// controls, the one that says it is disabled is reported. One that says
   /// nothing about being enabled (a dropdown's selected item) is inert and
   /// never takes the tap.
+  ///
+  /// The rule trusts what a control's Semantics says. A control marked
+  /// disabled that still has a live handler, such as
+  /// `Semantics(enabled: false)` around a translucent GestureDetector, is
+  /// treated as disabled, so a tap that fires it is reported as the
+  /// control beneath it.
   static bool _takesTapFrom(MarkerGroup control, MarkerGroup best) =>
       control.hitIndex! < best.hitIndex! &&
       (control.enabled || (!best.enabled && control.explicitEnabled != null));
