@@ -58,8 +58,8 @@ abstract final class TargetResolver {
     );
   }
 
-  /// Whether [later], which comes after [current] in the element tree,
-  /// takes the tap from it.
+  /// Whether [control] takes the tap from [best], the control picked so
+  /// far. [control] comes after [best] in the element tree.
   ///
   /// The gesture arena gives an unresolved tap to the first recognizer that
   /// joined it, and recognizers join in hit-test order, so the control hit
@@ -69,7 +69,7 @@ abstract final class TargetResolver {
   /// controls, the one that says it is disabled is reported. One that says
   /// nothing about being enabled (a dropdown's selected item) is inert and
   /// never takes the tap.
-  static bool _takesTapFrom(MarkerGroup later, MarkerGroup current) =>
-      later.hitIndex! < current.hitIndex! &&
-      (later.enabled || (!current.enabled && later.explicitEnabled != null));
+  static bool _takesTapFrom(MarkerGroup control, MarkerGroup best) =>
+      control.hitIndex! < best.hitIndex! &&
+      (control.enabled || (!best.enabled && control.explicitEnabled != null));
 }
