@@ -156,7 +156,7 @@ bool isPassThrough(Element e) {
 
 bool _isFlagless(Widget w) =>
     w is Semantics &&
-    !isControlBoundary(w.properties) &&
+    !isControlSemantics(w.properties) &&
     !isTapAction(w.properties);
 
 /// The runtime type's name without type arguments (`DropdownButton<int>` is

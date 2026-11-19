@@ -1,13 +1,51 @@
 // Which widgets are markers: the parts of a control that the hit walk looks
-// for. ControlGrouper (control_grouper.dart) pairs them into controls.
+// for. groupControls (control_grouper.dart) pairs them into controls.
 import 'package:flutter/gestures.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter/widgets.dart';
 
+/// Which part of a control a marker is.
+enum MarkerKind {
+  /// A Semantics that marks a control: button, toggled, checked, enabled,
+  /// textField or expanded. See [isControlSemantics].
+  controlSemantics,
+
+  /// InkResponse's tap-action Semantics: tappable, without saying what it
+  /// is. See [isTapAction].
+  tapAction,
+
+  /// A MergeSemantics, which composite tiles such as CheckboxListTile build.
+  mergeSemantics,
+
+  /// A SelectableRegion, which SelectionArea builds. On Flutter 3.19 it
+  /// wraps its child in a translucent RawGestureDetector with a plain tap
+  /// recognizer that has onTapUp set. That detector is the region's own,
+  /// not a control: text under it reports nothing. The region claims the
+  /// first detector below it unless that detector is in its child.
+  selectableRegion,
+
+  /// A GestureDetector or RawGestureDetector that a primary tap reaches.
+  detector,
+}
+
+/// The kind of marker [element] is, or null if it is layout or paint.
+/// [parent] is its parent element.
+MarkerKind? markerKindOf(Element element, Element? parent) {
+  final w = element.widget;
+  if (w is Semantics && isControlSemantics(w.properties)) {
+    return MarkerKind.controlSemantics;
+  }
+  if (w is Semantics && isTapAction(w.properties)) return MarkerKind.tapAction;
+  if (w is MergeSemantics) return MarkerKind.mergeSemantics;
+  if (w is SelectableRegion) return MarkerKind.selectableRegion;
+  if (_isDetector(w, parent)) return MarkerKind.detector;
+  return null;
+}
+
 /// A Semantics a control builds around itself. `currentValueLength` marks a
 /// text field on Flutter 3.19, whose TextField sets no role flag; `expanded`
 /// marks DropdownButton and PopupMenuButton.
-bool isControlBoundary(SemanticsProperties p) =>
+bool isControlSemantics(SemanticsProperties p) =>
     p.button == true ||
     p.toggled != null ||
     p.checked != null ||
@@ -23,7 +61,7 @@ bool isTapAction(SemanticsProperties p) =>
 
 /// A GestureDetector a primary tap reaches, or a RawGestureDetector one
 /// would, other than the one a GestureDetector builds.
-bool isActiveHandler(Widget w, Element? parent) {
+bool _isDetector(Widget w, Element? parent) {
   if (w is GestureDetector) {
     // The callbacks for which it builds a TapGestureRecognizer. Long-press
     // and double-tap recognizers give up on a short press.
