@@ -19,7 +19,8 @@ import 'hit_path.dart';
 //   controlsHitBy returns only these.
 // - _PathAbove: what the walk knows about the path above the current
 //   element: the nearest marker, whether a Row, Column or Stack forks the
-//   path between that marker and here, and the tile the element is inside.
+//   path between that marker and here, the tile the element is inside, and
+//   whether it is inside a SelectableRegion's child.
 // - Pairing: a marker joins the group of the marker directly above it when
 //   nothing forks between them and that marker can still pair below.
 //   Otherwise it starts a group of its own. Each kind's method in
@@ -62,23 +63,23 @@ class _ControlGrouper {
     final kind = markerKindOf(element, parent);
     if (kind == null) return null;
     final marker = _ControlMarker(element, kind, _path.hitIndexOf(element));
-    return switch (kind) {
-      MarkerKind.controlSemantics =>
-        _controlSemantics(marker, element.widget as Semantics, parent, above),
-      MarkerKind.tapAction =>
-        _tapAction(marker, element.widget as Semantics, above),
-      MarkerKind.mergeSemantics ||
-      MarkerKind.selectableRegion =>
-        _startOpen(marker),
-      MarkerKind.detector => _detector(marker, above),
-    };
+    switch (kind) {
+      case MarkerKind.controlSemantics:
+        _controlSemantics(marker, parent, above);
+      case MarkerKind.tapAction:
+        _tapAction(marker, above);
+      case MarkerKind.mergeSemantics || MarkerKind.selectableRegion:
+        _startOpen(marker);
+      case MarkerKind.detector:
+        _detector(marker, above);
+    }
+    return marker;
   }
 
   /// A Semantics that marks a control: button, toggled, checked, enabled,
   /// textField or expanded.
-  _ControlMarker _controlSemantics(
+  void _controlSemantics(
     _ControlMarker marker,
-    Semantics w,
     Element? parent,
     _PathAbove above,
   ) {
@@ -93,90 +94,70 @@ class _ControlGrouper {
       // control. A Semantics that is the root of a component's build
       // starts a control of its own, so a GestureDetector wrapped around
       // a button stays a separate control.
-      markerDirectlyAbove.group._add(marker, w);
-      return marker;
+      markerDirectlyAbove.group._add(marker);
+      return;
     }
-    final p = w.properties;
+    final p = (marker.element.widget as Semantics).properties;
     if (markerDirectlyAbove != null && markerDirectlyAbove.canPairBelow) {
-      _pair(markerDirectlyAbove, marker, w);
+      _pair(markerDirectlyAbove, marker);
     } else if (above.enclosingTile != null &&
         (p.checked != null || p.toggled != null)) {
       // A composite tile's checkbox or switch is the tile's own, even
       // across the tile's slots. A button there (an IconButton in the
       // title) is still a control of its own.
-      above.enclosingTile!._add(marker, w);
+      above.enclosingTile!._add(marker);
     } else {
-      _start(marker, w);
+      _start(marker);
     }
     marker.canPairBelow = true;
-    return marker;
   }
 
   /// InkResponse's tap action: tappable, without saying what it is.
-  _ControlMarker _tapAction(
-      _ControlMarker marker, Semantics w, _PathAbove above) {
+  void _tapAction(_ControlMarker marker, _PathAbove above) {
     final markerDirectlyAbove = above.markerDirectlyAbove;
     if (markerDirectlyAbove != null && markerDirectlyAbove.canPairBelow) {
-      _pair(markerDirectlyAbove, marker, w);
+      _pair(markerDirectlyAbove, marker);
     } else {
-      _start(marker, w);
+      _start(marker);
     }
     marker.canPairBelow = true;
-    return marker;
   }
 
   /// An active gesture detector. It joins only a marker directly above it
   /// that can still pair below. Below another detector it is a control of
   /// its own: a GestureDetector in a button's child is deeper in the arena
-  /// and wins the tap.
-  _ControlMarker _detector(_ControlMarker marker, _PathAbove above) {
+  /// and wins the tap. Inside a SelectableRegion's child it is the app's,
+  /// not the region's own detector.
+  void _detector(_ControlMarker marker, _PathAbove above) {
     final markerDirectlyAbove = above.markerDirectlyAbove;
     if (markerDirectlyAbove != null &&
         markerDirectlyAbove.canPairBelow &&
-        !_inRegionChild(markerDirectlyAbove, marker.element)) {
+        !above.reachesRegionChild(marker.element)) {
       _pair(markerDirectlyAbove, marker);
     } else {
       _start(marker);
     }
-    return marker;
   }
 
   /// Starts a group with [marker], which can then pair with the marker
   /// directly below it.
-  _ControlMarker _startOpen(_ControlMarker marker) {
+  void _startOpen(_ControlMarker marker) {
     _start(marker);
     marker.canPairBelow = true;
-    return marker;
   }
 
-  void _start(_ControlMarker marker, [Semantics? semantics]) {
+  void _start(_ControlMarker marker) {
     final group = MarkerGroup._();
     groups.add(group);
-    group._add(marker, semantics);
+    group._add(marker);
   }
 
   /// [marker] joins the group of [markerAbove], which then can't pair below
   /// again: a marker pairs with at most one thing below it.
-  void _pair(_ControlMarker markerAbove, _ControlMarker marker,
-      [Semantics? semantics]) {
+  void _pair(_ControlMarker markerAbove, _ControlMarker marker) {
     markerAbove.canPairBelow = false;
-    markerAbove.group._add(marker, semantics);
+    markerAbove.group._add(marker);
   }
-}
-
-/// Whether [handler] is inside the child of the SelectableRegion [marker],
-/// where it is the app's, not the region's own detector.
-bool _inRegionChild(_ControlMarker marker, Element handler) {
-  final region = marker.element.widget;
-  if (region is! SelectableRegion) return false;
-  final child = region.child;
-  var inside = identical(handler.widget, child);
-  handler.visitAncestorElements((a) {
-    if (identical(a, marker.element)) return false;
-    inside = inside || identical(a.widget, child);
-    return !inside;
-  });
-  return inside;
 }
 
 /// One control: the markers that pair into it.
@@ -193,7 +174,7 @@ class MarkerGroup {
   bool? _explicitEnabled;
   int? _hitIndex;
 
-  void _add(_ControlMarker marker, [Semantics? semantics]) {
+  void _add(_ControlMarker marker) {
     _markers.add(marker);
     _kinds.add(marker.kind);
     marker.group = this;
@@ -201,8 +182,9 @@ class MarkerGroup {
     if (hit != null && (_hitIndex == null || hit < _hitIndex!)) {
       _hitIndex = hit;
     }
-    final p = semantics?.properties;
-    if (p == null) return;
+    final w = marker.element.widget;
+    if (w is! Semantics) return;
+    final p = w.properties;
     _button |= p.button == true;
     _toggle |= p.toggled != null;
     _checked |= p.checked != null;
@@ -283,10 +265,14 @@ class MarkerGroup {
 /// [_ControlGrouper.visit] builds one per element and hands it to the
 /// element's children.
 class _PathAbove {
-  const _PathAbove(
-      this.nearestMarker, this.forkedSinceMarker, this.enclosingTile);
+  const _PathAbove({
+    this.nearestMarker,
+    this.forkedSinceMarker = false,
+    this.enclosingTile,
+    this.inRegionChild = false,
+  });
 
-  static const none = _PathAbove(null, false, null);
+  static const none = _PathAbove();
 
   /// The closest marker higher up the path.
   final _ControlMarker? nearestMarker;
@@ -300,19 +286,36 @@ class _PathAbove {
   /// CheckboxListTile. The tile claims the checkbox or switch below it.
   final MarkerGroup? enclosingTile;
 
+  /// Whether [nearestMarker] is a SelectableRegion and the path from it to
+  /// here has passed through the region's child. Everything there is the
+  /// app's content; the region's own detector sits between the region and
+  /// its child.
+  final bool inRegionChild;
+
   /// [nearestMarker] when nothing forks between it and here, otherwise null.
   /// Only this marker can be paired with.
   _ControlMarker? get markerDirectlyAbove =>
       forkedSinceMarker ? null : nearestMarker;
 
+  /// Whether [element], whose parent this describes, is the child of the
+  /// SelectableRegion [nearestMarker] or inside it.
+  bool reachesRegionChild(Element element) {
+    if (inRegionChild) return true;
+    final region = nearestMarker?.element.widget;
+    return region is SelectableRegion &&
+        identical(element.widget, region.child);
+  }
+
   /// What is above the children of [element], which is [marker] if it is one.
   _PathAbove forChildrenOf(Element element, _ControlMarker? marker) =>
       _PathAbove(
-        marker ?? nearestMarker,
-        (marker == null && forkedSinceMarker) || childCount(element) > 1,
-        marker?.kind == MarkerKind.mergeSemantics
+        nearestMarker: marker ?? nearestMarker,
+        forkedSinceMarker:
+            (marker == null && forkedSinceMarker) || childCount(element) > 1,
+        enclosingTile: marker?.kind == MarkerKind.mergeSemantics
             ? marker!.group
             : enclosingTile,
+        inRegionChild: marker == null && reachesRegionChild(element),
       );
 }
 

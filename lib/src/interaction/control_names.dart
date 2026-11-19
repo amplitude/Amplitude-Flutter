@@ -71,40 +71,44 @@ final bool _isObfuscated = '$Semantics' != 'Semantics';
 /// The component that built [start], or null if a layout widget or a branch
 /// comes first.
 Element? _builderOf(Element start) {
-  // The ancestors up to the first one with more than one child.
-  final up = <Element>[];
+  Element? builder;
+  // The ancestor just passed lays something out. Only a gesture detector
+  // directly above excuses it: GestureDetector's private _GestureSemantics
+  // is its own.
+  var afterLayout = false;
   start.visitAncestorElements((a) {
-    up.add(a);
-    return childCount(a) <= 1;
+    if (childCount(a) > 1) return false;
+    final w = a.widget;
+    if (afterLayout && w is! GestureDetector && w is! RawGestureDetector) {
+      return false;
+    }
+    if (_isNamedComponent(a)) {
+      builder = _outermostBuilder(a);
+      return false;
+    }
+    afterLayout = !_isPassThrough(a);
+    return true;
   });
-  for (var i = 0; i < up.length; i++) {
-    if (childCount(up[i]) > 1) return null;
-    if (_isNamedComponent(up[i])) return _outermostBuilder(up, i);
-    // GestureDetector's private _GestureSemantics is its own.
-    final builtByHandler = i + 1 < up.length &&
-        (up[i + 1].widget is GestureDetector ||
-            up[i + 1].widget is RawGestureDetector);
-    if (!_isPassThrough(up[i]) && !builtByHandler) return null;
-  }
-  return null;
+  return builder;
 }
 
-/// From `up[i]`, up through the components whose build returned it
+/// From [component], up through the components whose build returned it
 /// directly. A flagless `Semantics()` between two of them (PopupMenuButton
 /// wraps its IconButton in one) is passed over.
-Element _outermostBuilder(List<Element> up, int i) {
-  while (i + 1 < up.length) {
-    if (_isNamedComponent(up[i + 1])) {
-      i++;
-    } else if (i + 2 < up.length &&
-        _isFlagless(up[i + 1].widget) &&
-        _isNamedComponent(up[i + 2])) {
-      i += 2;
-    } else {
-      break;
+Element _outermostBuilder(Element component) {
+  var outermost = component;
+  var afterSemantics = false;
+  component.visitAncestorElements((a) {
+    if (_isNamedComponent(a)) {
+      outermost = a;
+      afterSemantics = false;
+      return true;
     }
-  }
-  return up[i];
+    if (afterSemantics || !_isFlagless(a.widget)) return false;
+    afterSemantics = true;
+    return true;
+  });
+  return outermost;
 }
 
 bool _isNamedComponent(Element e) =>
