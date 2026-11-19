@@ -6,16 +6,17 @@ import 'hit_path.dart';
 
 // How grouping works
 //
-// groupControls walks the hit path from the root down and pairs the
-// markers it finds into groups, one per control.
+// controlsHitBy hit-tests a pointer-down, walks the hit path from the root
+// down and pairs the markers it finds into groups, one per control.
 //
 // - Marker (_ControlMarker): one widget of a control. Its MarkerKind,
 //   from markerKindOf in control_markers.dart, names the widget it comes
 //   from: controlSemantics, tapAction, mergeSemantics, selectableRegion or
 //   detector. Every other widget is skipped.
-// - Group (MarkerGroup): the markers that make up one control, such as
-//   the button's Semantics and its GestureDetector above. Only candidate
-//   groups the tap reaches can be reported.
+// - Group (MarkerGroup): the markers the walk paired, such as the button's
+//   Semantics and its GestureDetector above.
+// - Control: a group that can be a target and that the tap reached.
+//   controlsHitBy returns only these.
 // - _PathAbove: what the walk knows about the path above the current
 //   element: the nearest marker, whether a Row, Column or Stack forks the
 //   path between that marker and here, and the tile the element is inside.
@@ -24,12 +25,19 @@ import 'hit_path.dart';
 //   Otherwise it starts a group of its own. Each kind's method in
 //   _ControlGrouper holds its exceptions.
 
-/// The controls on [path]: the markers the walk passes, paired into
-/// groups, in element-tree order, each before the controls nested in it.
-List<MarkerGroup> groupControls(HitPath path) {
-  final grouper = _ControlGrouper(path.hitIndexOf);
+/// The controls [event] hit: the groups of markers on its hit path that can
+/// be a target and that the tap reached, in element-tree order, each before
+/// the controls nested in it.
+///
+/// Hit-tests [event] itself, so call it once per pointer-down.
+List<MarkerGroup> controlsHitBy(PointerDownEvent event) {
+  final path = HitPath(event);
+  final grouper = _ControlGrouper(path);
   path.walk(_PathAbove.none, grouper.visit);
-  return grouper.groups;
+  return [
+    for (final group in grouper.groups)
+      if (group._isControl) group,
+  ];
 }
 
 /// Groups the markers on the hit path into controls, as the walk visits
@@ -37,9 +45,9 @@ List<MarkerGroup> groupControls(HitPath path) {
 /// element is a marker and returns what its children see. Each kind of
 /// marker has its own method below.
 class _ControlGrouper {
-  _ControlGrouper(this._hitIndexOf);
+  _ControlGrouper(this._path);
 
-  final int? Function(Element element) _hitIndexOf;
+  final HitPath _path;
   final groups = <MarkerGroup>[];
 
   _PathAbove visit(Element element, Element? parent, _PathAbove above) {
@@ -53,7 +61,7 @@ class _ControlGrouper {
       Element element, Element? parent, _PathAbove above) {
     final kind = markerKindOf(element, parent);
     if (kind == null) return null;
-    final marker = _ControlMarker(element, kind);
+    final marker = _ControlMarker(element, kind, _path.hitIndexOf(element));
     return switch (kind) {
       MarkerKind.controlSemantics =>
         _controlSemantics(marker, element.widget as Semantics, parent, above),
@@ -142,7 +150,7 @@ class _ControlGrouper {
   }
 
   void _start(_ControlMarker marker, [Semantics? semantics]) {
-    final group = MarkerGroup._(marker, _hitIndexOf);
+    final group = MarkerGroup._();
     groups.add(group);
     group._add(marker, semantics);
   }
@@ -173,17 +181,11 @@ bool _inRegionChild(_ControlMarker marker, Element handler) {
 
 /// One control: the markers that pair into it.
 class MarkerGroup {
-  MarkerGroup._(this._top, this._hitIndexOf);
+  MarkerGroup._();
 
-  /// The first marker, the highest on the path.
-  final _ControlMarker _top;
-  final int? Function(Element element) _hitIndexOf;
+  /// Its markers, the highest on the path first.
   final _markers = <_ControlMarker>[];
-  bool _controlSemantics = false;
-  bool _tapAction = false;
-  bool _mergeSemantics = false;
-  bool _selectableRegion = false;
-  bool _detector = false;
+  final _kinds = <MarkerKind>{};
   bool _button = false;
   bool _toggle = false;
   bool _checked = false;
@@ -193,22 +195,11 @@ class MarkerGroup {
 
   void _add(_ControlMarker marker, [Semantics? semantics]) {
     _markers.add(marker);
+    _kinds.add(marker.kind);
     marker.group = this;
-    final hit = _hitIndexOf(marker.element);
+    final hit = marker.hitIndex;
     if (hit != null && (_hitIndex == null || hit < _hitIndex!)) {
       _hitIndex = hit;
-    }
-    switch (marker.kind) {
-      case MarkerKind.controlSemantics:
-        _controlSemantics = true;
-      case MarkerKind.tapAction:
-        _tapAction = true;
-      case MarkerKind.mergeSemantics:
-        _mergeSemantics = true;
-      case MarkerKind.detector:
-        _detector = true;
-      case MarkerKind.selectableRegion:
-        _selectableRegion = true;
     }
     final p = semantics?.properties;
     if (p == null) return;
@@ -225,21 +216,27 @@ class MarkerGroup {
     }
   }
 
-  /// The elements of its markers, highest first.
-  Iterable<Element> get elements => _markers.map((m) => m.element);
+  bool _has(MarkerKind kind) => _kinds.contains(kind);
 
   /// The first position any of its markers has on the hit-test path, or
-  /// null if the tap didn't reach it. A lower index was hit first, which is
-  /// also the order recognizers join the gesture arena. A component element
-  /// (a button, a tile) has no render object of its own and stands in for
-  /// its nearest descendant one.
+  /// null if the tap didn't reach it: never null for a control. A lower
+  /// index was hit first, which is also the order recognizers join the
+  /// gesture arena. A component element (a button, a tile) has no render
+  /// object of its own and stands in for its nearest descendant one.
   int? get hitIndex => _hitIndex;
 
-  /// A container owns what it builds but is never a target.
-  bool get candidate => !_selectableRegion && (_controlSemantics || _detector);
+  /// Whether it is a control: the tap reached it and it can be a target. A
+  /// container (a SelectableRegion) owns what it builds but is never one.
+  bool get _isControl =>
+      _hitIndex != null &&
+      !_has(MarkerKind.selectableRegion) &&
+      (_has(MarkerKind.controlSemantics) || _has(MarkerKind.detector));
 
   /// Built a Semantics for itself, as opposed to a bare handler.
-  bool get hasSemantics => _controlSemantics || _tapAction || _mergeSemantics;
+  bool get _hasSemantics =>
+      _has(MarkerKind.controlSemantics) ||
+      _has(MarkerKind.tapAction) ||
+      _has(MarkerKind.mergeSemantics);
 
   /// False if any of the control's Semantics says it is disabled, true if
   /// one says it is enabled and none disagree, null if none say.
@@ -249,9 +246,9 @@ class MarkerGroup {
   /// handler; it is enabled unless it says otherwise.
   bool get enabled =>
       _explicitEnabled != false &&
-      (_detector || _textField || _explicitEnabled == true);
+      (_has(MarkerKind.detector) || _textField || _explicitEnabled == true);
 
-  String get role {
+  String get _role {
     if (_textField) return 'TextField';
     if (_toggle) return 'Switch';
     if (_checked) return 'Checkbox';
@@ -261,19 +258,29 @@ class MarkerGroup {
 
   /// The element the control is reported as: the component that built it.
   /// A bare handler, or a control nothing names, is reported as its
-  /// handler.
-  Element get reportedElement {
+  /// handler. Worked out on first read, so read it once grouping is done.
+  late final Element reportedElement = _findReportedElement();
+
+  Element _findReportedElement() {
     final handler = _markers
         .where((m) => m.kind == MarkerKind.detector)
         .firstOrNull
         ?.element;
-    if (!hasSemantics) return handler ?? _top.element;
-    return controlElementOf(elements) ?? handler ?? _top.element;
+    final top = _markers.first.element;
+    if (!_hasSemantics) return handler ?? top;
+    return controlElementOf(_markers.map((m) => m.element)) ?? handler ?? top;
   }
+
+  /// What the control is called: its class name (`ElevatedButton`), or its
+  /// role (`Button`) on obfuscated builds and for a Semantics written inline
+  /// in app code. A bare handler is called by its detector's class.
+  String get name => _hasSemantics
+      ? controlNameOf(reportedElement, role: _role)
+      : handlerNameOf(reportedElement.widget);
 }
 
 /// What the walk knows about the path above an element.
-/// [ControlGrouper.visit] builds one per element and hands it to the
+/// [_ControlGrouper.visit] builds one per element and hands it to the
 /// element's children.
 class _PathAbove {
   const _PathAbove(
@@ -311,10 +318,13 @@ class _PathAbove {
 
 /// A widget on the hit path that helps make up a control.
 class _ControlMarker {
-  _ControlMarker(this.element, this.kind);
+  _ControlMarker(this.element, this.kind, this.hitIndex);
 
   final Element element;
   final MarkerKind kind;
+
+  /// Its position on the hit-test path, or null if the tap didn't hit it.
+  final int? hitIndex;
   late MarkerGroup group;
 
   /// This marker hasn't paired with anything below it yet, so the next marker

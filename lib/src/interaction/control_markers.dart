@@ -1,5 +1,5 @@
 // Which widgets are markers: the parts of a control that the hit walk looks
-// for. groupControls (control_grouper.dart) pairs them into controls.
+// for. controlsHitBy (control_grouper.dart) pairs them into controls.
 import 'package:flutter/gestures.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter/widgets.dart';

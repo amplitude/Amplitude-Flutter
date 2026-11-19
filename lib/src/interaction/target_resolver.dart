@@ -1,8 +1,6 @@
 import 'package:flutter/widgets.dart';
 
 import 'control_grouper.dart';
-import 'control_names.dart';
-import 'hit_path.dart';
 import 'interaction_target.dart';
 
 // How resolving works
@@ -16,12 +14,11 @@ import 'interaction_target.dart';
 //         GestureDetector       <- a marker: receives the tap
 //           Padding, Text       (layout and paint, not markers)
 //
-// 1. HitPath (hit_path.dart) hit-tests the pointer-down and walks the
-//    elements on the hit path from the root down.
-// 2. groupControls (control_grouper.dart) pairs the markers the walk
-//    passes into groups, one per control, each with its first position on
-//    the hit path.
-// 3. resolve picks the group the gesture arena would give the tap.
+// 1. controlsHitBy (control_grouper.dart) hit-tests the pointer-down and
+//    walks the elements on the hit path from the root down, with HitPath
+//    (hit_path.dart). It pairs the markers the walk passes into groups, one
+//    per control, each with its first position on the hit path.
+// 2. resolve picks the group the gesture arena would give the tap.
 
 /// Picks the control a pointer-down landed on: the one, of those on
 /// Flutter's hit-test path, that the gesture arena would give the tap.
@@ -48,20 +45,16 @@ import 'interaction_target.dart';
 abstract final class TargetResolver {
   static InteractionTarget? resolve(PointerDownEvent event) {
     MarkerGroup? best;
-    for (final control in groupControls(HitPath(event))) {
-      if (!control.candidate || control.hitIndex == null) continue;
+    for (final control in controlsHitBy(event)) {
       if (best == null || _takesTapFrom(control, best)) {
         best = control;
       }
     }
     if (best == null) return null;
-    final element = best.reportedElement;
     return InteractionTarget(
-      element: element,
+      element: best.reportedElement,
       enabled: best.enabled,
-      name: best.hasSemantics
-          ? controlNameOf(element, role: best.role)
-          : handlerNameOf(element.widget),
+      name: best.name,
     );
   }
 
