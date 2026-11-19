@@ -29,23 +29,7 @@ abstract final class TargetResolver {
   static InteractionTarget? resolve(PointerDownEvent event) {
     HitControl? best;
     for (final control in controlsHitBy(event)) {
-      final current = best;
-      if (current == null) {
-        best = control;
-        continue;
-      }
-      // Between controls in different branches, such as a translucent
-      // overlay and the button beneath it, the one Flutter hit first wins,
-      // as it does in the gesture arena. Between a control and one nested
-      // inside it, the deeper one wins, except that a disabled control
-      // builds no recognizer, so it can't take a tap from an enabled
-      // ancestor. A control that says nothing about being enabled (a
-      // dropdown's selected item) is inert and never displaces an ancestor.
-      final nested = _isAncestor(current.element, control.element);
-      final wins = nested
-          ? control.enabled || (!current.enabled && control.hasExplicitEnabled)
-          : control.hitIndex < current.hitIndex;
-      if (wins) {
+      if (best == null || _takesTapFrom(control, best)) {
         best = control;
       }
     }
@@ -58,17 +42,18 @@ abstract final class TargetResolver {
     );
   }
 
-  /// Whether [ancestor] is above [element]. An element's depth is stored,
-  /// so this climbs only to [ancestor]'s depth, never to the root.
-  static bool _isAncestor(Element ancestor, Element element) {
-    var steps = element.depth - ancestor.depth;
-    if (steps <= 0) return false;
-    var found = false;
-    element.visitAncestorElements((e) {
-      if (--steps > 0) return true;
-      found = identical(e, ancestor);
-      return false;
-    });
-    return found;
-  }
+  /// Whether [later], which comes after [current] in the element tree,
+  /// takes the tap from it.
+  ///
+  /// The gesture arena gives an unresolved tap to the first recognizer that
+  /// joined it, and recognizers join in hit-test order, so the control hit
+  /// first wins. That covers nesting too: a control is hit before the
+  /// controls it is nested in. A disabled control builds no recognizer, so
+  /// it never takes the tap from an enabled one. Between two disabled
+  /// controls, the one that says it is disabled is reported. One that says
+  /// nothing about being enabled (a dropdown's selected item) is inert and
+  /// never takes the tap.
+  static bool _takesTapFrom(HitControl later, HitControl current) =>
+      later.hitIndex < current.hitIndex &&
+      (later.enabled || (!current.enabled && later.hasExplicitEnabled));
 }
