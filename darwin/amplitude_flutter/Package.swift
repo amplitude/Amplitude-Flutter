@@ -19,7 +19,7 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/amplitude/Amplitude-Swift.git",
-            .upToNextMinor(from: "1.19.4")
+            .upToNextMinor(from: "1.20.1")
         ),
     ],
     targets: [
