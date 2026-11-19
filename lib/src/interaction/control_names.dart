@@ -1,9 +1,9 @@
 // Which element a control is reported as, and what it is called.
 //
 // Maintenance: two lists here are judgement calls about Flutter's own
-// widgets, not facts any API exposes. `isPlumbing` names the
+// widgets, not facts any API exposes. `_isPlumbing` names the
 // widgets-library components controls build around their parts, and
-// `isPassThrough` the elements allowed between a control's component and
+// `_isPassThrough` the elements allowed between a control's component and
 // its Semantics. A Flutter release that adds a wrapper inside a control can
 // make a name fall back to the control's handler or role. The real-tap
 // tests pin the reported name of every control form, and CI runs them on
@@ -43,21 +43,21 @@ Element? controlElementOf(Iterable<Element> markers) {
 /// built it (a Semantics written inline in app code).
 String controlNameOf(Element element, {required String role}) {
   final w = element.widget;
-  if (isObfuscated ||
+  if (_isObfuscated ||
       w is Semantics ||
       w is GestureDetector ||
       w is RawGestureDetector) {
     return role;
   }
-  return typeName(w);
+  return _typeName(w);
 }
 
 /// What a bare gesture detector, with no Semantics of its own, is called.
 String handlerNameOf(Widget w) {
-  if (isObfuscated) {
+  if (_isObfuscated) {
     return w is GestureDetector ? 'GestureDetector' : 'RawGestureDetector';
   }
-  return typeName(w);
+  return _typeName(w);
 }
 
 /// How many child elements [e] has.
@@ -68,52 +68,56 @@ int childCount(Element e) {
 }
 
 /// Obfuscated builds rename every type, the framework's included.
-final bool isObfuscated = '$Semantics' != 'Semantics';
+final bool _isObfuscated = '$Semantics' != 'Semantics';
 
 /// The component that built [start], or null if a layout widget or a branch
 /// comes first.
 Element? _builderOf(Element start) {
-  // The ancestors up to the first one with more than one child.
-  final up = <Element>[];
+  Element? builder;
+  // The ancestor just passed lays something out. Only a gesture detector
+  // directly above excuses it: GestureDetector's private _GestureSemantics
+  // is its own.
+  var afterLayout = false;
   start.visitAncestorElements((a) {
-    up.add(a);
-    return childCount(a) <= 1;
+    if (childCount(a) > 1) return false;
+    final w = a.widget;
+    if (afterLayout && w is! GestureDetector && w is! RawGestureDetector) {
+      return false;
+    }
+    if (_isNamedComponent(a)) {
+      builder = _outermostBuilder(a);
+      return false;
+    }
+    afterLayout = !_isPassThrough(a);
+    return true;
   });
-  for (var i = 0; i < up.length; i++) {
-    if (childCount(up[i]) > 1) return null;
-    if (_isNamedComponent(up[i])) return _outermostBuilder(up, i);
-    // GestureDetector's private _GestureSemantics is its own.
-    final builtByHandler = i + 1 < up.length &&
-        (up[i + 1].widget is GestureDetector ||
-            up[i + 1].widget is RawGestureDetector);
-    if (!isPassThrough(up[i]) && !builtByHandler) return null;
-  }
-  return null;
+  return builder;
 }
 
-/// From `up[i]`, up through the components whose build returned it
+/// From [component], up through the components whose build returned it
 /// directly. A flagless `Semantics()` between two of them (PopupMenuButton
 /// wraps its IconButton in one) is passed over.
-Element _outermostBuilder(List<Element> up, int i) {
-  while (i + 1 < up.length) {
-    if (_isNamedComponent(up[i + 1])) {
-      i++;
-    } else if (i + 2 < up.length &&
-        _isFlagless(up[i + 1].widget) &&
-        _isNamedComponent(up[i + 2])) {
-      i += 2;
-    } else {
-      break;
+Element _outermostBuilder(Element component) {
+  var outermost = component;
+  var afterSemantics = false;
+  component.visitAncestorElements((a) {
+    if (_isNamedComponent(a)) {
+      outermost = a;
+      afterSemantics = false;
+      return true;
     }
-  }
-  return up[i];
+    if (afterSemantics || !_isFlagless(a.widget)) return false;
+    afterSemantics = true;
+    return true;
+  });
+  return outermost;
 }
 
 bool _isNamedComponent(Element e) =>
-    (e is StatelessElement || e is StatefulElement) && !isPlumbing(e.widget);
+    (e is StatelessElement || e is StatefulElement) && !_isPlumbing(e.widget);
 
 /// Widgets-library components that controls build around their parts.
-bool isPlumbing(Widget w) =>
+bool _isPlumbing(Widget w) =>
     w is GestureDetector ||
     w is RawGestureDetector ||
     w is Focus ||
@@ -131,10 +135,10 @@ bool isPlumbing(Widget w) =>
 /// Elements between a control's component and its Semantics that don't lay
 /// anything out: inherited and proxy elements, plumbing, and render widgets
 /// that only route pointers or semantics, or only paint.
-bool isPassThrough(Element e) {
+bool _isPassThrough(Element e) {
   if (e is ProxyElement) return true;
   final w = e.widget;
-  return isPlumbing(w) ||
+  return _isPlumbing(w) ||
       w is MouseRegion ||
       w is Listener ||
       w is IgnorePointer ||
@@ -158,14 +162,14 @@ bool isPassThrough(Element e) {
 
 bool _isFlagless(Widget w) =>
     w is Semantics &&
-    !isControlBoundary(w.properties) &&
+    !isControlSemantics(w.properties) &&
     !isTapAction(w.properties);
 
 /// The runtime type's name without type arguments (`DropdownButton<int>` is
 /// `DropdownButton`). A private name drops its underscore and a `With…` or
 /// `M2`/`M3` suffix: Flutter 3.19's `_ElevatedButtonWithIcon` is
 /// `ElevatedButton`.
-String typeName(Widget w) {
+String _typeName(Widget w) {
   var name = w.runtimeType.toString();
   final generic = name.indexOf('<');
   if (generic > 0) {
