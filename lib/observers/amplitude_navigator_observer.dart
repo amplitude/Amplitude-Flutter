@@ -85,6 +85,14 @@ class AmplitudeNavigatorObserver extends NavigatorObserver {
   /// Decides whether a route should be tracked as a screen.
   final bool Function(Route<dynamic>? route) routeFilter;
 
+  /// The name of the most recent screen view tracked by any
+  /// [AmplitudeNavigatorObserver], or `null` before the first one.
+  ///
+  /// Other autocapture sources (e.g. `AmplitudeElementTapDetector`) read this
+  /// to attach screen context to their events. Apps not using this observer
+  /// can ignore it and supply screen names to those sources directly.
+  static String? currentScreenName;
+
   /// Whether screen view autocapture is enabled on [amplitude]'s configuration.
   bool get _enabled {
     return switch (amplitude.configuration.autocapture) {
@@ -114,6 +122,7 @@ class AmplitudeNavigatorObserver extends NavigatorObserver {
         }());
         return;
       }
+      currentScreenName = name;
       unawaited(
         amplitude
             .track(BaseEvent(
