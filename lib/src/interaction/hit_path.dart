@@ -5,92 +5,13 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 
-import 'control_grouper.dart';
-import 'control_names.dart';
 import 'fling_stops.dart';
-
-// How this file works
-//
-// A control is made of several widgets. A tap on an ElevatedButton passes
-// through these, and two of them matter:
-//
-//   ElevatedButton
-//     Semantics(button: true)   <- a marker: says "a button, enabled"
-//       Material, InkWell internals
-//         GestureDetector       <- a marker: receives the tap
-//           Padding, Text       (layout and paint, not markers)
-//
-// controlsHitBy hit-tests a pointer-down (_HitPath) and walks the elements
-// on the hit path from the root down. ControlGrouper (control_grouper.dart)
-// pairs the markers it passes into groups, one per control, and each group
-// the tap reaches becomes a HitControl. TargetResolver then picks the
-// control that takes the tap.
-
-/// Every control under [event] that could take the tap, in element-tree
-/// order: each before the controls nested in it.
-///
-/// A control is made of the markers the walk pairs up on the hit path: the
-/// Semantics a control builds, its tap action, and its gesture
-/// detector. A bare gesture detector with no Semantics is a control too.
-///
-/// The walk starts [FlingStops] watching each list it passes, so a later
-/// press that stops one of them can be told apart.
-List<HitControl> controlsHitBy(
-  PointerDownEvent event,
-) {
-  final path = _HitPath(event);
-  final grouper = ControlGrouper();
-  path.walk(grouper.visit);
-  final controls = <HitControl>[];
-  for (final group in grouper.groups) {
-    if (!group.candidate) continue;
-    // Null when this tap couldn't reach the control.
-    int? hitIndex;
-    for (final element in group.elements) {
-      final i = path.hitIndexOf(element);
-      if (i != null && (hitIndex == null || i < hitIndex)) {
-        hitIndex = i;
-      }
-    }
-    if (hitIndex == null) continue;
-    controls.add(HitControl._(group, group.reportedElement, hitIndex));
-  }
-  return controls;
-}
-
-/// A control under a pointer-down.
-class HitControl {
-  HitControl._(this._group, this.element, this.hitIndex);
-
-  final MarkerGroup _group;
-
-  /// The element the control is reported as: the component that built it,
-  /// or its gesture detector when it has no Semantics or nothing names it.
-  final Element element;
-
-  /// Its first position on the hit-test path. A lower index was hit first,
-  /// which is also the order recognizers join the gesture arena.
-  final int hitIndex;
-
-  /// Whether it accepts input now.
-  bool get enabled => _group.enabled;
-
-  /// Whether any of its Semantics says it is enabled or disabled. One that
-  /// says nothing (a dropdown's selected item) is inert.
-  bool get hasExplicitEnabled => _group.explicitEnabled != null;
-
-  /// Its class name (`ElevatedButton`), or its role (`Button`) on obfuscated
-  /// builds and for a Semantics written inline in app code.
-  String get name => _group.hasSemantics
-      ? controlNameOf(element, role: _group.role)
-      : handlerNameOf(element.widget);
-}
 
 /// What a pointer-down hit: Flutter's hit-test path for it, and a walk of
 /// the element tree along that path. Knows nothing about controls.
-class _HitPath {
+class HitPath {
   /// Hit-tests [event] in its view, the way Flutter's gesture binding does.
-  _HitPath(PointerDownEvent event) : _viewId = event.viewId {
+  HitPath(PointerDownEvent event) : _viewId = event.viewId {
     final result = HitTestResult();
     WidgetsBinding.instance.hitTestInView(result, event.position, _viewId);
     for (final entry in result.path) {

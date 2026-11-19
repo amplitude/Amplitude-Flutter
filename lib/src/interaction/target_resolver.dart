@@ -1,7 +1,27 @@
 import 'package:flutter/widgets.dart';
 
-import 'hit_controls.dart';
+import 'control_grouper.dart';
+import 'control_names.dart';
+import 'hit_path.dart';
 import 'interaction_target.dart';
+
+// How resolving works
+//
+// A control is made of several widgets. A tap on an ElevatedButton passes
+// through these, and two of them matter:
+//
+//   ElevatedButton
+//     Semantics(button: true)   <- a marker: says "a button, enabled"
+//       Material, InkWell internals
+//         GestureDetector       <- a marker: receives the tap
+//           Padding, Text       (layout and paint, not markers)
+//
+// 1. HitPath (hit_path.dart) hit-tests the pointer-down and walks the
+//    elements on the hit path from the root down.
+// 2. ControlGrouper (control_grouper.dart) pairs the markers the walk
+//    passes into groups, one per control, each with its first position on
+//    the hit path.
+// 3. resolve picks the group the gesture arena would give the tap.
 
 /// Picks the control a pointer-down landed on: the one, of those on
 /// Flutter's hit-test path, that the gesture arena would give the tap.
@@ -27,18 +47,24 @@ import 'interaction_target.dart';
 /// - Obfuscated builds name every control by its role.
 abstract final class TargetResolver {
   static InteractionTarget? resolve(PointerDownEvent event) {
-    HitControl? best;
-    for (final control in controlsHitBy(event)) {
+    final path = HitPath(event);
+    final grouper = ControlGrouper(path.hitIndexOf);
+    path.walk(grouper.visit);
+    MarkerGroup? best;
+    for (final control in grouper.groups) {
+      if (!control.candidate || control.hitIndex == null) continue;
       if (best == null || _takesTapFrom(control, best)) {
         best = control;
       }
     }
-    final target = best;
-    if (target == null) return null;
+    if (best == null) return null;
+    final element = best.reportedElement;
     return InteractionTarget(
-      element: target.element,
-      enabled: target.enabled,
-      name: target.name,
+      element: element,
+      enabled: best.enabled,
+      name: best.hasSemantics
+          ? controlNameOf(element, role: best.role)
+          : handlerNameOf(element.widget),
     );
   }
 
@@ -53,7 +79,7 @@ abstract final class TargetResolver {
   /// controls, the one that says it is disabled is reported. One that says
   /// nothing about being enabled (a dropdown's selected item) is inert and
   /// never takes the tap.
-  static bool _takesTapFrom(HitControl later, HitControl current) =>
-      later.hitIndex < current.hitIndex &&
-      (later.enabled || (!current.enabled && later.hasExplicitEnabled));
+  static bool _takesTapFrom(MarkerGroup later, MarkerGroup current) =>
+      later.hitIndex! < current.hitIndex! &&
+      (later.enabled || (!current.enabled && later.explicitEnabled != null));
 }

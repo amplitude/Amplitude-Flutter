@@ -6,16 +6,16 @@ import 'control_names.dart';
 // How grouping works
 //
 // ControlGrouper is handed each element on the hit path, from the root
-// down (hit_controls.dart walks it), and pairs the markers it finds into
-// groups, one per control.
+// down (HitPath walks it), and pairs the markers it finds into groups, one
+// per control.
 //
 // - Marker (_ControlMarker): one widget of a control. Its _MarkerKind names
 //   the widget it comes from: controlSemantics, tapAction, mergeSemantics,
 //   selectableRegion or detector. control_markers.dart says which widgets
 //   are markers. Every other widget is skipped.
 // - Group (MarkerGroup): the markers that make up one control, such as
-//   the button's Semantics and its GestureDetector above. A group the tap
-//   reaches becomes a HitControl. Only candidate groups can be reported.
+//   the button's Semantics and its GestureDetector above. Only candidate
+//   groups the tap reaches can be reported.
 // - _PathAbove: what the walk knows about the path above the current
 //   element: the nearest marker, whether a Row, Column or Stack forks the
 //   path between that marker and here, and the tile the element is inside.
@@ -29,6 +29,14 @@ import 'control_names.dart';
 /// asks [_markerFor] whether the element is a marker, and records what its
 /// children will see. Each kind of marker has its own method below.
 class ControlGrouper {
+  /// [hitIndexOf] gives an element's position on the hit-test path, or
+  /// null if the tap didn't hit it.
+  ControlGrouper(this._hitIndexOf);
+
+  final int? Function(Element element) _hitIndexOf;
+
+  /// Every control the walk found, in element-tree order: each before the
+  /// controls nested in it.
   final groups = <MarkerGroup>[];
 
   /// The path from the root to the element being visited, each with what is
@@ -162,7 +170,7 @@ class ControlGrouper {
   }
 
   void _start(_ControlMarker marker, [Semantics? semantics]) {
-    final group = MarkerGroup._(marker);
+    final group = MarkerGroup._(marker, _hitIndexOf);
     groups.add(group);
     group._add(marker, semantics);
   }
@@ -192,10 +200,11 @@ class ControlGrouper {
 
 /// One control: the markers that pair into it.
 class MarkerGroup {
-  MarkerGroup._(this._top);
+  MarkerGroup._(this._top, this._hitIndexOf);
 
   /// The first marker, the highest on the path.
   final _ControlMarker _top;
+  final int? Function(Element element) _hitIndexOf;
   final _markers = <_ControlMarker>[];
   bool _controlSemantics = false;
   bool _tapAction = false;
@@ -207,10 +216,15 @@ class MarkerGroup {
   bool _checked = false;
   bool _textField = false;
   bool? _explicitEnabled;
+  int? _hitIndex;
 
   void _add(_ControlMarker marker, [Semantics? semantics]) {
     _markers.add(marker);
     marker.group = this;
+    final hit = _hitIndexOf(marker.element);
+    if (hit != null && (_hitIndex == null || hit < _hitIndex!)) {
+      _hitIndex = hit;
+    }
     switch (marker.kind) {
       case _MarkerKind.controlSemantics:
         _controlSemantics = true;
@@ -240,6 +254,13 @@ class MarkerGroup {
 
   /// The elements of its markers, highest first.
   Iterable<Element> get elements => _markers.map((m) => m.element);
+
+  /// The first position any of its markers has on the hit-test path, or
+  /// null if the tap didn't reach it. A lower index was hit first, which is
+  /// also the order recognizers join the gesture arena. A component element
+  /// (a button, a tile) has no render object of its own and stands in for
+  /// its nearest descendant one.
+  int? get hitIndex => _hitIndex;
 
   /// A container owns what it builds but is never a target.
   bool get candidate => !_selectableRegion && (_controlSemantics || _detector);
