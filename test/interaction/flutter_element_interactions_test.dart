@@ -89,7 +89,7 @@ void main() {
     testWidgets('an Amplitude instance with element interactions logs taps',
         skip: kIsWeb, (t) async {
       Amplitude(config(const AutocaptureEnabled()), MockMethodChannel());
-      expect(await logsOfTap(t), ['Amplitude: tap on GestureDetector']);
+      expect(await logsOfTap(t), ['Amplitude: tap on ElevatedButton']);
     });
   });
 }
@@ -102,7 +102,7 @@ void registerTests() {
         final stop = FlutterElementInteractions.register(config(autocapture));
         expect(stop, isNotNull);
         addTearDown(stop!);
-        expect(await logsOfTap(t), ['Amplitude: tap on GestureDetector']);
+        expect(await logsOfTap(t), ['Amplitude: tap on ElevatedButton']);
       });
       // Web keeps the Browser SDK's DOM capture.
       test('$name captures nothing on web', skip: !kIsWeb, () {
