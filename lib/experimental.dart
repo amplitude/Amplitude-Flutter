@@ -17,9 +17,17 @@ abstract final class AmplitudeExperimental {
   /// Whether element interactions are captured on iOS and Android.
   ///
   /// Off by default, so an app that enabled element interactions for web
-  /// captures nothing new on mobile. When true, an Amplitude instance whose
-  /// configuration enables element interactions captures taps on controls
-  /// on iOS and Android. Web is unaffected.
+  /// sends nothing new on mobile. When true, an Amplitude instance whose
+  /// configuration enables element interactions sends an
+  /// `[Amplitude] Element Interacted` event for each tap on a control on iOS
+  /// and Android, with no wrapper widget. Web is unaffected.
+  ///
+  /// Only strings the app's code sets are read: a Material or Cupertino
+  /// button's text, `Semantics` labels, tooltips and `Semantics.identifier`.
+  /// Taps on disabled controls, keyboard activations and accessibility
+  /// actions are not sent. `[Amplitude] Hierarchy` is cut at 1,024
+  /// characters. On obfuscated builds controls are named by role
+  /// (`Button`), and no Hierarchy or button text is sent.
   ///
   /// Each instance reads this once, when it's constructed, so set it
   /// before creating the instance. It can come from the app's own feature
