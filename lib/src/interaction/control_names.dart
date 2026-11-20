@@ -1,9 +1,9 @@
 // Which element a control is reported as, and what it is called.
 //
 // Maintenance: two lists here are judgement calls about Flutter's own
-// widgets, not facts any API exposes. `_isPlumbing` names the
+// widgets, not facts any API exposes. `isPlumbing` names the
 // widgets-library components controls build around their parts, and
-// `_isPassThrough` the elements allowed between a control's component and
+// `isPassThrough` the elements allowed between a control's component and
 // its Semantics. A Flutter release that adds a wrapper inside a control can
 // make a name fall back to the control's handler or role. The real-tap
 // tests pin the reported name of every control form, and CI runs them on
@@ -43,21 +43,21 @@ Element? controlElementOf(Iterable<Element> markers) {
 /// built it (a Semantics written inline in app code).
 String controlNameOf(Element element, {required String role}) {
   final w = element.widget;
-  if (_isObfuscated ||
+  if (isObfuscated ||
       w is Semantics ||
       w is GestureDetector ||
       w is RawGestureDetector) {
     return role;
   }
-  return _typeName(w);
+  return typeName(w);
 }
 
 /// What a bare gesture detector, with no Semantics of its own, is called.
 String handlerNameOf(Widget w) {
-  if (_isObfuscated) {
+  if (isObfuscated) {
     return w is GestureDetector ? 'GestureDetector' : 'RawGestureDetector';
   }
-  return _typeName(w);
+  return typeName(w);
 }
 
 /// How many child elements [e] has.
@@ -68,7 +68,7 @@ int childCount(Element e) {
 }
 
 /// Obfuscated builds rename every type, the framework's included.
-final bool _isObfuscated = '$Semantics' != 'Semantics';
+final bool isObfuscated = '$Semantics' != 'Semantics';
 
 /// The component that built [start], or null if a layout widget or a branch
 /// comes first.
@@ -88,7 +88,7 @@ Element? _builderOf(Element start) {
       builder = _outermostBuilder(a);
       return false;
     }
-    afterLayout = !_isPassThrough(a);
+    afterLayout = !isPassThrough(a);
     return true;
   });
   return builder;
@@ -114,10 +114,10 @@ Element _outermostBuilder(Element component) {
 }
 
 bool _isNamedComponent(Element e) =>
-    (e is StatelessElement || e is StatefulElement) && !_isPlumbing(e.widget);
+    (e is StatelessElement || e is StatefulElement) && !isPlumbing(e.widget);
 
 /// Widgets-library components that controls build around their parts.
-bool _isPlumbing(Widget w) =>
+bool isPlumbing(Widget w) =>
     w is GestureDetector ||
     w is RawGestureDetector ||
     w is Focus ||
@@ -135,10 +135,10 @@ bool _isPlumbing(Widget w) =>
 /// Elements between a control's component and its Semantics that don't lay
 /// anything out: inherited and proxy elements, plumbing, and render widgets
 /// that only route pointers or semantics, or only paint.
-bool _isPassThrough(Element e) {
+bool isPassThrough(Element e) {
   if (e is ProxyElement) return true;
   final w = e.widget;
-  return _isPlumbing(w) ||
+  return isPlumbing(w) ||
       w is MouseRegion ||
       w is Listener ||
       w is IgnorePointer ||
@@ -169,7 +169,7 @@ bool _isFlagless(Widget w) =>
 /// `DropdownButton`). A private name drops its underscore and a `With…` or
 /// `M2`/`M3` suffix: Flutter 3.19's `_ElevatedButtonWithIcon` is
 /// `ElevatedButton`.
-String _typeName(Widget w) {
+String typeName(Widget w) {
   var name = w.runtimeType.toString();
   final generic = name.indexOf('<');
   if (generic > 0) {

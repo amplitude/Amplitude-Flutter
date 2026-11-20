@@ -151,7 +151,8 @@ class _OwnContent {
   void visit(Element element, Element? parent, {required bool inIcon}) {
     if (++_visited > _maxVisited) return;
     final w = element.widget;
-    if (w is Semantics && isControlBoundary(w.properties)) {
+    final kind = markerKindOf(element, parent);
+    if (kind == MarkerKind.controlSemantics) {
       // Below the control's own handler, its Semantics is never the root of
       // a component's build (a ListTile's sits under its InkWell); one that
       // is belongs to a control wrapped in that handler. This is how the
@@ -160,7 +161,7 @@ class _OwnContent {
           parent is StatelessElement || parent is StatefulElement;
       if (_boundary || (_handler && builtByComponent)) return;
       _boundary = true;
-    } else if (isActiveHandler(w, parent)) {
+    } else if (kind == MarkerKind.detector) {
       if (_handler) return;
       _handler = true;
     }
@@ -199,9 +200,7 @@ class _AncestorLabels {
     target.visitAncestorElements((a) {
       final w = a.widget;
       if (childCount(a) > 1 ||
-          isActiveHandler(w, _parentOf(a)) ||
-          (w is Semantics &&
-              (isControlBoundary(w.properties) || isTapAction(w.properties)))) {
+          _controlParts.contains(markerKindOf(a, _parentOf(a)))) {
         return false;
       }
       if (w is Semantics) {
@@ -214,6 +213,14 @@ class _AncestorLabels {
     return found;
   }
 }
+
+/// Markers that are part of a control: a handler, a control's Semantics or
+/// InkResponse's tap action.
+const _controlParts = {
+  MarkerKind.detector,
+  MarkerKind.controlSemantics,
+  MarkerKind.tapAction,
+};
 
 Element? _parentOf(Element e) {
   Element? parent;
