@@ -17,11 +17,12 @@ enum MarkerKind {
   /// A MergeSemantics, which composite tiles such as CheckboxListTile build.
   mergeSemantics,
 
-  /// A SelectableRegion, which SelectionArea builds. On Flutter 3.19 it
-  /// wraps its child in a translucent RawGestureDetector with a plain tap
-  /// recognizer that has onTapUp set. That detector is the region's own,
-  /// not a control: text under it reports nothing. The region claims the
-  /// first detector below it unless that detector is in its child.
+  /// A SelectableRegion, which SelectionArea builds. It wraps its child in
+  /// a detector of its own that takes any tap no handler in the child
+  /// does, so text under it reports nothing and a handler around it never
+  /// gets the tap. On Flutter 3.19 that detector is a RawGestureDetector
+  /// with a plain tap recognizer, which the region claims: the first
+  /// detector below it unless that detector is in its child.
   selectableRegion,
 
   /// A GestureDetector or RawGestureDetector that a primary tap reaches.

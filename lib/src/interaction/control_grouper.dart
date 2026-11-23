@@ -16,7 +16,8 @@ import 'hit_path.dart';
 // - Group (MarkerGroup): the markers the walk paired, such as the button's
 //   Semantics and its GestureDetector above.
 // - Control: a group that can be a target and that the tap reached.
-//   controlsHitBy returns only these.
+//   controlsHitBy returns only these, less any a SelectableRegion's
+//   detector takes the tap from.
 // - _PathAbove: what the walk knows about the path above the current
 //   element: the nearest marker, whether a Row, Column or Stack forks the
 //   path between that marker and here, the tile the element is inside, and
@@ -30,14 +31,28 @@ import 'hit_path.dart';
 /// be a target and that the tap reached, in element-tree order, each before
 /// the controls nested in it.
 ///
+/// A control hit after a SelectableRegion is left out. The region's own
+/// detector joins the arena before it and takes the tap: a GestureDetector
+/// or ListTile around a SelectionArea never runs on a tap on its text.
+///
 /// Hit-tests [event] itself, so call it once per pointer-down.
 List<MarkerGroup> controlsHitBy(PointerDownEvent event) {
   final path = HitPath(event);
   final grouper = _ControlGrouper(path);
   path.walk(_PathAbove.none, grouper.visit);
+  int? region;
+  for (final group in grouper.groups) {
+    final hit = group._hitIndex;
+    if (hit != null &&
+        group._has(MarkerKind.selectableRegion) &&
+        (region == null || hit < region)) {
+      region = hit;
+    }
+  }
   return [
     for (final group in grouper.groups)
-      if (group._isControl) group,
+      if (group._isControl && (region == null || group._hitIndex! < region))
+        group,
   ];
 }
 

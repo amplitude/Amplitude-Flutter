@@ -865,6 +865,35 @@ void main() {
         expect(r!.enabled, isTrue);
       },
     );
+
+    // The region's own detector is deeper in the arena than any handler
+    // around it, so it takes the tap and the handler never runs.
+    final wrappers = <String, Widget Function(VoidCallback, Widget)>{
+      'GestureDetector': (onTap, child) =>
+          GestureDetector(onTap: onTap, child: child),
+      'InkWell': (onTap, child) => InkWell(onTap: onTap, child: child),
+      'ListTile': (onTap, child) => ListTile(onTap: onTap, title: child),
+    };
+    for (final MapEntry(key: name, value: wrap) in wrappers.entries) {
+      testWidgets(
+        'a $name around a SelectionArea is not credited',
+        variant: platforms,
+        (t) async {
+          var ran = 0;
+          await t.pumpWidget(
+            app(wrap(() => ran++, const SelectionArea(child: Text('text')))),
+          );
+          final p = t.getCenter(find.text('text'));
+
+          final r = resolveAt(t, p);
+          await t.tapAt(p);
+          await t.pump(const Duration(seconds: 1));
+
+          expect(ran, 0);
+          expect(r, isNull);
+        },
+      );
+    }
   });
 
   testWidgets(
