@@ -10,6 +10,10 @@
 // flutter test runs in debug mode, with asserts on, so the numbers are an
 // upper bound: a release build is faster. The resolver runs once per
 // pointer-down, not once per frame.
+//
+// Flutter 3.50 deprecates material.dart, but material_ui needs a newer
+// Flutter than the SDK supports, as for test/ (test/analysis_options.yaml).
+// ignore_for_file: deprecated_member_use
 import 'package:amplitude_flutter/src/interaction/target_resolver.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
