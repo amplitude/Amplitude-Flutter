@@ -3,9 +3,9 @@
 // Farooqi, and its nested-label exclusion, by Wei Sun:
 // https://github.com/amplitude/Amplitude-Flutter/pull/317.
 //
-// Only strings a developer wrote are read: a button's text, Semantics
-// labels, tooltips and identifiers. Text that is often user data, such as
-// a list tile's title, is never read.
+// Only a button's text, Semantics labels, tooltips and identifiers are
+// read. Text that is often user data, such as a list tile's title, is
+// never read, though an app can still build these strings from user data.
 import 'package:flutter/semantics.dart';
 import 'package:flutter/widgets.dart';
 
@@ -174,9 +174,9 @@ class _OwnContent {
 }
 
 /// Labels and an identifier set just around the tapped control: on its
-/// ancestors up to the first one with more than one child, or the first
-/// that is part of another control, as iOS and Android read them only
-/// from the control itself.
+/// ancestors up to the first one with more than one child, the first that
+/// is part of another control, or the dialog, sheet or page it's on, as iOS
+/// and Android read them only from the control itself.
 class _AncestorLabels {
   String? label;
   String? tooltip;
@@ -187,7 +187,8 @@ class _AncestorLabels {
     target.visitAncestorElements((a) {
       final w = a.widget;
       if (childCount(a) > 1 ||
-          _controlParts.contains(markerKindOf(a, _parentOf(a)))) {
+          _controlParts.contains(markerKindOf(a, _parentOf(a))) ||
+          _isRouteSemantics(w)) {
         return false;
       }
       if (w is Semantics) {
@@ -200,6 +201,12 @@ class _AncestorLabels {
     return found;
   }
 }
+
+/// The Semantics a dialog, sheet or page puts around its content: its label
+/// ('Alert', 'Dialog') names the route, not a control in it.
+bool _isRouteSemantics(Widget w) =>
+    w is Semantics &&
+    (w.properties.scopesRoute == true || w.properties.namesRoute == true);
 
 /// Markers that are part of a control: a handler, a control's Semantics or
 /// InkResponse's tap action.

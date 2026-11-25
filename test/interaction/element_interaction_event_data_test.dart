@@ -175,6 +175,59 @@ void main() {
       expect(dataAt(t, byId('b')).accessibilityLabel, isNull);
     });
 
+    // Material dialogs and sheets label their route ('Alert', 'Dialog') in
+    // the device's language. With one control inside, nothing with more
+    // than one child stops the climb before that label.
+    testWidgets("not the label of a bottom sheet it's alone in", (t) async {
+      await t.pumpWidget(MaterialApp(
+        navigatorObservers: [recorder],
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: ElevatedButton(
+              key: const Key('open'),
+              onPressed: () => showModalBottomSheet<void>(
+                context: context,
+                builder: (_) => ElevatedButton(
+                    key: const Key('b'),
+                    onPressed: () {},
+                    child: const Text('Share')),
+              ),
+              child: const Text('Open'),
+            ),
+          ),
+        ),
+      ));
+      await t.tap(byId('open'));
+      await t.pumpAndSettle();
+      expect(dataAt(t, byId('b')).accessibilityLabel, isNull);
+    });
+
+    testWidgets("not the label of a dialog it's alone in", (t) async {
+      await t.pumpWidget(MaterialApp(
+        navigatorObservers: [recorder],
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: ElevatedButton(
+              key: const Key('open'),
+              onPressed: () => showDialog<void>(
+                context: context,
+                builder: (_) => AlertDialog(actions: [
+                  TextButton(
+                      key: const Key('b'),
+                      onPressed: () {},
+                      child: const Text('OK')),
+                ]),
+              ),
+              child: const Text('Open'),
+            ),
+          ),
+        ),
+      ));
+      await t.tap(byId('open'));
+      await t.pumpAndSettle();
+      expect(dataAt(t, byId('b')).accessibilityLabel, isNull);
+    });
+
     testWidgets("not Text's semanticsLabel, which is its visible text",
         (t) async {
       await t.pumpWidget(app(ListTile(
