@@ -3,6 +3,14 @@
 /// Disable or enable ElementInteractions by using class extensions
 /// [ElementInteractionsDisabled]/[ElementInteractionsEnabled], or use
 /// [ElementInteractionsOptions] for more granular control.
+///
+/// **iOS and Android (experimental).** Off unless the app opts in with
+/// `AmplitudeExperimental.mobileElementInteractions`, from
+/// `package:amplitude_flutter/experimental.dart`, which describes what is
+/// sent.
+///
+/// **Web.** Clicks are captured by the Browser SDK, as configured by
+/// [ElementInteractionsOptions].
 sealed class ElementInteractions {
   const ElementInteractions();
 
@@ -22,8 +30,11 @@ sealed class ElementInteractions {
 
 /// Options for the autocapture elementInteractions feature.
 ///
-/// Element interactions (click tracking) are only supported on Web, through the
-/// Browser SDK. Requires Browser SDK >= 2.10.0.
+/// On web, element interactions (click tracking) go through the Browser SDK,
+/// configured by these options. Requires Browser SDK >= 2.10.0. On iOS and
+/// Android, once the app opts in (experimental), these options turn on tap
+/// capture (see [ElementInteractions]); the CSS and attribute options only
+/// apply to web.
 /// Refer to [docs](https://amplitude.com/docs/sdks/analytics/browser/browser-sdk-2#autocapture) for more details.
 ///
 /// **Flutter web requirement.** DOM-based capture only sees real DOM nodes.
@@ -161,7 +172,9 @@ class ElementInteractionsDisabled extends ElementInteractions {
 
 /// Enable autocapture ElementInteractions.
 ///
-/// Enables click tracking with the Flutter-aware
+/// On iOS and Android, once the app opts in (experimental), captures taps
+/// (see [ElementInteractions]). On web,
+/// enables click tracking with the Flutter-aware
 /// [ElementInteractionsOptions.defaultCssSelectorAllowlist], so clicks on
 /// Flutter web widgets are captured. Use [ElementInteractionsOptions] if you need
 /// to customize the allowlist or the other options.

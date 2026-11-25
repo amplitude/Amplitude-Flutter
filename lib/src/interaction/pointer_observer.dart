@@ -16,7 +16,9 @@ import 'target_resolver.dart';
 ///
 /// The control is resolved at pointer-down, as Flutter binds a pointer to
 /// what it hit then and reuses that for the rest of the gesture. Listeners
-/// are called at release, after the app's own gesture callbacks.
+/// are called at release. A control's own tap callback usually runs before
+/// them; inside a scrollable, where the tap waits for the scroll to give
+/// up, it runs after them.
 ///
 /// Needs the Flutter binding: subscribe after `runApp` or
 /// `WidgetsFlutterBinding.ensureInitialized()`. `Amplitude` already needs it
@@ -134,8 +136,8 @@ class PointerObserver {
         (event.position - attempt.down.position).distance > attempt.slop) {
       return;
     }
-    // The app's gesture callbacks for this release have already run, but
-    // they only schedule rebuilds: the tree changes at the next frame. An
+    // The app's gesture callbacks for this release may already have run,
+    // but they only schedule rebuilds: the tree changes at the next frame. An
     // element unmounted during the press took its recognizers with it.
     if (!target.element.mounted) return;
     for (final listener in _listeners.toList()) {

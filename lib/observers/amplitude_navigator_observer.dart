@@ -5,6 +5,8 @@ import 'package:flutter/widgets.dart';
 import '../amplitude.dart';
 import '../autocapture/autocapture.dart';
 import '../events/base_event.dart';
+import '../src/interaction/observed_routes.dart';
+import '../src/screen_naming.dart';
 
 /// Event type Amplitude uses for autocaptured screen views. Matches the native
 /// iOS/Android SDK screen view event so events unify in the Amplitude UI.
@@ -36,9 +38,13 @@ bool defaultRouteFilter(Route<dynamic>? route) => route is PageRoute;
 /// platform, including web.
 ///
 /// Capture is gated on the `screenViews` autocapture option of the [Amplitude]
-/// instance passed in — if screen views are disabled the observer is a no-op.
+/// instance passed in — if screen views are disabled, no screen views are sent.
 /// Both attaching the observer AND enabling `screenViews` are required (Flutter
 /// cannot inject a [NavigatorObserver] automatically).
+///
+/// On iOS and Android, it also gives element interactions their
+/// `[Amplitude] Screen Name`, when the app opted in to them (see
+/// `AmplitudeExperimental.mobileElementInteractions`).
 ///
 /// The observer tracks Flutter route changes on every platform, including web.
 /// This matters on web because a Flutter route change does not necessarily
@@ -74,7 +80,7 @@ class AmplitudeNavigatorObserver extends NavigatorObserver {
     this.amplitude, {
     this.nameExtractor = defaultScreenNameExtractor,
     this.routeFilter = defaultRouteFilter,
-  });
+  }) : _naming = ScreenNaming(routeFilter, nameExtractor);
 
   /// The Amplitude instance screen view events are tracked with.
   final Amplitude amplitude;
@@ -84,6 +90,14 @@ class AmplitudeNavigatorObserver extends NavigatorObserver {
 
   /// Decides whether a route should be tracked as a screen.
   final bool Function(Route<dynamic>? route) routeFilter;
+
+  /// Applies [routeFilter] and [nameExtractor], so a throwing one never
+  /// interrupts navigation.
+  final ScreenNaming _naming;
+
+  /// Where this observer keeps routes for element interactions; null when
+  /// [amplitude] doesn't capture taps.
+  ObservedRoutes? get _routes => observedRoutes[amplitude];
 
   /// Whether screen view autocapture is enabled on [amplitude]'s configuration.
   bool get _enabled {
@@ -95,15 +109,15 @@ class AmplitudeNavigatorObserver extends NavigatorObserver {
   }
 
   void _trackScreenView(Route<dynamic>? route) {
-    // Analytics must never interfere with navigation, so any failure here — a
-    // throwing custom routeFilter/nameExtractor or a failed track call — is
-    // swallowed and surfaced only in debug builds.
+    // Analytics must never interfere with navigation, so a failed track call
+    // is swallowed and surfaced only in debug builds. _naming does the same
+    // for a throwing routeFilter or nameExtractor.
     try {
-      if (!_enabled || route == null || !routeFilter(route)) {
+      if (!_enabled || route == null || !_naming.isScreen(route)) {
         return;
       }
-      final name = nameExtractor(route.settings);
-      if (name == null || name.isEmpty) {
+      final name = _naming.screenNameOf(route);
+      if (name == null) {
         assert(() {
           debugPrint(
               'AmplitudeNavigatorObserver: skipped a screen view because the '
@@ -139,32 +153,26 @@ class AmplitudeNavigatorObserver extends NavigatorObserver {
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
     super.didPush(route, previousRoute);
+    _routes?.didPush(route, previousRoute, _naming);
     _trackScreenView(route);
   }
 
   @override
   void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
     super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
+    _routes?.didReplace(newRoute, oldRoute, _naming);
     _trackScreenView(newRoute);
   }
 
   @override
   void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
     super.didPop(route, previousRoute);
+    _routes?.forgetDisposed();
     // Only treat a pop as a screen change when a page-level route was popped.
     // Dismissing a dialog, popup, or bottom sheet (a non-page route) does not
     // change the visible screen (the underlying page was already reported), so
     // popping one must not re-report `previousRoute`.
-    //
-    // routeFilter is evaluated here too, so guard it the same way
-    // _trackScreenView does: a throwing custom routeFilter must never interrupt
-    // the navigator's pop handling.
-    try {
-      if (!routeFilter(route)) {
-        return;
-      }
-    } catch (error, stackTrace) {
-      _onTrackError(error, stackTrace);
+    if (!_naming.isScreen(route)) {
       return;
     }
     _trackScreenView(previousRoute);

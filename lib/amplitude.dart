@@ -9,10 +9,12 @@ import 'configuration.dart';
 import 'events/base_event.dart';
 import 'events/group_identify_event.dart';
 import 'src/interaction/flutter_element_interactions.dart';
+import 'src/interaction/observed_routes.dart';
 
 class Amplitude {
   Configuration configuration;
   MethodChannel _channel = const MethodChannel('amplitude_flutter');
+  FlutterElementInteractions? _elementInteractions;
 
   /// Whether the platform SDK has completed initialization successfully.
   ///
@@ -43,7 +45,15 @@ class Amplitude {
   Amplitude(this.configuration, [MethodChannel? methodChannel]) {
     _channel = methodChannel ?? _channel;
     isBuilt = _init();
-    FlutterElementInteractions.register(configuration);
+    _elementInteractions = FlutterElementInteractions.register(
+      configuration,
+      isBuilt: isBuilt,
+      track: track,
+      routes: () => observedRoutes[this],
+    );
+    // AmplitudeNavigatorObserver keeps routes only for an instance that
+    // captures taps.
+    if (_elementInteractions != null) observedRoutes[this] = ObservedRoutes();
   }
 
   /// Private method to initialize and return a `Future<bool>`
@@ -265,7 +275,12 @@ class Amplitude {
   ///
   /// Set setOptOut to true to disable logging for a specific user.
   /// Set setOptOut to false to re-enable logging.
+  ///
+  /// Also updates [Configuration.optOut], as the iOS and Android SDKs'
+  /// optOut setters update their configuration.
   Future<void> setOptOut(bool enabled) async {
+    configuration.optOut = enabled;
+    _elementInteractions?.setOptOut(enabled);
     Map<String, bool> properties = {};
     properties['setOptOut'] = enabled;
 
