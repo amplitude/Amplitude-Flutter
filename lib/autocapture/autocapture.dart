@@ -128,7 +128,8 @@ class AutocaptureOptions extends Autocapture {
   /// render.
   final bool fileDownloads;
 
-  /// Web specific
+  /// Web specific. Experimental on iOS and Android, and off unless the app
+  /// opts in: see `AmplitudeExperimental.mobileElementInteractions`.
   ///
   /// Configures element interaction (click) tracking using `ElementInteractions`. See [docs](https://amplitude.com/docs/sdks/analytics/browser/browser-sdk-2#autocapture)
   /// for more information. Set to `ElementInteractionsDisabled()` to disable tracking clicks.
@@ -272,7 +273,8 @@ class AutocaptureEnabled extends Autocapture {
   /// Whether to capture file download events.
   final bool fileDownloads = true;
 
-  /// Web specific
+  /// Web specific. Experimental on iOS and Android, and off unless the app
+  /// opts in: see `AmplitudeExperimental.mobileElementInteractions`.
   ///
   /// Whether to capture element interaction (click) events.
   final bool elementInteractions = true;

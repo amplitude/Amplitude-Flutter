@@ -9,7 +9,9 @@
 // tests pin the reported name of every control form, and CI runs them on
 // the latest stable Flutter, so such a change fails CI rather than
 // changing event values. Fix it here, by adding the new wrapper to the
-// right list. See the decision log, Q26 and Q28.
+// right list. The event data (element_interaction_event_data.dart) reads
+// the same lists to build Hierarchy and to find the tapped control's own
+// text.
 import 'package:flutter/widgets.dart';
 
 import 'control_markers.dart';
