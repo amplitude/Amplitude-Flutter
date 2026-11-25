@@ -6,6 +6,7 @@ import '../amplitude.dart';
 import '../autocapture/autocapture.dart';
 import '../events/base_event.dart';
 import '../src/interaction/observed_routes.dart';
+import '../src/screen_naming.dart';
 
 /// Event type Amplitude uses for autocaptured screen views. Matches the native
 /// iOS/Android SDK screen view event so events unify in the Amplitude UI.
@@ -79,7 +80,7 @@ class AmplitudeNavigatorObserver extends NavigatorObserver {
     this.amplitude, {
     this.nameExtractor = defaultScreenNameExtractor,
     this.routeFilter = defaultRouteFilter,
-  });
+  }) : _naming = ScreenNaming(routeFilter, nameExtractor);
 
   /// The Amplitude instance screen view events are tracked with.
   final Amplitude amplitude;
@@ -90,9 +91,9 @@ class AmplitudeNavigatorObserver extends NavigatorObserver {
   /// Decides whether a route should be tracked as a screen.
   final bool Function(Route<dynamic>? route) routeFilter;
 
-  /// Applies [routeFilter] and [nameExtractor] for screen views and element
-  /// interactions, so a throwing one never interrupts navigation.
-  late final _naming = RouteNaming(routeFilter, nameExtractor);
+  /// Applies [routeFilter] and [nameExtractor], so a throwing one never
+  /// interrupts navigation.
+  final ScreenNaming _naming;
 
   /// Where this observer keeps routes for element interactions; null when
   /// [amplitude] doesn't capture taps.

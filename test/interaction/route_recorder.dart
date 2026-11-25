@@ -1,5 +1,6 @@
 import 'package:amplitude_flutter/observers/amplitude_navigator_observer.dart';
 import 'package:amplitude_flutter/src/interaction/observed_routes.dart';
+import 'package:amplitude_flutter/src/screen_naming.dart';
 import 'package:flutter/widgets.dart';
 
 /// Records routes as `AmplitudeNavigatorObserver` does with its default
@@ -8,7 +9,7 @@ class RouteRecorder extends NavigatorObserver {
   final routes = ObservedRoutes();
 
   static const _naming =
-      RouteNaming(defaultRouteFilter, defaultScreenNameExtractor);
+      ScreenNaming(defaultRouteFilter, defaultScreenNameExtractor);
 
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) =>

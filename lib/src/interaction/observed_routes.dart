@@ -1,45 +1,6 @@
 import 'package:flutter/widgets.dart';
 
-/// Which routes a navigator observer counts as screens, and their names, for
-/// both its `[Amplitude] Screen Viewed` events and element interactions.
-///
-/// The callbacks are the app's own, so analytics never breaks navigation: a
-/// throwing callback means "not a screen" or "no name", and a debug build
-/// prints the error.
-final class RouteNaming {
-  const RouteNaming(this._routeFilter, this._nameExtractor);
-
-  final bool Function(Route<dynamic>? route) _routeFilter;
-  final String? Function(RouteSettings settings) _nameExtractor;
-
-  /// Whether [route] is a screen. Dialogs and popups usually aren't.
-  bool isScreen(Route<dynamic> route) {
-    try {
-      return _routeFilter(route);
-    } catch (error) {
-      _report('decide whether a route is a screen', error);
-      return false;
-    }
-  }
-
-  /// [route]'s screen name, or null when it has none.
-  String? screenNameOf(Route<dynamic> route) {
-    try {
-      final name = _nameExtractor(route.settings);
-      return name == null || name.isEmpty ? null : name;
-    } catch (error) {
-      _report('name a route', error);
-      return null;
-    }
-  }
-
-  static void _report(String action, Object error) {
-    assert(() {
-      debugPrint('AmplitudeNavigatorObserver: failed to $action: $error');
-      return true;
-    }());
-  }
-}
+import '../screen_naming.dart';
 
 /// The routes an Amplitude instance's navigator observers have seen, so a
 /// tap can find the route it's on: its Screen Name and the page that ends
@@ -50,13 +11,13 @@ class ObservedRoutes {
   final _routes = <Route<dynamic>, _ObservedRoute>{};
 
   void didPush(
-      Route<dynamic> route, Route<dynamic>? previous, RouteNaming naming) {
+      Route<dynamic> route, Route<dynamic>? previous, ScreenNaming naming) {
     _forgetDisposed();
     _routes[route] = _ObservedRoute(naming, previous);
   }
 
   void didReplace(
-      Route<dynamic>? newRoute, Route<dynamic>? oldRoute, RouteNaming naming) {
+      Route<dynamic>? newRoute, Route<dynamic>? oldRoute, ScreenNaming naming) {
     if (newRoute != null) {
       _routes[newRoute] = _ObservedRoute(naming, _routes[oldRoute]?.previous);
     }
@@ -102,7 +63,7 @@ class ObservedRoutes {
 class _ObservedRoute {
   _ObservedRoute(this.naming, this.previous);
 
-  final RouteNaming naming;
+  final ScreenNaming naming;
 
   /// The route this one was shown over, when it was pushed.
   final Route<dynamic>? previous;
