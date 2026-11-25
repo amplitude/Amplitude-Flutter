@@ -12,11 +12,9 @@ final class RouteNaming {
   final String? Function(Route<dynamic> route) screenNameOf;
 }
 
-/// The live routes that an Amplitude instance's navigator observers have
-/// seen. A tap's Screen Name and the page that ends its Hierarchy come from
-/// the route the tapped control is on, found here rather than with
-/// `ModalRoute.of`: that would make the app's tapped widget rebuild on
-/// every later navigation.
+/// The live routes an Amplitude instance's navigator observers have seen,
+/// so a tap can find the route it's on: its Screen Name and the page that
+/// ends its Hierarchy.
 class ObservedRoutes {
   final _routes = <Route<dynamic>, _ObservedRoute>{};
 
@@ -25,7 +23,6 @@ class ObservedRoutes {
     _routes[route] = _ObservedRoute(naming, previous);
   }
 
-  /// [newRoute] is shown over the route [oldRoute] was shown over.
   void didReplace(
       Route<dynamic>? newRoute, Route<dynamic>? oldRoute, RouteNaming naming) {
     final old = oldRoute == null ? null : _routes.remove(oldRoute);
@@ -34,7 +31,6 @@ class ObservedRoutes {
     }
   }
 
-  /// [route] was popped or removed.
   void didRemove(Route<dynamic> route) => _routes.remove(route);
 
   /// Each live route, by the element its page is built under. A tapped

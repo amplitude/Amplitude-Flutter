@@ -74,17 +74,14 @@ class FlutterElementInteractions {
   /// null when the app installed none.
   final ObservedRoutes? Function() _routes;
 
-  /// Whether the debug hint about a missing observer was printed.
   bool _hinted = false;
 
   /// Stops the tap listener; null while not listening.
   VoidCallback? _unsubscribe;
 
-  /// Whether the platform SDK finished init. Taps before then aren't
-  /// captured, as on Android, which installs its own tap capture during
-  /// init. A failed init never captures: on iOS it keeps no instance, so an
-  /// event would reach an older instance with the same name, or get no
-  /// reply.
+  /// Taps are captured only once the platform SDK has finished init, as on
+  /// Android. After a failed init, an iOS event would reach an older
+  /// instance with the same name.
   bool _ready = false;
 
   bool _optOut;
@@ -93,7 +90,6 @@ class FlutterElementInteractions {
   /// it, or a tap would count once for each capture with this name.
   bool _unregistered = false;
 
-  /// Listens for taps only while ready, opted in and registered.
   void _update() {
     if (_ready && !_optOut && !_unregistered) {
       _unsubscribe ??= PointerObserver.instance.subscribe(_onTap);
@@ -139,9 +135,8 @@ class FlutterElementInteractions {
     return routes;
   }
 
-  /// Sends [event] now, during the tap: `track` is called before the first
-  /// `await`. The platform SDK credits it to whoever is identified at that
-  /// moment, as it does the app's own `track()` calls.
+  /// Calls `track` before any `await`, so the tap is credited to whoever is
+  /// identified as it happens.
   Future<void> _send(ElementInteractionEvent event) async {
     try {
       await _track(event);
