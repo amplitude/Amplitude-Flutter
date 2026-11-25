@@ -7,6 +7,7 @@ import 'package:amplitude_flutter/configuration.dart';
 import 'package:amplitude_flutter/events/base_event.dart';
 import 'package:amplitude_flutter/experimental.dart';
 import 'package:amplitude_flutter/observers/amplitude_navigator_observer.dart';
+import 'package:amplitude_flutter/src/interaction/observed_routes.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -305,6 +306,36 @@ void main() {
         await t.pump();
         expect(screens(channel), ['Screen /']);
       });
+
+      testWidgets('the observer keeps routes only while taps are captured',
+          (t) async {
+        final channel = channelReplyingTo(Completer<void>()..complete());
+        final amplitude = await ready(channel);
+        await t
+            .pumpWidget(app(observer: AmplitudeNavigatorObserver(amplitude)));
+        expect(observedRoutes[amplitude]!.pages(), hasLength(1));
+      });
+
+      final notCapturing = <String, Amplitude Function(MockMethodChannel)>{
+        "an app that didn't opt in": (channel) {
+          AmplitudeExperimental.mobileElementInteractions = false;
+          return Amplitude(config(), channel);
+        },
+        'element interactions turned off': (channel) => Amplitude(
+            config(autocapture: const AutocaptureDisabled()), channel),
+      };
+      for (final MapEntry(key: name, value: create) in notCapturing.entries) {
+        testWidgets('the observer keeps no routes for $name', (t) async {
+          final channel = channelReplyingTo(Completer<void>()..complete());
+          final amplitude = create(channel);
+          await amplitude.isBuilt;
+          await t
+              .pumpWidget(app(observer: AmplitudeNavigatorObserver(amplitude)));
+          await t.tap(find.byKey(const Key('push')));
+          await t.pumpAndSettle();
+          expect(observedRoutes[amplitude], isNull);
+        });
+      }
 
       testWidgets('is left out without AmplitudeNavigatorObserver', (t) async {
         final channel = channelReplyingTo(Completer<void>()..complete());

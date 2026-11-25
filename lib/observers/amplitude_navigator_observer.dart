@@ -107,8 +107,9 @@ class AmplitudeNavigatorObserver extends NavigatorObserver {
     },
   );
 
-  /// The routes this observer has seen, which element interactions read.
-  ObservedRoutes get _routes => observedRoutes[amplitude] ??= ObservedRoutes();
+  /// Where this observer keeps routes for element interactions; null when
+  /// [amplitude] doesn't capture taps.
+  ObservedRoutes? get _routes => observedRoutes[amplitude];
 
   /// Whether screen view autocapture is enabled on [amplitude]'s configuration.
   bool get _enabled {
@@ -172,21 +173,21 @@ class AmplitudeNavigatorObserver extends NavigatorObserver {
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
     super.didPush(route, previousRoute);
-    _routes.didPush(route, previousRoute, _naming);
+    _routes?.didPush(route, previousRoute, _naming);
     _trackScreenView(route);
   }
 
   @override
   void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
     super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
-    _routes.didReplace(newRoute, oldRoute, _naming);
+    _routes?.didReplace(newRoute, oldRoute, _naming);
     _trackScreenView(newRoute);
   }
 
   @override
   void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
     super.didPop(route, previousRoute);
-    _routes.didRemove(route);
+    _routes?.didRemove(route);
     // Only treat a pop as a screen change when a page-level route was popped.
     // Dismissing a dialog, popup, or bottom sheet (a non-page route) does not
     // change the visible screen (the underlying page was already reported), so
@@ -209,6 +210,6 @@ class AmplitudeNavigatorObserver extends NavigatorObserver {
   @override
   void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
     super.didRemove(route, previousRoute);
-    _routes.didRemove(route);
+    _routes?.didRemove(route);
   }
 }

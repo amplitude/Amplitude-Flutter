@@ -498,6 +498,27 @@ void hierarchyAndScreenName() {
       expect(recorder.routes.pages(), hasLength(1));
     });
 
+    testWidgets("forgets a removed navigator's routes at a push, without a tap",
+        (t) async {
+      await t.pumpWidget(
+          MaterialApp(navigatorObservers: [recorder], home: const HomePage()));
+      final navigator = Navigator.of(t.element(byId('save')));
+      unawaited(navigator
+          .push(MaterialPageRoute<void>(builder: (_) => const DetailPage())));
+      await t.pumpAndSettle();
+      expect(recorder.routes.length, 2);
+
+      // A new app replaces the navigator without popping its routes.
+      await t.pumpWidget(MaterialApp(
+          key: UniqueKey(),
+          navigatorObservers: [recorder],
+          home: const HomePage()));
+      unawaited(Navigator.of(t.element(byId('save')))
+          .push(MaterialPageRoute<void>(builder: (_) => const DetailPage())));
+      await t.pumpAndSettle();
+      expect(recorder.routes.length, 2);
+    });
+
     testWidgets('is still sent on obfuscated builds', (t) async {
       await t.pumpWidget(
           MaterialApp(navigatorObservers: [recorder], home: const HomePage()));

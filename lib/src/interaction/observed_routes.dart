@@ -20,6 +20,7 @@ class ObservedRoutes {
 
   void didPush(
       Route<dynamic> route, Route<dynamic>? previous, RouteNaming naming) {
+    _forgetDisposed();
     _routes[route] = _ObservedRoute(naming, previous);
   }
 
@@ -36,15 +37,21 @@ class ObservedRoutes {
   /// Each live route, by the element its page is built under. A tapped
   /// control's route is the first of these among its ancestors.
   Map<Element, Route<dynamic>> pages() {
-    // A navigator that was itself removed disposes its routes without
-    // popping them.
-    _routes.removeWhere((route, _) => route.navigator == null);
+    _forgetDisposed();
     return {
       for (final route in _routes.keys)
         if (route case ModalRoute(subtreeContext: final Element page))
           page: route,
     };
   }
+
+  @visibleForTesting
+  int get length => _routes.length;
+
+  /// A navigator that was itself removed disposes its routes without
+  /// popping them.
+  void _forgetDisposed() =>
+      _routes.removeWhere((route, _) => route.navigator == null);
 
   /// [route]'s screen name. A route that isn't a screen, such as a dialog,
   /// takes the name of the screen it was shown over.

@@ -51,6 +51,9 @@ class Amplitude {
       track: track,
       routes: () => observedRoutes[this],
     );
+    // AmplitudeNavigatorObserver keeps routes only for an instance that
+    // captures taps.
+    if (_elementInteractions != null) observedRoutes[this] = ObservedRoutes();
   }
 
   /// Private method to initialize and return a `Future<bool>`
