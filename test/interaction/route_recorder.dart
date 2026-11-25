@@ -21,5 +21,5 @@ class RouteRecorder extends NavigatorObserver {
 
   @override
   void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) =>
-      routes.didPop();
+      routes.forgetDisposed();
 }

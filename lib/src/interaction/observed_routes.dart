@@ -12,7 +12,7 @@ class ObservedRoutes {
 
   void didPush(
       Route<dynamic> route, Route<dynamic>? previous, ScreenNaming naming) {
-    _forgetDisposed();
+    forgetDisposed();
     _routes[route] = _ObservedRoute(naming, previous);
   }
 
@@ -23,15 +23,11 @@ class ObservedRoutes {
     }
   }
 
-  /// A route was popped. It stays until Flutter disposes it; routes that
-  /// were disposed since are forgotten now.
-  void didPop() => _forgetDisposed();
-
   /// Each route that isn't disposed yet, including one animating out after
   /// a pop, by the element its page is built under. A tapped control's
   /// route is the first of these among its ancestors.
   Map<Element, Route<dynamic>> pages() {
-    _forgetDisposed();
+    forgetDisposed();
     return {
       for (final route in _routes.keys)
         if (route case ModalRoute(subtreeContext: final Element page))
@@ -44,7 +40,9 @@ class ObservedRoutes {
 
   /// Forgets routes Flutter has disposed: popped or removed ones, once
   /// their exit animation ends, and those of a navigator that was removed.
-  void _forgetDisposed() =>
+  /// A route that was just popped is still animating out, so it stays: a
+  /// button that closes its own dialog or page is read after the pop.
+  void forgetDisposed() =>
       _routes.removeWhere((route, _) => route.navigator == null);
 
   /// [route]'s screen name. A route that isn't a screen, such as a dialog,
