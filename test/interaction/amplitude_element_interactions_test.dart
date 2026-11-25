@@ -247,14 +247,23 @@ void main() {
                             key: const Key('dialog'),
                             onPressed: () => showDialog<void>(
                                   context: context,
-                                  builder: (_) => AlertDialog(actions: [
+                                  builder: (dialog) => AlertDialog(actions: [
                                     TextButton(
                                         key: const Key('ok'),
                                         onPressed: () {},
                                         child: const Text('OK')),
+                                    TextButton(
+                                        key: const Key('close'),
+                                        onPressed: () =>
+                                            Navigator.of(dialog).pop(),
+                                        child: const Text('Close')),
                                   ]),
                                 ),
                             child: const Text('Help')),
+                        ElevatedButton(
+                            key: const Key('done'),
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: const Text('Done')),
                       ]),
                     ),
                   ),
@@ -291,6 +300,34 @@ void main() {
 
         expect(screens(channel),
             ['/', '/', '/checkout', '/checkout', '/checkout', '/']);
+      });
+
+      // Outside a scrollable, onPressed runs before the tap listener, so
+      // the route is already popped when the tap is read.
+      testWidgets('is kept by a button that closes its own dialog or page',
+          (t) async {
+        final channel = channelReplyingTo(Completer<void>()..complete());
+        final amplitude = await ready(channel);
+        await t
+            .pumpWidget(app(observer: AmplitudeNavigatorObserver(amplitude)));
+        await t.tap(find.byKey(const Key('push')));
+        await t.pumpAndSettle();
+        await t.tap(find.byKey(const Key('dialog')));
+        await t.pumpAndSettle();
+
+        await t.tap(find.byKey(const Key('close')));
+        await t.pumpAndSettle();
+        await t.tap(find.byKey(const Key('done')));
+        await t.pumpAndSettle();
+
+        final events = tracked(channel)
+            .where((e) => e['event_type'] == '[Amplitude] Element Interacted')
+            .map((e) => e['event_properties'] as Map)
+            .toList();
+        expect(events.map((p) => p['[Amplitude] Screen Name']),
+            ['/', '/checkout', '/checkout', '/checkout']);
+        expect(events.last['[Amplitude] Hierarchy'],
+            isNot(contains('Transition')));
       });
 
       testWidgets("uses the observer's nameExtractor, as Screen Viewed does",

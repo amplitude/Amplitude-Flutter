@@ -12,9 +12,11 @@ final class RouteNaming {
   final String? Function(Route<dynamic> route) screenNameOf;
 }
 
-/// The live routes an Amplitude instance's navigator observers have seen,
-/// so a tap can find the route it's on: its Screen Name and the page that
-/// ends its Hierarchy.
+/// The routes an Amplitude instance's navigator observers have seen, so a
+/// tap can find the route it's on: its Screen Name and the page that ends
+/// its Hierarchy. A route is kept until Flutter disposes it, not only until
+/// it's popped: a button that closes its own dialog or page is read after
+/// its `onPressed` has popped the route.
 class ObservedRoutes {
   final _routes = <Route<dynamic>, _ObservedRoute>{};
 
@@ -26,13 +28,10 @@ class ObservedRoutes {
 
   void didReplace(
       Route<dynamic>? newRoute, Route<dynamic>? oldRoute, RouteNaming naming) {
-    final old = oldRoute == null ? null : _routes.remove(oldRoute);
     if (newRoute != null) {
-      _routes[newRoute] = _ObservedRoute(naming, old?.previous);
+      _routes[newRoute] = _ObservedRoute(naming, _routes[oldRoute]?.previous);
     }
   }
-
-  void didRemove(Route<dynamic> route) => _routes.remove(route);
 
   /// Each live route, by the element its page is built under. A tapped
   /// control's route is the first of these among its ancestors.
@@ -48,8 +47,8 @@ class ObservedRoutes {
   @visibleForTesting
   int get length => _routes.length;
 
-  /// A navigator that was itself removed disposes its routes without
-  /// popping them.
+  /// Forgets routes Flutter has disposed: popped or removed ones, once
+  /// their exit animation ends, and those of a navigator that was removed.
   void _forgetDisposed() =>
       _routes.removeWhere((route, _) => route.navigator == null);
 

@@ -483,7 +483,7 @@ void hierarchyAndScreenName() {
       expect(dataAt(t, byId('detail')).screenName, '/checkout');
     });
 
-    testWidgets('forgets routes that are popped or removed', (t) async {
+    testWidgets('forgets routes once a pop or remove disposes them', (t) async {
       await t.pumpWidget(
           MaterialApp(navigatorObservers: [recorder], home: const HomePage()));
       final navigator = Navigator.of(t.element(byId('save')));
