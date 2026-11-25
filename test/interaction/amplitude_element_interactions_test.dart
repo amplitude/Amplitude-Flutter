@@ -6,6 +6,7 @@ import 'package:amplitude_flutter/autocapture/element_interactions.dart';
 import 'package:amplitude_flutter/configuration.dart';
 import 'package:amplitude_flutter/events/base_event.dart';
 import 'package:amplitude_flutter/experimental.dart';
+import 'package:amplitude_flutter/observers/amplitude_navigator_observer.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -206,6 +207,152 @@ void main() {
       await t.pump();
       verifyNever(first.invokeMethod('track', any));
       expect(trackCount(second), 1);
+    });
+
+    group('Screen Name', () {
+      /// The Screen Name of each Element Interacted event, in tap order.
+      List<String?> screens(MockMethodChannel channel) => tracked(channel)
+          .where((e) => e['event_type'] == '[Amplitude] Element Interacted')
+          .map((e) => (e['event_properties'] as Map)['[Amplitude] Screen Name']
+              as String?)
+          .toList();
+
+      Widget app({NavigatorObserver? observer}) => MaterialApp(
+            navigatorObservers: [if (observer != null) observer],
+            routes: {
+              '/': (_) => Scaffold(
+                    body: Builder(
+                      builder: (context) => Column(children: [
+                        ElevatedButton(
+                            key: const Key('home'),
+                            onPressed: () {},
+                            child: const Text('Home')),
+                        ElevatedButton(
+                            key: const Key('push'),
+                            onPressed: () =>
+                                Navigator.pushNamed(context, '/checkout'),
+                            child: const Text('Checkout')),
+                      ]),
+                    ),
+                  ),
+              '/checkout': (_) => Scaffold(
+                    body: Builder(
+                      builder: (context) => Column(children: [
+                        ElevatedButton(
+                            key: const Key('pay'),
+                            onPressed: () {},
+                            child: const Text('Pay')),
+                        ElevatedButton(
+                            key: const Key('dialog'),
+                            onPressed: () => showDialog<void>(
+                                  context: context,
+                                  builder: (_) => AlertDialog(actions: [
+                                    TextButton(
+                                        key: const Key('ok'),
+                                        onPressed: () {},
+                                        child: const Text('OK')),
+                                  ]),
+                                ),
+                            child: const Text('Help')),
+                      ]),
+                    ),
+                  ),
+            },
+          );
+
+      Future<Amplitude> ready(MockMethodChannel channel) async {
+        final amplitude = Amplitude(config(), channel);
+        await amplitude.isBuilt;
+        return amplitude;
+      }
+
+      testWidgets('is the screen of the route the control is on', (t) async {
+        final channel = channelReplyingTo(Completer<void>()..complete());
+        final amplitude = await ready(channel);
+        await t
+            .pumpWidget(app(observer: AmplitudeNavigatorObserver(amplitude)));
+
+        await t.tap(find.byKey(const Key('home')));
+        await t.tap(find.byKey(const Key('push')));
+        await t.pumpAndSettle();
+        await t.tap(find.byKey(const Key('pay')));
+        await t.tap(find.byKey(const Key('dialog')));
+        await t.pumpAndSettle();
+        // A dialog isn't a screen: the page under it still is.
+        await t.tap(find.byKey(const Key('ok')));
+        final navigator = Navigator.of(t.element(find.byKey(const Key('ok'))));
+        navigator.pop();
+        await t.pumpAndSettle();
+        navigator.pop();
+        await t.pumpAndSettle();
+        await t.tap(find.byKey(const Key('home')));
+        await t.pump();
+
+        expect(screens(channel),
+            ['/', '/', '/checkout', '/checkout', '/checkout', '/']);
+      });
+
+      testWidgets("uses the observer's nameExtractor, as Screen Viewed does",
+          (t) async {
+        final channel = channelReplyingTo(Completer<void>()..complete());
+        final amplitude = await ready(channel);
+        await t.pumpWidget(app(
+          observer: AmplitudeNavigatorObserver(amplitude,
+              nameExtractor: (settings) => 'Screen ${settings.name}'),
+        ));
+
+        await t.tap(find.byKey(const Key('home')));
+        await t.pump();
+        expect(screens(channel), ['Screen /']);
+      });
+
+      testWidgets('is left out without AmplitudeNavigatorObserver', (t) async {
+        final channel = channelReplyingTo(Completer<void>()..complete());
+        await ready(channel);
+        await t.pumpWidget(app());
+
+        await t.tap(find.byKey(const Key('home')));
+        await t.pump();
+        expect(screens(channel), [null]);
+      });
+
+      testWidgets('is left out on a route with no name', (t) async {
+        final channel = channelReplyingTo(Completer<void>()..complete());
+        final amplitude = await ready(channel);
+        await t
+            .pumpWidget(app(observer: AmplitudeNavigatorObserver(amplitude)));
+        Navigator.of(t.element(find.byKey(const Key('home')))).push(
+          MaterialPageRoute<void>(
+            builder: (_) => Scaffold(
+              body: ElevatedButton(
+                  key: const Key('unnamed'),
+                  onPressed: () {},
+                  child: const Text('Go')),
+            ),
+          ),
+        );
+        await t.pumpAndSettle();
+
+        await t.tap(find.byKey(const Key('unnamed')));
+        await t.pump();
+        expect(screens(channel), [null]);
+      });
+
+      testWidgets("isn't taken from another instance's observer", (t) async {
+        final channel = channelReplyingTo(Completer<void>()..complete());
+        await ready(channel);
+        final otherChannel = channelReplyingTo(Completer<void>()..complete());
+        final other = Amplitude(
+          Configuration(apiKey: 'key', instanceName: 'other'),
+          otherChannel,
+        );
+        await other.isBuilt;
+        await t.pumpWidget(app(observer: AmplitudeNavigatorObserver(other)));
+
+        await t.tap(find.byKey(const Key('home')));
+        await t.pump();
+        expect(screens(channel), [null]);
+      });
     });
   });
 }

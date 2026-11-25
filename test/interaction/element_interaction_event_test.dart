@@ -4,6 +4,11 @@ import 'package:amplitude_flutter/src/interaction/target_resolver.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'route_recorder.dart';
+
+/// Installed in every app here, as AmplitudeNavigatorObserver would be.
+var recorder = RouteRecorder();
+
 Finder byId(String id) => find.byKey(ValueKey(id));
 
 ElementInteractionEvent eventAt(WidgetTester t, Finder finder) {
@@ -11,14 +16,16 @@ ElementInteractionEvent eventAt(WidgetTester t, Finder finder) {
     PointerDownEvent(position: t.getCenter(finder), viewId: t.view.viewId),
   )!;
   return ElementInteractionEvent(
-    ElementInteractionEventData.from(target),
+    ElementInteractionEventData.from(target, routes: recorder.routes),
     timestamp: 1767225600000,
   );
 }
 
 void main() {
+  setUp(() => recorder = RouteRecorder());
   testWidgets('an Element Interacted event for a button', (t) async {
     await t.pumpWidget(MaterialApp(
+      navigatorObservers: [recorder],
       home: Scaffold(
         body: Center(
           child: Semantics(
@@ -53,6 +60,7 @@ void main() {
   // often user data.
   testWidgets("a tile's text and key appear nowhere in its event", (t) async {
     await t.pumpWidget(MaterialApp(
+      navigatorObservers: [recorder],
       home: Scaffold(
         body: ListView(children: [
           ListTile(

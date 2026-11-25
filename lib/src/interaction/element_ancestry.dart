@@ -1,6 +1,5 @@
 // Where a tapped control sits in the app: the `[Amplitude] Hierarchy`
-// value and the page used as a fallback Screen Name. Follows the approach
-// of PR #317's hierarchy, by Zohaib Farooqi:
+// value. Follows the approach of PR #317's hierarchy, by Zohaib Farooqi:
 // https://github.com/amplitude/Amplitude-Flutter/pull/317.
 import 'package:flutter/widgets.dart';
 
@@ -18,27 +17,33 @@ import 'interaction_target.dart';
 /// internals that build something themselves (Material in a Card) remain,
 /// as framework views do on iOS and Android.
 class ElementAncestry {
-  ElementAncestry(this.names, {required this.reachedPage});
+  ElementAncestry(this.names, {this.page});
 
   /// Android cuts Hierarchy at this length; whole entries are dropped from
   /// the outer end so that the target always stays.
   static const _maxLength = 1024;
 
   final List<String> names;
-  final bool reachedPage;
 
-  /// The walk stops at [page], the route's own subtree: everything above it
-  /// is the same for every tap. Without a route, it stops at the nearest
-  /// Overlay.
-  static ElementAncestry of(InteractionTarget target, {BuildContext? page}) {
+  /// The element the control's route builds its page under, when [isPage]
+  /// found it.
+  final Element? page;
+
+  /// The walk stops at the route's page, the first ancestor for which
+  /// [isPage] holds: everything above it is the same for every tap. Failing
+  /// that, it stops at the nearest Overlay.
+  static ElementAncestry of(
+    InteractionTarget target, {
+    bool Function(Element) isPage = _noPage,
+  }) {
     final names = [target.name];
-    var reachedPage = false;
+    Element? page;
     // Whether only elements that build nothing of their own lie between
     // here and the last kept name.
     var direct = true;
     target.element.visitAncestorElements((a) {
-      if (identical(a, page)) {
-        reachedPage = true;
+      if (isPage(a)) {
+        page = a;
         return false;
       }
       if (a.widget is Overlay) return false;
@@ -55,7 +60,7 @@ class ElementAncestry {
       }
       return true;
     });
-    return ElementAncestry(names, reachedPage: reachedPage);
+    return ElementAncestry(names, page: page);
   }
 
   String get hierarchy {
@@ -66,11 +71,9 @@ class ElementAncestry {
     }
     return joined();
   }
-
-  /// The route's page widget: the outermost name, when the walk reached the
-  /// page and found something around the control.
-  String? get page => reachedPage && names.length > 1 ? names.last : null;
 }
+
+bool _noPage(Element _) => false;
 
 /// A component an app would recognize in Hierarchy.
 bool _isAppStructure(Element e) {

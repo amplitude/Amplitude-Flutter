@@ -1,10 +1,18 @@
+import 'dart:async';
+
 import 'package:amplitude_flutter/src/interaction/element_interaction_event_data.dart';
 import 'package:amplitude_flutter/src/interaction/target_resolver.dart';
 import 'package:flutter/cupertino.dart' show CupertinoButton;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'route_recorder.dart';
+
+/// Installed in every app here, as AmplitudeNavigatorObserver would be.
+var recorder = RouteRecorder();
+
 Widget app(Widget child) => MaterialApp(
+      navigatorObservers: [recorder],
       home: Scaffold(body: Center(child: SizedBox(width: 360, child: child))),
     );
 
@@ -17,7 +25,7 @@ ElementInteractionEventData dataAt(WidgetTester t, Finder finder) {
     PointerDownEvent(position: t.getCenter(finder), viewId: t.view.viewId),
   );
   expect(target, isNotNull, reason: 'nothing resolved at $finder');
-  return ElementInteractionEventData.from(target!);
+  return ElementInteractionEventData.from(target!, routes: recorder.routes);
 }
 
 /// An app wrapper whose build returns a Material button directly.
@@ -41,6 +49,7 @@ class FancyButton extends StatelessWidget {
 }
 
 void main() {
+  setUp(() => recorder = RouteRecorder());
   group('Target Text', () {
     final buttons = <String, Widget>{
       'ElevatedButton':
@@ -209,6 +218,7 @@ void main() {
     // destination's Tooltip sits around the item, behind a branch.
     testWidgets('a NavigationBar destination sends no label', (t) async {
       await t.pumpWidget(MaterialApp(
+        navigatorObservers: [recorder],
         home: Scaffold(
           bottomNavigationBar: NavigationBar(destinations: const [
             NavigationDestination(icon: Icon(Icons.home), label: 'Home'),
@@ -337,7 +347,8 @@ class DetailPage extends StatelessWidget {
 void hierarchyAndScreenName() {
   group('Hierarchy', () {
     testWidgets('keeps the components an app would recognize', (t) async {
-      await t.pumpWidget(const MaterialApp(home: HomePage()));
+      await t.pumpWidget(
+          MaterialApp(navigatorObservers: [recorder], home: const HomePage()));
       expect(dataAt(t, byId('save')).hierarchy,
           'ElevatedButton → ListView → HomePage');
       expect(dataAt(t, byId('buy')).hierarchy,
@@ -347,7 +358,8 @@ void hierarchyAndScreenName() {
     });
 
     testWidgets('stops at the page of a pushed route or a dialog', (t) async {
-      await t.pumpWidget(const MaterialApp(home: HomePage()));
+      await t.pumpWidget(
+          MaterialApp(navigatorObservers: [recorder], home: const HomePage()));
       await t.tap(byId('dialog'));
       await t.pumpAndSettle();
       expect(dataAt(t, byId('ok')).hierarchy,
@@ -381,7 +393,8 @@ void hierarchyAndScreenName() {
               key: const Key('deep'), onPressed: () {}, child: const Text('Go'))
           : LongNamedWrapperForHierarchyLimits(
               child: Padding(padding: EdgeInsets.zero, child: nest(depth - 1)));
-      await t.pumpWidget(MaterialApp(home: Scaffold(body: nest(60))));
+      await t.pumpWidget(MaterialApp(
+          navigatorObservers: [recorder], home: Scaffold(body: nest(60))));
       final hierarchy = dataAt(t, byId('deep')).hierarchy!;
       expect(hierarchy.length, lessThanOrEqualTo(1024));
       expect(hierarchy, startsWith('ElevatedButton → '));
@@ -390,12 +403,14 @@ void hierarchyAndScreenName() {
     });
 
     testWidgets('is left out on obfuscated builds', (t) async {
-      await t.pumpWidget(const MaterialApp(home: HomePage()));
+      await t.pumpWidget(
+          MaterialApp(navigatorObservers: [recorder], home: const HomePage()));
       final target = TargetResolver.resolve(
         PointerDownEvent(
             position: t.getCenter(byId('save')), viewId: t.view.viewId),
       )!;
-      final data = ElementInteractionEventData.from(target, obfuscated: true);
+      final data = ElementInteractionEventData.from(target,
+          routes: recorder.routes, obfuscated: true);
       expect(data.hierarchy, isNull);
       expect(data.screenName, '/');
     });
@@ -404,37 +419,106 @@ void hierarchyAndScreenName() {
   group('Screen Name', () {
     testWidgets("is the route's name", (t) async {
       await t.pumpWidget(MaterialApp(
+        navigatorObservers: [recorder],
         initialRoute: '/checkout',
         routes: {'/checkout': (_) => const DetailPage()},
       ));
       expect(dataAt(t, byId('detail')).screenName, '/checkout');
     });
 
-    testWidgets("falls back to an unnamed route's page widget", (t) async {
-      await t.pumpWidget(const MaterialApp(home: HomePage()));
+    testWidgets('is left out on a route with no name, as in screen views',
+        (t) async {
+      await t.pumpWidget(
+          MaterialApp(navigatorObservers: [recorder], home: const HomePage()));
       expect(dataAt(t, byId('save')).screenName, '/');
       await t.tap(byId('push'));
       await t.pumpAndSettle();
-      expect(dataAt(t, byId('detail')).screenName, 'DetailPage');
-      Navigator.of(t.element(byId('detail'))).pop();
-      await t.pumpAndSettle();
-
-      await t.tap(byId('dialog'));
-      await t.pumpAndSettle();
-      expect(dataAt(t, byId('ok')).screenName, 'AlertDialog');
+      expect(dataAt(t, byId('detail')).screenName, isNull);
     });
 
-    testWidgets('has no fallback on obfuscated builds', (t) async {
-      await t.pumpWidget(const MaterialApp(home: HomePage()));
-      await t.tap(byId('push'));
+    testWidgets("in a dialog is the name of the screen it's shown over",
+        (t) async {
+      await t.pumpWidget(
+          MaterialApp(navigatorObservers: [recorder], home: const HomePage()));
+      await t.tap(byId('dialog'));
       await t.pumpAndSettle();
-      final target = TargetResolver.resolve(
-        PointerDownEvent(
-            position: t.getCenter(byId('detail')), viewId: t.view.viewId),
-      )!;
+      final data = dataAt(t, byId('ok'));
+      expect(data.screenName, '/');
+      expect(data.hierarchy, 'TextButton → Material → AlertDialog');
+    });
+
+    testWidgets("in a nested navigator is the inner route's name", (t) async {
+      final inner = RouteRecorder();
+      await t.pumpWidget(MaterialApp(
+        navigatorObservers: [recorder],
+        home: Scaffold(
+          body: Navigator(
+            observers: [inner],
+            pages: const [
+              MaterialPage<void>(name: 'inner', child: DetailPage()),
+            ],
+            onPopPage: (_, __) => false,
+          ),
+        ),
+      ));
+      final target = TargetResolver.resolve(PointerDownEvent(
+          position: t.getCenter(byId('detail')), viewId: t.view.viewId))!;
+      final data =
+          ElementInteractionEventData.from(target, routes: inner.routes);
+      expect(data.screenName, 'inner');
+      expect(data.hierarchy, 'ElevatedButton → DetailPage');
+    });
+
+    testWidgets("after a replacement is the new route's name", (t) async {
+      await t.pumpWidget(MaterialApp(
+        navigatorObservers: [recorder],
+        routes: {
+          '/': (_) => const HomePage(),
+          '/checkout': (_) => const DetailPage(),
+        },
+      ));
+      unawaited(Navigator.of(t.element(byId('save')))
+          .pushReplacementNamed('/checkout'));
+      await t.pumpAndSettle();
+      expect(dataAt(t, byId('detail')).screenName, '/checkout');
+    });
+
+    testWidgets('forgets routes that are popped or removed', (t) async {
+      await t.pumpWidget(
+          MaterialApp(navigatorObservers: [recorder], home: const HomePage()));
+      final navigator = Navigator.of(t.element(byId('save')));
+      final pushed =
+          MaterialPageRoute<void>(builder: (_) => const DetailPage());
+      unawaited(navigator.push(pushed));
+      await t.pumpAndSettle();
+      expect(recorder.routes.pages(), hasLength(2));
+
+      navigator.removeRoute(pushed);
+      await t.pumpAndSettle();
+      expect(recorder.routes.pages(), hasLength(1));
+    });
+
+    testWidgets('is still sent on obfuscated builds', (t) async {
+      await t.pumpWidget(
+          MaterialApp(navigatorObservers: [recorder], home: const HomePage()));
+      final target = TargetResolver.resolve(PointerDownEvent(
+          position: t.getCenter(byId('save')), viewId: t.view.viewId))!;
       expect(
-          ElementInteractionEventData.from(target, obfuscated: true).screenName,
-          isNull);
+          ElementInteractionEventData.from(target,
+                  routes: recorder.routes, obfuscated: true)
+              .screenName,
+          '/');
+    });
+
+    testWidgets('is left out without AmplitudeNavigatorObserver', (t) async {
+      await t.pumpWidget(const MaterialApp(home: HomePage()));
+      final target = TargetResolver.resolve(PointerDownEvent(
+          position: t.getCenter(byId('save')), viewId: t.view.viewId))!;
+      final data = ElementInteractionEventData.from(target);
+      expect(data.screenName, isNull);
+      // Without the page, the walk runs on to the Overlay.
+      expect(
+          data.hierarchy, startsWith('ElevatedButton → ListView → HomePage'));
     });
   });
 }

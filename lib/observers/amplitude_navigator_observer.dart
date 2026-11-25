@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import '../amplitude.dart';
 import '../autocapture/autocapture.dart';
 import '../events/base_event.dart';
+import '../src/interaction/observed_routes.dart';
 
 /// Event type Amplitude uses for autocaptured screen views. Matches the native
 /// iOS/Android SDK screen view event so events unify in the Amplitude UI.
@@ -85,6 +86,30 @@ class AmplitudeNavigatorObserver extends NavigatorObserver {
   /// Decides whether a route should be tracked as a screen.
   final bool Function(Route<dynamic>? route) routeFilter;
 
+  /// Names routes for element interactions as screen views name them.
+  late final _naming = RouteNaming(
+    isScreen: (route) {
+      try {
+        return routeFilter(route);
+      } catch (error) {
+        _onNamingError(error);
+        return false;
+      }
+    },
+    screenNameOf: (route) {
+      try {
+        final name = nameExtractor(route.settings);
+        return name == null || name.isEmpty ? null : name;
+      } catch (error) {
+        _onNamingError(error);
+        return null;
+      }
+    },
+  );
+
+  /// The routes this observer has seen, which element interactions read.
+  ObservedRoutes get _routes => observedRoutes[amplitude] ??= ObservedRoutes();
+
   /// Whether screen view autocapture is enabled on [amplitude]'s configuration.
   bool get _enabled {
     return switch (amplitude.configuration.autocapture) {
@@ -127,6 +152,14 @@ class AmplitudeNavigatorObserver extends NavigatorObserver {
     }
   }
 
+  void _onNamingError(Object error) {
+    assert(() {
+      debugPrint('AmplitudeNavigatorObserver: failed to name a route for an '
+          'element interaction: $error');
+      return true;
+    }());
+  }
+
   void _onTrackError(Object error, StackTrace stackTrace) {
     assert(() {
       debugPrint(
@@ -139,18 +172,21 @@ class AmplitudeNavigatorObserver extends NavigatorObserver {
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
     super.didPush(route, previousRoute);
+    _routes.didPush(route, previousRoute, _naming);
     _trackScreenView(route);
   }
 
   @override
   void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
     super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
+    _routes.didReplace(newRoute, oldRoute, _naming);
     _trackScreenView(newRoute);
   }
 
   @override
   void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
     super.didPop(route, previousRoute);
+    _routes.didRemove(route);
     // Only treat a pop as a screen change when a page-level route was popped.
     // Dismissing a dialog, popup, or bottom sheet (a non-page route) does not
     // change the visible screen (the underlying page was already reported), so
@@ -168,5 +204,11 @@ class AmplitudeNavigatorObserver extends NavigatorObserver {
       return;
     }
     _trackScreenView(previousRoute);
+  }
+
+  @override
+  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didRemove(route, previousRoute);
+    _routes.didRemove(route);
   }
 }

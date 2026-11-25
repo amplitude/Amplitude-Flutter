@@ -9,6 +9,7 @@ import 'configuration.dart';
 import 'events/base_event.dart';
 import 'events/group_identify_event.dart';
 import 'src/interaction/flutter_element_interactions.dart';
+import 'src/interaction/observed_routes.dart';
 
 class Amplitude {
   Configuration configuration;
@@ -48,6 +49,7 @@ class Amplitude {
       configuration,
       isBuilt: isBuilt,
       track: track,
+      routes: () => observedRoutes[this],
     );
   }
 

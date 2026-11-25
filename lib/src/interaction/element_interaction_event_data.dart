@@ -13,6 +13,7 @@ import 'control_markers.dart';
 import 'control_names.dart';
 import 'element_ancestry.dart';
 import 'interaction_target.dart';
+import 'observed_routes.dart';
 
 /// Controls whose text is sent as Target Text, by name, so the SDK imports
 /// neither Material nor Cupertino and the `material_ui` and `cupertino_ui`
@@ -46,18 +47,16 @@ class ElementInteractionEventData {
   /// what an obfuscated build sends.
   factory ElementInteractionEventData.from(
     InteractionTarget target, {
+    ObservedRoutes? routes,
     bool? obfuscated,
   }) {
     obfuscated ??= isObfuscated;
     final own = _OwnContent(collectText: _sendsText(target))
       ..visit(target.element, _parentOf(target.element), inIcon: false);
     final around = _AncestorLabels.of(target.element);
-    // Registers the tapped element as dependent on its route, so it
-    // rebuilds when the route changes. That measured at about 2 rebuilds
-    // per navigation.
-    final route = ModalRoute.of(target.element);
-    final ancestry = ElementAncestry.of(target, page: route?.subtreeContext);
-    final routeName = route?.settings.name;
+    final pages = routes?.pages() ?? const <Element, Route<dynamic>>{};
+    final ancestry = ElementAncestry.of(target, isPage: pages.containsKey);
+    final route = pages[ancestry.page];
     return ElementInteractionEventData(
       targetViewClass: target.name,
       targetText: own.text.isEmpty ? null : own.text.join(' '),
@@ -66,11 +65,7 @@ class ElementInteractionEventData {
       accessibilityIdentifier: own.identifier ?? around.identifier,
       // Obfuscated names change and get reused between releases.
       hierarchy: obfuscated ? null : ancestry.hierarchy,
-      // An unnamed route (most Navigator.push calls) falls back to its page
-      // widget's class, as iOS falls back to a view controller's type.
-      screenName: routeName != null && routeName.isNotEmpty
-          ? routeName
-          : (obfuscated ? null : ancestry.page),
+      screenName: route == null ? null : routes!.screenNameOf(route),
     );
   }
 
@@ -93,7 +88,8 @@ class ElementInteractionEventData {
   /// → ListView → HomePage`. Null on obfuscated builds.
   final String? hierarchy;
 
-  /// The route's name, else the class of its page widget.
+  /// The name of the screen the control is on, as
+  /// `AmplitudeNavigatorObserver` names it in `[Amplitude] Screen Viewed`.
   final String? screenName;
 }
 

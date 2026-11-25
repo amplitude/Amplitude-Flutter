@@ -11,6 +11,7 @@ import 'element_interaction_event.dart';
 import 'element_interaction_event_data.dart';
 import 'pointer_observer.dart';
 import 'interaction_target.dart';
+import 'observed_routes.dart';
 
 /// Sends an `[Amplitude] Element Interacted` event for each tap on a control,
 /// for one Amplitude instance, on iOS and Android.
@@ -18,7 +19,7 @@ import 'interaction_target.dart';
 /// Everything here runs on the UI thread: the event data is read inside the
 /// tap listener at release, and the event is sent from there.
 class FlutterElementInteractions {
-  FlutterElementInteractions._(Future<bool> isBuilt, this._track,
+  FlutterElementInteractions._(Future<bool> isBuilt, this._track, this._routes,
       {required bool optOut})
       : _optOut = optOut {
     isBuilt.then((built) {
@@ -40,6 +41,7 @@ class FlutterElementInteractions {
     Configuration configuration, {
     required Future<bool> isBuilt,
     required Future<void> Function(BaseEvent) track,
+    required ObservedRoutes? Function() routes,
   }) {
     final name = configuration.instanceName;
     _registered.remove(name)?.unregister();
@@ -47,6 +49,7 @@ class FlutterElementInteractions {
     return _registered[name] = FlutterElementInteractions._(
       isBuilt,
       track,
+      routes,
       optOut: configuration.optOut,
     );
   }
@@ -66,6 +69,13 @@ class FlutterElementInteractions {
       };
 
   final Future<void> Function(BaseEvent) _track;
+
+  /// The routes this instance's `AmplitudeNavigatorObserver`s have seen;
+  /// null when the app installed none.
+  final ObservedRoutes? Function() _routes;
+
+  /// Whether the debug hint about a missing observer was printed.
+  bool _hinted = false;
 
   /// Stops the tap listener; null while not listening.
   VoidCallback? _unsubscribe;
@@ -109,10 +119,24 @@ class FlutterElementInteractions {
     // it.
     if (!target.enabled) return;
     final event = ElementInteractionEvent(
-      ElementInteractionEventData.from(target),
+      ElementInteractionEventData.from(target, routes: _routesOrHint()),
       timestamp: DateTime.now().millisecondsSinceEpoch,
     );
     unawaited(_send(event));
+  }
+
+  ObservedRoutes? _routesOrHint() {
+    final routes = _routes();
+    assert(() {
+      if (routes == null && !_hinted) {
+        _hinted = true;
+        debugPrint('Amplitude element interactions: add '
+            'AmplitudeNavigatorObserver to your navigator for taps to carry '
+            'a Screen Name and a Hierarchy that ends at the page.');
+      }
+      return true;
+    }());
+    return routes;
   }
 
   /// Sends [event] now, during the tap: `track` is called before the first
