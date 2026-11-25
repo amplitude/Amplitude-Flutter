@@ -216,6 +216,21 @@ void main() {
       expect(other, hasLength(1));
     });
 
+    testWidgets('opting a replaced capture back in leaves it stopped',
+        (t) async {
+      final first = <BaseEvent>[];
+      final second = <BaseEvent>[];
+      final replaced = capture(first)!;
+      capture(second);
+      await t.pumpWidget(buttons());
+
+      replaced.setOptOut(false);
+      await t.tap(find.byKey(const Key('on')));
+      await t.pump();
+      expect(first, isEmpty);
+      expect(second, hasLength(1));
+    });
+
     testWidgets('a replaced capture that finishes init later stays stopped',
         (t) async {
       final firstReady = Completer<bool>();

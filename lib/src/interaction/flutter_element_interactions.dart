@@ -73,7 +73,14 @@ class FlutterElementInteractions {
   /// reset, opt-out or [unregister].
   int _generation = 0;
 
-  void _start() => _unsubscribe ??= PointerObserver.instance.subscribe(_onTap);
+  /// Set once replaced or stopped for good; opting back in must not restart
+  /// it, or a tap would count once for each capture with this name.
+  bool _unregistered = false;
+
+  void _start() {
+    if (_unregistered) return;
+    _unsubscribe ??= PointerObserver.instance.subscribe(_onTap);
+  }
 
   void _stop() {
     _unsubscribe?.call();
@@ -82,6 +89,7 @@ class FlutterElementInteractions {
 
   /// Stops capturing taps, and drops taps waiting to be sent.
   void unregister() {
+    _unregistered = true;
     _generation++;
     _stop();
   }
