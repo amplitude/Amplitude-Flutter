@@ -29,8 +29,7 @@ class ElementInteractionEvent extends BaseEvent {
         );
 }
 
-/// The event and property names. iOS's names where iOS has one; pending
-/// review of the cross-SDK key mapping.
+/// The event and property names. iOS's names where iOS has one.
 class _Keys {
   static const eventType = '[Amplitude] Element Interacted';
   static const action = '[Amplitude] Action';

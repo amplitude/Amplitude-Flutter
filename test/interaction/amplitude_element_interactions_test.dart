@@ -146,10 +146,11 @@ void main() {
         'on its own': false,
       }.entries) {
         // In a list the button's onPressed runs after the tap listener, once
-        // the scroll gesture gives up; on its own it runs before.
+        // the scroll gesture gives up; on its own it runs before. The
+        // experimental docs describe this order.
         testWidgets(
             "$name in a tapped button's onPressed, $layout, "
-            'still tracks the tap', (t) async {
+            'tracks the tap ${scrolls ? 'before' : 'after'} it', (t) async {
           final channel = channelReplyingTo(Completer<void>()..complete());
           final amplitude = Amplitude(config(), channel);
           await amplitude.isBuilt;
@@ -168,8 +169,28 @@ void main() {
 
           await t.tap(find.byKey(const Key('b')));
           await t.pump();
-          expect(tracked(channel).single['event_type'],
-              '[Amplitude] Element Interacted');
+          if (scrolls) {
+            verifyInOrder([
+              channel.invokeMethod(
+                  'track',
+                  argThat(containsPair(
+                      'event',
+                      containsPair(
+                          'event_type', '[Amplitude] Element Interacted')))),
+              channel.invokeMethod(name, any),
+            ]);
+          } else {
+            verifyInOrder([
+              channel.invokeMethod(name, any),
+              channel.invokeMethod(
+                  'track',
+                  argThat(containsPair(
+                      'event',
+                      containsPair(
+                          'event_type', '[Amplitude] Element Interacted')))),
+            ]);
+          }
+          verifyNever(channel.invokeMethod('track', any));
         });
       }
     }

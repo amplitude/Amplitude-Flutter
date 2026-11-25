@@ -136,7 +136,8 @@ class FlutterElementInteractions {
   }
 
   /// Calls `track` before any `await`, so the tap is credited to whoever is
-  /// identified as it happens.
+  /// identified when this listener runs: usually after the control's own
+  /// callback, but before it inside a scrollable (see [PointerObserver]).
   Future<void> _send(ElementInteractionEvent event) async {
     try {
       await _track(event);

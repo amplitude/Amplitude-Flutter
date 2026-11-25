@@ -22,8 +22,11 @@ abstract final class AmplitudeExperimental {
   /// `[Amplitude] Element Interacted` event for each tap on a control on iOS
   /// and Android, with no wrapper widget. Web is unaffected.
   ///
-  /// Only strings the app's code sets are read: a Material or Cupertino
-  /// button's text, `Semantics` labels, tooltips and `Semantics.identifier`.
+  /// Only these strings are read: a Material or Cupertino button's text,
+  /// `Semantics` labels, tooltips and `Semantics.identifier`. Other text,
+  /// such as a list tile's title or what's typed in a field, is never read.
+  /// An app can still build these strings from user data
+  /// (`Text('Continue as $email')`), so check them before opting in.
   /// Taps on disabled controls, keyboard activations and accessibility
   /// actions are not sent. `[Amplitude] Hierarchy` is cut at 1,024
   /// characters. On obfuscated builds controls are named by role
@@ -38,6 +41,12 @@ abstract final class AmplitudeExperimental {
   /// opens it on the root navigator by default, so a dialog opened from a
   /// nested navigator gets the root navigator's screen. Taps made before
   /// the platform SDK finishes initializing aren't captured.
+  ///
+  /// A tap is sent with the user and device IDs current when it's read:
+  /// after the control's own `onPressed` has run, except inside a list or
+  /// other scrollable, where it's read first. So a log-out button that calls
+  /// `setUserId(null)` sends its tap as the logged-out user on its own, and
+  /// as the logged-in user in a list.
   ///
   /// Each instance reads this once, when it's constructed, so set it
   /// before creating the instance. It can come from the app's own feature
