@@ -42,39 +42,45 @@ class HitPath {
   int? hitIndexOf(Element element) => _hitOrder[element.renderObject];
 
   /// Calls [visit] for each element in the subtrees the tap hit, each
-  /// before its children. [visit]'s `parent` is the element's parent, or
-  /// null for the root.
+  /// before its children, from the root down.
+  ///
+  /// [visit] gets the element, its parent (null for the root) and what its
+  /// parent's visit returned ([top] for the root), and returns what the
+  /// element's children get.
   ///
   /// OverlayPortal content is visited from its Overlay, before the overlay
-  /// entries, with its real parent: that parent lives in the page, which the
-  /// walk may never visit. The only ancestors visited before the content are
-  /// also its render ancestors, so it competes with page content by hit
-  /// order, as in the gesture arena.
-  void walk(void Function(Element element, Element? parent) visit) {
+  /// entries, with its real parent and [top]: that parent lives in the
+  /// page, which the walk may never visit. The only ancestors visited
+  /// before the content are also its render ancestors, so it competes with
+  /// page content by hit order, as in the gesture arena.
+  void walk<T>(
+    T top,
+    T Function(Element element, Element? parent, T above) visit,
+  ) {
     final root = WidgetsBinding.instance.rootElement;
     if (root == null) return;
     // Portal content already visited from its Overlay, to skip if the walk
     // reaches it again through the page.
     final portalContent = <Element>{};
 
-    void step(Element element, Element? parent) {
+    void step(Element element, Element? parent, T above) {
       if (!_reaches(element)) return;
-      visit(element, parent);
+      final below = visit(element, parent, above);
       if (element.widget is Overlay) {
         for (final content in _hitPortalContent(element)) {
           if (portalContent.add(content)) {
-            step(content, _parentOf(content));
+            step(content, _parentOf(content), top);
           }
         }
       }
       element.visitChildElements((child) {
         if (!portalContent.contains(child)) {
-          step(child, element);
+          step(child, element, below);
         }
       });
     }
 
-    step(root, null);
+    step(root, null, top);
   }
 
   /// Whether the tap can have hit anything in [element]'s subtree.
