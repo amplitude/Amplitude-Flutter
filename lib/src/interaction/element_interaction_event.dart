@@ -4,9 +4,7 @@ import 'element_interaction_event_data.dart';
 /// `[Amplitude] Element Interacted`, sent for a tap on a control, as iOS
 /// and Android send it for theirs.
 class ElementInteractionEvent extends BaseEvent {
-  /// [timestamp] is when the tap happened: the event may wait for the SDK
-  /// to finish initializing, and the platform SDK would otherwise date it
-  /// when it is sent.
+  /// [timestamp] is when the tap happened.
   ElementInteractionEvent(
     ElementInteractionEventData data, {
     required int timestamp,

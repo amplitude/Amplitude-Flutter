@@ -29,6 +29,13 @@ abstract final class AmplitudeExperimental {
   /// characters. On obfuscated builds controls are named by role
   /// (`Button`), and no Hierarchy or button text is sent.
   ///
+  /// `[Amplitude] Screen Name` comes from `AmplitudeNavigatorObserver`: it's
+  /// the name of the tapped control's route, as the observer names it in
+  /// `[Amplitude] Screen Viewed`. Without the observer on the app's
+  /// navigator (one per navigator, for nested navigators), taps carry no
+  /// Screen Name and Hierarchy doesn't stop at the page. Taps made before
+  /// the platform SDK finishes initializing aren't captured.
+  ///
   /// Each instance reads this once, when it's constructed, so set it
   /// before creating the instance. It can come from the app's own feature
   /// flag service.

@@ -37,9 +37,13 @@ bool defaultRouteFilter(Route<dynamic>? route) => route is PageRoute;
 /// platform, including web.
 ///
 /// Capture is gated on the `screenViews` autocapture option of the [Amplitude]
-/// instance passed in — if screen views are disabled the observer is a no-op.
+/// instance passed in — if screen views are disabled, no screen views are sent.
 /// Both attaching the observer AND enabling `screenViews` are required (Flutter
 /// cannot inject a [NavigatorObserver] automatically).
+///
+/// On iOS and Android, it also gives element interactions their
+/// `[Amplitude] Screen Name`, when the app opted in to them (see
+/// `AmplitudeExperimental.mobileElementInteractions`).
 ///
 /// The observer tracks Flutter route changes on every platform, including web.
 /// This matters on web because a Flutter route change does not necessarily
