@@ -344,6 +344,19 @@ void main() {
         expect(screens(channel), ['Screen /']);
       });
 
+      testWidgets('is left out when the nameExtractor throws', (t) async {
+        final channel = channelReplyingTo(Completer<void>()..complete());
+        final amplitude = await ready(channel);
+        await t.pumpWidget(app(
+          observer: AmplitudeNavigatorObserver(amplitude,
+              nameExtractor: (_) => throw Exception('extractor boom')),
+        ));
+
+        await t.tap(find.byKey(const Key('home')));
+        await t.pump();
+        expect(screens(channel), [null]);
+      });
+
       testWidgets('the observer keeps routes only while taps are captured',
           (t) async {
         final channel = channelReplyingTo(Completer<void>()..complete());

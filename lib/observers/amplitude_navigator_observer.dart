@@ -90,26 +90,9 @@ class AmplitudeNavigatorObserver extends NavigatorObserver {
   /// Decides whether a route should be tracked as a screen.
   final bool Function(Route<dynamic>? route) routeFilter;
 
-  /// Names routes for element interactions as screen views name them.
-  late final _naming = RouteNaming(
-    isScreen: (route) {
-      try {
-        return routeFilter(route);
-      } catch (error) {
-        _onNamingError(error);
-        return false;
-      }
-    },
-    screenNameOf: (route) {
-      try {
-        final name = nameExtractor(route.settings);
-        return name == null || name.isEmpty ? null : name;
-      } catch (error) {
-        _onNamingError(error);
-        return null;
-      }
-    },
-  );
+  /// Applies [routeFilter] and [nameExtractor] for screen views and element
+  /// interactions, so a throwing one never interrupts navigation.
+  late final _naming = RouteNaming(routeFilter, nameExtractor);
 
   /// Where this observer keeps routes for element interactions; null when
   /// [amplitude] doesn't capture taps.
@@ -125,15 +108,15 @@ class AmplitudeNavigatorObserver extends NavigatorObserver {
   }
 
   void _trackScreenView(Route<dynamic>? route) {
-    // Analytics must never interfere with navigation, so any failure here — a
-    // throwing custom routeFilter/nameExtractor or a failed track call — is
-    // swallowed and surfaced only in debug builds.
+    // Analytics must never interfere with navigation, so a failed track call
+    // is swallowed and surfaced only in debug builds. _naming does the same
+    // for a throwing routeFilter or nameExtractor.
     try {
-      if (!_enabled || route == null || !routeFilter(route)) {
+      if (!_enabled || route == null || !_naming.isScreen(route)) {
         return;
       }
-      final name = nameExtractor(route.settings);
-      if (name == null || name.isEmpty) {
+      final name = _naming.screenNameOf(route);
+      if (name == null) {
         assert(() {
           debugPrint(
               'AmplitudeNavigatorObserver: skipped a screen view because the '
@@ -155,14 +138,6 @@ class AmplitudeNavigatorObserver extends NavigatorObserver {
     } catch (error, stackTrace) {
       _onTrackError(error, stackTrace);
     }
-  }
-
-  void _onNamingError(Object error) {
-    assert(() {
-      debugPrint('AmplitudeNavigatorObserver: failed to name a route for an '
-          'element interaction: $error');
-      return true;
-    }());
   }
 
   void _onTrackError(Object error, StackTrace stackTrace) {
@@ -196,16 +171,7 @@ class AmplitudeNavigatorObserver extends NavigatorObserver {
     // Dismissing a dialog, popup, or bottom sheet (a non-page route) does not
     // change the visible screen (the underlying page was already reported), so
     // popping one must not re-report `previousRoute`.
-    //
-    // routeFilter is evaluated here too, so guard it the same way
-    // _trackScreenView does: a throwing custom routeFilter must never interrupt
-    // the navigator's pop handling.
-    try {
-      if (!routeFilter(route)) {
-        return;
-      }
-    } catch (error, stackTrace) {
-      _onTrackError(error, stackTrace);
+    if (!_naming.isScreen(route)) {
       return;
     }
     _trackScreenView(previousRoute);

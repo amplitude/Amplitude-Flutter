@@ -1,3 +1,4 @@
+import 'package:amplitude_flutter/observers/amplitude_navigator_observer.dart';
 import 'package:amplitude_flutter/src/interaction/observed_routes.dart';
 import 'package:flutter/widgets.dart';
 
@@ -6,13 +7,8 @@ import 'package:flutter/widgets.dart';
 class RouteRecorder extends NavigatorObserver {
   final routes = ObservedRoutes();
 
-  static final _naming = RouteNaming(
-    isScreen: (route) => route is PageRoute,
-    screenNameOf: (route) {
-      final name = route.settings.name;
-      return name == null || name.isEmpty ? null : name;
-    },
-  );
+  static const _naming =
+      RouteNaming(defaultRouteFilter, defaultScreenNameExtractor);
 
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) =>
