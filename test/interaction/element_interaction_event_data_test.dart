@@ -175,6 +175,52 @@ void main() {
       expect(dataAt(t, byId('b')).accessibilityLabel, isNull);
     });
 
+    // A GestureDetector that dismisses the keyboard often wraps a whole
+    // page, and a tap on its plain content resolves to it. Labels elsewhere
+    // on the page aren't its own.
+    testWidgets("not a page's labels, for a handler wrapping the page",
+        (t) async {
+      await t.pumpWidget(app(GestureDetector(
+        onTap: () {},
+        child: Column(children: [
+          const Text('Welcome back', key: Key('plain')),
+          Semantics(label: 'Profile of Jane Doe', child: const Text('Jane')),
+          Semantics(identifier: 'profile-header', child: const Text('Hi')),
+        ]),
+      )));
+      final data = dataAt(t, byId('plain'));
+      expect(data.targetViewClass, 'GestureDetector');
+      expect(data.accessibilityLabel, isNull);
+      expect(data.accessibilityIdentifier, isNull);
+    });
+
+    testWidgets("an InkWell's icon label, when the icon is all it shows",
+        (t) async {
+      await t.pumpWidget(app(InkWell(
+        key: const Key('i'),
+        onTap: () {},
+        child: const Icon(Icons.delete, semanticLabel: 'Delete'),
+      )));
+      expect(dataAt(t, byId('i')).accessibilityLabel, 'Delete');
+    });
+
+    // As on iOS and Android, which read only the tapped view's own label.
+    // Semantics around the card still labels it.
+    testWidgets('not a label beside other content in a bare handler',
+        (t) async {
+      await t.pumpWidget(app(GestureDetector(
+        key: const Key('g'),
+        onTap: () {},
+        child: const Row(children: [
+          Icon(Icons.star, semanticLabel: 'Star'),
+          Text('Save'),
+        ]),
+      )));
+      final data = dataAt(t, find.text('Save'));
+      expect(data.targetViewClass, 'GestureDetector');
+      expect(data.accessibilityLabel, isNull);
+    });
+
     // Material dialogs and sheets label their route ('Alert', 'Dialog') in
     // the device's language. With one control inside, nothing with more
     // than one child stops the climb before that label.

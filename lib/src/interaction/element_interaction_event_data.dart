@@ -128,14 +128,21 @@ class _OwnContent {
   var _boundary = false;
   var _handler = false;
 
-  /// A GestureDetector that dismisses the keyboard often wraps a whole page,
-  /// and every tap on plain content resolves to it. The search stops after
-  /// this many elements so such a tap stays cheap; a control's own text and
-  /// labels come long before.
+  /// The search stops after this many elements, so a control with a large
+  /// subtree stays cheap; its own text and labels come long before.
   static const _maxVisited = 256;
   var _visited = 0;
 
-  void visit(Element element, Element? parent, {required bool inIcon}) {
+  /// [owned] is whether [element] is under the control's own Semantics.
+  /// Until it is, as for a bare GestureDetector or InkWell, the search stays
+  /// on a single-child path: content beside other content, such as the rest
+  /// of a page a GestureDetector wraps, isn't the control's own.
+  void visit(
+    Element element,
+    Element? parent, {
+    required bool inIcon,
+    bool owned = false,
+  }) {
     if (++_visited > _maxVisited) return;
     final w = element.widget;
     final kind = markerKindOf(element, parent);
@@ -148,6 +155,7 @@ class _OwnContent {
           parent is StatelessElement || parent is StatefulElement;
       if (_boundary || (_handler && builtByComponent)) return;
       _boundary = true;
+      owned = true;
     } else if (kind == MarkerKind.detector) {
       if (_handler) return;
       _handler = true;
@@ -161,8 +169,10 @@ class _OwnContent {
     if (collectText && w is RichText && !inIcon) {
       text.add(w.text.toPlainText());
     }
+    if (!owned && childCount(element) > 1) return;
     element.visitChildElements(
-      (child) => visit(child, element, inIcon: inIcon || w is Icon),
+      (child) =>
+          visit(child, element, inIcon: inIcon || w is Icon, owned: owned),
     );
   }
 
