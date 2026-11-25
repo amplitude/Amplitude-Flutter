@@ -894,6 +894,53 @@ void main() {
         },
       );
     }
+
+    // With nothing between them, the region's child is still the app's:
+    // the region pairs only with its own detector.
+    final direct = <String, (Widget Function(VoidCallback?), bool)>{
+      'InkWell': (
+        (onTap) => InkWell(key: formKey, onTap: onTap, child: const Text('x')),
+        true,
+      ),
+      'ElevatedButton': (
+        (onTap) => ElevatedButton(
+            key: formKey, onPressed: onTap, child: const Text('x')),
+        true,
+      ),
+      'GestureDetector': (
+        (onTap) =>
+            GestureDetector(key: formKey, onTap: onTap, child: const Text('x')),
+        true,
+      ),
+      'disabled ElevatedButton': (
+        (_) => const ElevatedButton(
+              key: formKey,
+              onPressed: null,
+              child: Text('x'),
+            ),
+        false,
+      ),
+    };
+    for (final MapEntry(key: name, value: (build, enabled)) in direct.entries) {
+      testWidgets(
+        'a $name directly inside a SelectionArea is reported as itself',
+        variant: platforms,
+        (t) async {
+          var ran = 0;
+          await t.pumpWidget(app(SelectionArea(child: build(() => ran++))));
+          final p = t.getCenter(find.byKey(formKey));
+
+          final r = resolveAt(t, p);
+          await t.tapAt(p);
+          await t.pump(const Duration(seconds: 1));
+
+          expect(ran, enabled ? 1 : 0);
+          expect(r?.element, same(t.element(find.byKey(formKey))));
+          expect(r!.name, name.replaceFirst('disabled ', ''));
+          expect(r.enabled, enabled);
+        },
+      );
+    }
   });
 
   testWidgets(

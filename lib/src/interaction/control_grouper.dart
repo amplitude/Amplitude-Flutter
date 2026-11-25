@@ -24,8 +24,9 @@ import 'hit_path.dart';
 //   whether it is inside a SelectableRegion's child.
 // - Pairing: a marker joins the group of the marker directly above it when
 //   nothing forks between them and that marker can still pair below.
-//   Otherwise it starts a group of its own. Each kind's method in
-//   _ControlGrouper holds its exceptions.
+//   Otherwise it starts a group of its own. A SelectableRegion pairs only
+//   with its own detector, never with anything in its child. Each kind's
+//   method in _ControlGrouper holds its other exceptions.
 
 /// The controls [event] hit: the groups of markers on its hit path that can
 /// be a target and that the tap reached, in element-tree order, each before
@@ -113,7 +114,9 @@ class _ControlGrouper {
       return;
     }
     final p = (marker.element.widget as Semantics).properties;
-    if (markerDirectlyAbove != null && markerDirectlyAbove.canPairBelow) {
+    if (markerDirectlyAbove != null &&
+        markerDirectlyAbove.canPairBelow &&
+        !above.reachesRegionChild(marker.element)) {
       _pair(markerDirectlyAbove, marker);
     } else if (above.enclosingTile != null &&
         (p.checked != null || p.toggled != null)) {
@@ -130,7 +133,9 @@ class _ControlGrouper {
   /// InkResponse's tap action: tappable, without saying what it is.
   void _tapAction(_ControlMarker marker, _PathAbove above) {
     final markerDirectlyAbove = above.markerDirectlyAbove;
-    if (markerDirectlyAbove != null && markerDirectlyAbove.canPairBelow) {
+    if (markerDirectlyAbove != null &&
+        markerDirectlyAbove.canPairBelow &&
+        !above.reachesRegionChild(marker.element)) {
       _pair(markerDirectlyAbove, marker);
     } else {
       _start(marker);
