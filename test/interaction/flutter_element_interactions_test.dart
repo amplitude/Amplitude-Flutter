@@ -101,45 +101,51 @@ void main() {
   });
 
   group('on iOS and Android', skip: kIsWeb, () {
-    testWidgets("a tap made during init is sent once ready, at the tap's time",
-        (t) async {
+    testWidgets("a tap made during init isn't sent, as on Android", (t) async {
       final ready = Completer<bool>();
       final sent = <BaseEvent>[];
       capture(sent, isBuilt: ready.future);
       await t.pumpWidget(buttons());
 
-      final before = DateTime.now().millisecondsSinceEpoch;
       await t.tap(find.byKey(const Key('on')));
-      final after = DateTime.now().millisecondsSinceEpoch;
-      await t.pump();
-      expect(sent, isEmpty);
-
       ready.complete(true);
       await t.pump();
+      expect(sent, isEmpty);
+    });
+
+    testWidgets("once ready, a tap is sent at the tap's time", (t) async {
+      final sent = <BaseEvent>[];
+      capture(sent);
+      await t.pumpWidget(buttons());
+      await t.pump();
+
+      final before = DateTime.now().millisecondsSinceEpoch;
+      final gesture =
+          await t.startGesture(t.getCenter(find.byKey(const Key('on'))));
+      await gesture.up();
+      final after = DateTime.now().millisecondsSinceEpoch;
       expect(sent, hasLength(1));
       expect(sent.single.eventType, '[Amplitude] Element Interacted');
       expect(sent.single.timestamp, inInclusiveRange(before, after));
     });
 
-    testWidgets('taps waiting for init are sent in tap order', (t) async {
+    testWidgets('opting back in during init still waits for init', (t) async {
       final ready = Completer<bool>();
       final sent = <BaseEvent>[];
-      capture(sent, isBuilt: ready.future);
-      await t.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Column(children: [
-            for (final label in ['1', '2', '3'])
-              TextButton(key: Key(label), onPressed: () {}, child: Text(label)),
-          ]),
-        ),
-      ));
+      final registered = capture(sent,
+          configuration: config(optOut: true), isBuilt: ready.future)!;
+      await t.pumpWidget(buttons());
 
-      for (final label in ['1', '2', '3']) {
-        await t.tap(find.byKey(Key(label)));
-      }
+      registered.setOptOut(false);
+      await t.tap(find.byKey(const Key('on')));
+      await t.pump();
+      expect(sent, isEmpty);
+
       ready.complete(true);
       await t.pump();
-      expect(sent.map(textOf), ['1', '2', '3']);
+      await t.tap(find.byKey(const Key('on')));
+      await t.pump();
+      expect(sent, hasLength(1));
     });
 
     testWidgets('a failed init sends nothing, before or after it fails',
@@ -155,20 +161,6 @@ void main() {
       await t.tap(find.byKey(const Key('on')));
       await t.pump();
       expect(sent, isEmpty);
-    });
-
-    testWidgets('an identity reset drops taps waiting for init', (t) async {
-      final ready = Completer<bool>();
-      final sent = <BaseEvent>[];
-      final registered = capture(sent, isBuilt: ready.future)!;
-      await t.pumpWidget(buttons());
-
-      await t.tap(find.byKey(const Key('on')));
-      registered.resetIdentity();
-      await t.tap(find.byKey(const Key('on')));
-      ready.complete(true);
-      await t.pump();
-      expect(sent, hasLength(1));
     });
 
     testWidgets('opting out stops capture; opting back in resumes it',

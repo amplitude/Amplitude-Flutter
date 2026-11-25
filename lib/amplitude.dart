@@ -224,7 +224,6 @@ class Amplitude {
   /// amplitude.setUserId('user Id');
   /// ```
   Future<void> setUserId(String? userId) async {
-    _elementInteractions?.resetIdentity();
     Map<String, String?> properties = {};
     properties['setUserId'] = userId;
 
@@ -250,7 +249,6 @@ class Amplitude {
   /// amplitude.setDeviceId('device Id');
   /// ```
   Future<void> setDeviceId(String? deviceId) async {
-    _elementInteractions?.resetIdentity();
     Map<String, String?> properties = {};
     properties['setDeviceId'] = deviceId;
 
@@ -289,7 +287,6 @@ class Amplitude {
   ///
   /// Note different devices on different platforms should have different device Ids.
   Future<void> reset() async {
-    _elementInteractions?.resetIdentity();
     return await _channel
         .invokeMethod('reset', {'instanceName': configuration.instanceName});
   }

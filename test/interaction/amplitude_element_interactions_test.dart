@@ -85,18 +85,20 @@ void main() {
       verifyNever(channel.invokeMethod('track', any));
     });
 
-    testWidgets('a tap made during init is tracked once init replies',
+    testWidgets("a tap made during init isn't tracked; one after it is",
         (t) async {
       final ready = Completer<void>();
       final channel = channelReplyingTo(ready);
-      Amplitude(config(), channel);
+      final amplitude = Amplitude(config(), channel);
       await t.pumpWidget(button());
 
       await t.tap(find.byKey(const Key('b')));
+      ready.complete();
+      await amplitude.isBuilt;
       await t.pump();
       verifyNever(channel.invokeMethod('track', any));
 
-      ready.complete();
+      await t.tap(find.byKey(const Key('b')));
       await t.pump();
       final event = tracked(channel).single;
       expect(event['event_type'], '[Amplitude] Element Interacted');
@@ -136,20 +138,38 @@ void main() {
       'setDeviceId': (a) => a.setDeviceId('next device'),
       'reset': (a) => a.reset(),
     };
-    for (final MapEntry(key: name, value: resetIdentity) in resets.entries) {
-      testWidgets('$name drops taps still waiting for init', (t) async {
-        final ready = Completer<void>();
-        final channel = channelReplyingTo(ready);
-        final amplitude = Amplitude(config(), channel);
-        await t.pumpWidget(button());
+    for (final MapEntry(key: name, value: changeIdentity) in resets.entries) {
+      for (final MapEntry(key: layout, value: scrolls) in {
+        'in a list': true,
+        'on its own': false,
+      }.entries) {
+        // In a list the button's onPressed runs after the tap listener, once
+        // the scroll gesture gives up; on its own it runs before.
+        testWidgets(
+            "$name in a tapped button's onPressed, $layout, "
+            'still tracks the tap', (t) async {
+          final channel = channelReplyingTo(Completer<void>()..complete());
+          final amplitude = Amplitude(config(), channel);
+          await amplitude.isBuilt;
+          final logOut = ElevatedButton(
+            key: const Key('b'),
+            onPressed: () => unawaited(changeIdentity(amplitude)),
+            child: const Text('Log out'),
+          );
+          await t.pumpWidget(MaterialApp(
+            home: Scaffold(
+              body: scrolls
+                  ? ListView(children: [logOut])
+                  : Center(child: logOut),
+            ),
+          ));
 
-        await t.tap(find.byKey(const Key('b')));
-        unawaited(resetIdentity(amplitude));
-        await t.tap(find.byKey(const Key('b')));
-        ready.complete();
-        await t.pump();
-        expect(trackCount(channel), 1);
-      });
+          await t.tap(find.byKey(const Key('b')));
+          await t.pump();
+          expect(tracked(channel).single['event_type'],
+              '[Amplitude] Element Interacted');
+        });
+      }
     }
 
     testWidgets('setOptOut stops capture and updates the configuration',
