@@ -79,6 +79,6 @@ class _ObservedRoute {
   final Route<dynamic>? previous;
 }
 
-/// Each Amplitude instance's observed routes. Null until an
-/// `AmplitudeNavigatorObserver` for that instance sees a route.
+/// Each Amplitude instance's observed routes. Set when the instance
+/// captures taps; null otherwise, so its observers keep no routes.
 final observedRoutes = Expando<ObservedRoutes>('Amplitude observed routes');
