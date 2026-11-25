@@ -1,3 +1,18 @@
+# [4.9.0](https://github.com/amplitude/Amplitude-Flutter/compare/v4.8.2...v4.9.0) (2026-11-25)
+
+
+### Bug Fixes
+
+* **ios:** apply Configuration.deviceId on init ([#313](https://github.com/amplitude/Amplitude-Flutter/issues/313)) ([2e6167a](https://github.com/amplitude/Amplitude-Flutter/commit/2e6167a505347e71456761e6ad4c0cf16f82c70d))
+* use the configured server zone for remote config and diagnostics on iOS and macOS ([#343](https://github.com/amplitude/Amplitude-Flutter/issues/343)) ([0278d8f](https://github.com/amplitude/Amplitude-Flutter/commit/0278d8ff3e1f8b6c32e1211d46cb31c60d7e09a5))
+
+
+### Features
+
+* **autocapture:** identify the control each tap hit ([#333](https://github.com/amplitude/Amplitude-Flutter/issues/333)) ([85f4384](https://github.com/amplitude/Amplitude-Flutter/commit/85f4384ed5117b54c3c51e512a90efaa557766d2)), closes [#341](https://github.com/amplitude/Amplitude-Flutter/issues/341) [#317](https://github.com/amplitude/Amplitude-Flutter/issues/317) [#317](https://github.com/amplitude/Amplitude-Flutter/issues/317) [#317](https://github.com/amplitude/Amplitude-Flutter/issues/317)
+* **autocapture:** log taps on controls on iOS and Android ([#332](https://github.com/amplitude/Amplitude-Flutter/issues/332)) ([ea62d17](https://github.com/amplitude/Amplitude-Flutter/commit/ea62d170f51eea245e3fe51cecc95a3ac56a51e5))
+* **autocapture:** send element interaction events on iOS and Android ([#336](https://github.com/amplitude/Amplitude-Flutter/issues/336)) ([e6b3259](https://github.com/amplitude/Amplitude-Flutter/commit/e6b3259237928ab97dd674b47f91685784419ab5))
+
 ## [4.8.2](https://github.com/amplitude/Amplitude-Flutter/compare/v4.8.1...v4.8.2) (2026-11-03)
 
 
