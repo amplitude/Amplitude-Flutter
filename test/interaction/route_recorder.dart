@@ -21,4 +21,8 @@ class RouteRecorder extends NavigatorObserver {
   @override
   void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) =>
       routes.didReplace(newRoute, oldRoute, _naming);
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) =>
+      routes.didPop();
 }

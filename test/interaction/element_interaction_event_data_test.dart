@@ -498,6 +498,25 @@ void hierarchyAndScreenName() {
       expect(recorder.routes.pages(), hasLength(1));
     });
 
+    testWidgets('forgets disposed routes at a pop, without a tap', (t) async {
+      await t.pumpWidget(
+          MaterialApp(navigatorObservers: [recorder], home: const HomePage()));
+      final navigator = Navigator.of(t.element(byId('save')));
+      for (var i = 0; i < 2; i++) {
+        unawaited(navigator
+            .push(MaterialPageRoute<void>(builder: (_) => const DetailPage())));
+        await t.pumpAndSettle();
+      }
+      navigator.pop();
+      await t.pumpAndSettle();
+      // Disposed, but nothing has pruned it yet.
+      expect(recorder.routes.length, 3);
+
+      navigator.pop();
+      await t.pumpAndSettle();
+      expect(recorder.routes.length, 2);
+    });
+
     testWidgets("forgets a removed navigator's routes at a push, without a tap",
         (t) async {
       await t.pumpWidget(

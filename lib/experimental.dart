@@ -33,7 +33,10 @@ abstract final class AmplitudeExperimental {
   /// the name of the tapped control's route, as the observer names it in
   /// `[Amplitude] Screen Viewed`. Without the observer on the app's
   /// navigator (one per navigator, for nested navigators), taps carry no
-  /// Screen Name and Hierarchy doesn't stop at the page. Taps made before
+  /// Screen Name and Hierarchy doesn't stop at the page. A tap in a dialog
+  /// gets the name of the screen the dialog was opened over. `showDialog`
+  /// opens it on the root navigator by default, so a dialog opened from a
+  /// nested navigator gets the root navigator's screen. Taps made before
   /// the platform SDK finishes initializing aren't captured.
   ///
   /// Each instance reads this once, when it's constructed, so set it

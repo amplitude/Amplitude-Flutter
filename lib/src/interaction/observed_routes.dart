@@ -33,8 +33,13 @@ class ObservedRoutes {
     }
   }
 
-  /// Each live route, by the element its page is built under. A tapped
-  /// control's route is the first of these among its ancestors.
+  /// A route was popped. It stays until Flutter disposes it; routes that
+  /// were disposed since are forgotten now.
+  void didPop() => _forgetDisposed();
+
+  /// Each route that isn't disposed yet, including one animating out after
+  /// a pop, by the element its page is built under. A tapped control's
+  /// route is the first of these among its ancestors.
   Map<Element, Route<dynamic>> pages() {
     _forgetDisposed();
     return {
