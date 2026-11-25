@@ -344,6 +344,26 @@ void main() {
         expect(screens(channel), ['Screen /']);
       });
 
+      testWidgets('is sent with screen views turned off', (t) async {
+        final channel = channelReplyingTo(Completer<void>()..complete());
+        final amplitude = Amplitude(
+            config(
+                autocapture: const AutocaptureOptions(
+                    elementInteractions: ElementInteractionsEnabled())),
+            channel);
+        await amplitude.isBuilt;
+        await t
+            .pumpWidget(app(observer: AmplitudeNavigatorObserver(amplitude)));
+
+        await t.tap(find.byKey(const Key('home')));
+        await t.pump();
+        final events = tracked(channel);
+        expect(events.map((e) => e['event_type']),
+            ['[Amplitude] Element Interacted']);
+        expect((events.single['event_properties'] as Map)[screenNameProperty],
+            '/');
+      });
+
       testWidgets('is left out when the nameExtractor throws', (t) async {
         final channel = channelReplyingTo(Completer<void>()..complete());
         final amplitude = await ready(channel);
