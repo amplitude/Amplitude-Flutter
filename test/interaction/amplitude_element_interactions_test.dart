@@ -407,6 +407,34 @@ void main() {
         });
       }
 
+      for (final observed in [false, true]) {
+        testWidgets(
+            observed
+                ? "isn't hinted at with AmplitudeNavigatorObserver"
+                : 'is hinted at once in debug without '
+                    'AmplitudeNavigatorObserver', (t) async {
+          final channel = channelReplyingTo(Completer<void>()..complete());
+          final amplitude = await ready(channel);
+          final printed = <String?>[];
+          final original = debugPrint;
+          debugPrint = (message, {wrapWidth}) => printed.add(message);
+          try {
+            await t.pumpWidget(app(
+                observer:
+                    observed ? AmplitudeNavigatorObserver(amplitude) : null));
+            await t.tap(find.byKey(const Key('home')));
+            await t.tap(find.byKey(const Key('home')));
+            await t.pump();
+          } finally {
+            debugPrint = original;
+          }
+          expect(
+              printed
+                  .where((m) => m!.contains('add AmplitudeNavigatorObserver')),
+              hasLength(observed ? 0 : 1));
+        });
+      }
+
       testWidgets('is left out without AmplitudeNavigatorObserver', (t) async {
         final channel = channelReplyingTo(Completer<void>()..complete());
         await ready(channel);

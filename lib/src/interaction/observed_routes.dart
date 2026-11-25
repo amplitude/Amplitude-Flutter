@@ -38,6 +38,10 @@ class ObservedRoutes {
   @visibleForTesting
   int get length => _routes.length;
 
+  /// Whether no navigator observer has recorded a route. With an observer
+  /// installed, the page on screen is recorded before any tap on it.
+  bool get isEmpty => _routes.isEmpty;
+
   /// Forgets routes Flutter has disposed: popped or removed ones, once
   /// their exit animation ends, and those of a navigator that was removed.
   /// A route that was just popped is still animating out, so it stays: a

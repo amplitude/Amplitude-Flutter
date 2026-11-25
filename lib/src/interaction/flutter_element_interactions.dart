@@ -70,8 +70,8 @@ class FlutterElementInteractions {
 
   final Future<void> Function(BaseEvent) _track;
 
-  /// The routes this instance's `AmplitudeNavigatorObserver`s have seen;
-  /// null when the app installed none.
+  /// The routes this instance's `AmplitudeNavigatorObserver`s have seen.
+  /// Empty when the app installed none.
   final ObservedRoutes? Function() _routes;
 
   bool _hinted = false;
@@ -124,7 +124,7 @@ class FlutterElementInteractions {
   ObservedRoutes? _routesOrHint() {
     final routes = _routes();
     assert(() {
-      if (routes == null && !_hinted) {
+      if ((routes == null || routes.isEmpty) && !_hinted) {
         _hinted = true;
         debugPrint('Amplitude element interactions: add '
             'AmplitudeNavigatorObserver to your navigator for taps to carry '
